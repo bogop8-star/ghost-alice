@@ -1749,7 +1749,9 @@ def _managed_session_intent_options(command: str):
                 or len(options) != len(argv[2:]) // 2
                 or options["--platform"] != runner["platform"]
                 or options["--format"] not in {"json", "text"}
-                or options["--root"] != destination.ledger_root
+                # Compare normalized paths so Windows C:/a and C:\a name the same root.
+                or (os.path.normcase(os.path.normpath(options["--root"]))
+                    != os.path.normcase(os.path.normpath(destination.ledger_root)))
                 or options["--context"] != "prompt_submit"):
             return None
         return options
