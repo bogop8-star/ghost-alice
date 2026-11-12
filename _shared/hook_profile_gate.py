@@ -956,7 +956,9 @@ def _run(hook_id: str, payload: str, *, platform: str | None = None, binding=Non
             from addon_installer import load_privileged_adapter_allowlist, privileged_adapter_runner_id
             spec = load_privileged_adapter_allowlist(official_path=Path(env["GHOST_ALICE_CORE_ROOT"])/"skill-catalog/privileged-adapters.json").get(adapter.get("adapter_id"))
             if (not spec or spec.get("args_policy") != "no_args" or adapter.get("runner_id") != hook_id
-                    or len(argv) != 2 or argv[1] != adapter.get("script")):
+                    or len(argv) != 2 or not isinstance(adapter.get("script"), str)
+                    # Local Windows fix: compare normalized paths so C:/a and C:\a are the same script.
+                    or os.path.normcase(os.path.normpath(argv[1])) != os.path.normcase(os.path.normpath(adapter["script"]))):
                 raise HookCommandRejected("registered adapter identity/arguments mismatch", hook_payload=hook_payload)
             event = _payload_from_stdin(stdin_text).get("hook_event_name") or _payload_from_stdin(stdin_text).get("hookEventName")
             semantic = "on_agent_stop" if adapter.get("event") == "Stop" else "pre_tool_use"
