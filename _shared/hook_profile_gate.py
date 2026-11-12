@@ -948,7 +948,9 @@ def _run(hook_id: str, payload: str, *, platform: str | None = None, binding=Non
             else:
                 env.pop('GHOST_ALICE_PROJECT_CWD',None)
         for flag in ("--root","--session-intent-root"):
-            if flag in argv and argv[argv.index(flag)+1] != env["GHOST_ALICE_SESSION_INTENT_ROOT"]:
+            # Local Windows fix: compare normalized paths so C:/a and C:\a are the same root.
+            if flag in argv and (os.path.normcase(os.path.normpath(argv[argv.index(flag)+1]))
+                                 != os.path.normcase(os.path.normpath(env["GHOST_ALICE_SESSION_INTENT_ROOT"]))):
                 raise HookCommandRejected("inner ledger root conflicts with trusted binding", hook_payload=hook_payload)
         if adapter := binding.get("adapter"):
             from addon_installer import load_privileged_adapter_allowlist, privileged_adapter_runner_id
