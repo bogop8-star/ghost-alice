@@ -2082,7 +2082,7 @@ def _managed_prompt_instruction(command: str, identity: str):
         if (set(options) != required or len(options) != len(argv[2:]) // 2
                 or options["--platform"] != args[2]
                 or options["--format"] not in {"json", "text"}
-                or options["--root"] != destination.ledger_root
+                or Path(options["--root"]) != Path(destination.ledger_root)  # Local Windows fix: "/" vs "\"
                 or (identity == "session-intent" and (options["--hook"], options["--context"]) != ("session-intent", "prompt_submit"))):
             return None
         encoded = options["--internal-b64"]
