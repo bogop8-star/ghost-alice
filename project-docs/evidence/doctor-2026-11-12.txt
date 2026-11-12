@@ -1,0 +1,108 @@
+Installer doctor (C:\Users\<user>\.claude\skills):
+
+
+[INFO] Running installer doctor diagnostics...
+doctor: platform=claude
+install-state: present (25 targets)
+ownership: ok
+  ok _shared: ghost-alice-managed junction-to-repo
+  ok adversarial-verification: ghost-alice-managed junction-to-repo
+  ok boundary-contract: ghost-alice-managed junction-to-repo
+  ok brainstorming: ghost-alice-managed junction-to-repo
+  ok dispatching-parallel-agents: ghost-alice-managed junction-to-repo
+  ok executing-plans: ghost-alice-managed junction-to-repo
+  ok finishing-a-development-branch: ghost-alice-managed junction-to-repo
+  ok receiving-code-review: ghost-alice-managed junction-to-repo
+  ok requesting-code-review: ghost-alice-managed junction-to-repo
+  ok subagent-driven-development: ghost-alice-managed junction-to-repo
+  ok systematic-debugging: ghost-alice-managed junction-to-repo
+  ok test-driven-development: ghost-alice-managed junction-to-repo
+  ok using-coding-convention: ghost-alice-managed junction-to-repo
+  ok using-git-worktrees: ghost-alice-managed junction-to-repo
+  ok verification-before-completion: ghost-alice-managed junction-to-repo
+  ok writing-plans: ghost-alice-managed junction-to-repo
+  ok writing-skills: ghost-alice-managed junction-to-repo
+  ok skill-evolution: ghost-alice-managed junction-to-repo
+  ok agent-security-scan: ghost-alice-managed junction-to-repo
+  ok merge-companion: ghost-alice-managed junction-to-repo
+  ok necessity-gate: ghost-alice-managed junction-to-repo
+  ok session-intent-analyzer: ghost-alice-managed junction-to-repo
+  ok compact-handoff: ghost-alice-managed junction-to-repo
+  ok task-router: ghost-alice-managed junction-to-repo
+addon-registry: ok
+  ok autopilot-mode/autopilot-mode (skill): content_hash-match
+  ok autopilot-mode/autopilot-mode (adapter): content_hash-match
+  ok autopilot-mode/autopilot-mode (adapter): content_hash-match
+live-dir: 25 entries
+  core adversarial-verification
+  core agent-security-scan
+  addon autopilot-mode
+  core boundary-contract
+  core brainstorming
+  core compact-handoff
+  core dispatching-parallel-agents
+  core executing-plans
+  core finishing-a-development-branch
+  core merge-companion
+  core necessity-gate
+  core receiving-code-review
+  core requesting-code-review
+  core session-intent-analyzer
+  core skill-evolution
+  core subagent-driven-development
+  user synced
+  core systematic-debugging
+  core task-router
+  core test-driven-development
+  core using-coding-convention
+  core using-git-worktrees
+  core verification-before-completion
+  core writing-plans
+  core writing-skills
+global-rule: ok
+  ok claude-bootstrap: ghost-alice-managed full-file-marker-match
+pending-merge: clean
+snapshot: present
+encoding: ok
+node-runtime: ok (runtime-config:claude:C:\Program Files\nodejs\node.exe; For full capability, install Node.js: https://nodejs.org/en/download and ensure node is available on PATH)
+runtime-core: ok
+  ok runtime-file/hook_profile_gate.py: hash-match
+  ok runtime-file/agent_visibility_policy.py: hash-match
+  ok runtime-file/runtime_config.py: hash-match
+  ok runtime-file/work_impact_projection.py: hash-match
+  ok runtime-file/strict_session_log.py: hash-match
+  ok runtime-file/claude_stop_verification_hook.py: hash-match
+  ok runtime-file/completion_check_validator.py: hash-match
+  ok runtime-file/io_trace_hook.py: hash-match
+  ok runtime-file/governance_events.py: hash-match
+  ok runtime-file/pending_merge_precheck_hook.py: hash-match
+  ok runtime-file/merge_companion_messages.py: hash-match
+  ok runtime-file/session_intent_analyzer_hook.py: hash-match
+  ok runtime-file/task_router_reminder_hook.py: hash-match
+  ok hook-config/managed-hook-1: runtime-core-referenced
+  ok hook-config/managed-hook-2: runtime-core-referenced
+  ok hook-config/managed-hook-3: runtime-core-referenced
+  ok hook-config/managed-hook-4: runtime-core-referenced
+  ok hook-config/managed-hook-5: runtime-core-referenced
+  ok hook-config/managed-hook-6: runtime-core-referenced
+  ok hook-config/managed-hook-7: runtime-core-referenced
+  ok golden-hook-test/completion-validator: golden-pass
+  ok golden-hook-test/session-intent: golden-pass
+overall: ok
+
+[INFO] Running AI agent hook status... (pending-merge-prompt + session-intent + prompt + web-search + tool-checkpoint + completion + session-start + io-trace)
+  [install_hooks] install_hooks.py v1.7.0
+  [install_hooks] Home directory: C:\Users\<user>
+  [install_hooks]   Claude Code: hooks installed (full hook suite)
+  [install_hooks] ── status results ──
+  [install_hooks]   Claude Code: installed
+  [install_hooks]   Agent visibility: profile=dynamic
+  [install_hooks]   Strict session log: mode=always
+  [install_hooks]   Agent visibility guidance:
+  [install_hooks]     Default profile is dynamic unless --visibility overrides it.
+  [install_hooks]     --agent-visibility remains accepted for compatibility.
+  [install_hooks]     Profiles adjust user-facing governance message volume only; they do not disable hooks or gates.
+  [install_hooks]     Use /visibility to inspect, or /visibility strict, /visibility dynamic, or /visibility minimal to change it in trusted Codex sessions.
+  [install_hooks]     Claude Code: /visibility strict|dynamic|minimal; all platforms: python3 _shared/agent_visibility_cli.py show|set <profile>.
+  [install_hooks]     Hook execution, governance gates, and strict session logging remain unchanged.
+
