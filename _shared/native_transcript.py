@@ -251,8 +251,12 @@ def resolve_staged_input(observation, session_id, cursors):
         if native_id is not None and native_id != observation.get('native_prompt_id'):
             continue
         text = _input_text(entry)
-        if (text is None or len(text) != observation['input_char_count']
-                or 'sha256:' + hashlib.sha256(text.encode('utf-8')).hexdigest() != observation['input_digest']):
+        if text is None:
+            continue
+        # The transcript keeps block edge newlines; Claude Code trims the UserPromptSubmit prompt.
+        if not any(len(candidate) == observation['input_char_count']
+                   and 'sha256:' + hashlib.sha256(candidate.encode('utf-8')).hexdigest() == observation['input_digest']
+                   for candidate in {text, text.strip(), text.rstrip()}):
             continue
         matches.append(dict(actor=native_input_actor(entry), cursor_key=cursor_key,
                             start_offset=row_start, end_offset=offset))

@@ -117,6 +117,22 @@ class SessionIntentAnalyzerHookTests(unittest.TestCase):
         self.assertEqual(state['pending_native_inputs'], [])
         self.assertNotEqual(state['latest_input_event_id'], before['latest_input_event_id'])
 
+    def test_claude_native_prompt_matches_hook_prompt_with_surrounding_whitespace_trimmed(self):
+        # Claude Code trims the UserPromptSubmit prompt; the transcript keeps the block's edge newlines.
+        cases = dict(trailing=['<system-reminder>\ncontext\n</system-reminder>\n\n', '\n\nRun the test.\n'],
+                     leading=['\n  Run the test.'])
+        for name, blocks in cases.items():
+            with self.subTest(case=name):
+                coords, transcript, before = self.native_fixture('trimmed-' + name)
+                self.stage_native(coords, transcript, prompt='\n'.join(blocks).strip())
+                row = self.human_native(coords['session_id'])
+                row['message'] = dict(role='user', content=[dict(type='text', text=text) for text in blocks])
+                self.append_native(transcript, row)
+                self.reconcile_native(coords)
+                state = ledger_api.read_session_state(**coords)
+                self.assertEqual(state['pending_native_inputs'], [])
+                self.assertNotEqual(state['latest_input_event_id'], before['latest_input_event_id'])
+
     def test_claude_native_notification_preserves_route_and_identical_human_is_new_input(self):
         for kind in ('user', 'attachment'):
             with self.subTest(kind=kind):
