@@ -1324,15 +1324,25 @@ def reconcile_native_inputs(*, root: Path = DEFAULT_ROOT, platform: str, session
     with _transaction(root, transaction) as connection:
         state = _load_state_for_update(connection, paths, platform, session_id)
         while pending := _pending_native_inputs(state):
-            observation = pending[0]
             cursors = state.get('native_input_cursors', {})
             if (not isinstance(cursors, dict) or any(not isinstance(k, str) or type(v) is not int or v < 0
                                                      for k, v in cursors.items())):
                 raise ValueError('native transcript cursors are invalid')
-            resolved = native.resolve_staged_input(observation, session_id, cursors)
+            # The transcript appends inputs in order, so once a later observation resolves, an
+            # earlier unresolved one can never resolve. Supersede it without granting authority
+            # instead of letting it block every later input of the session.
+            index, resolved = next(((index, result) for index, observation in enumerate(pending)
+                if (result := native.resolve_staged_input(observation, session_id, cursors)) is not None),
+                (None, None))
             if resolved is None:
                 break
-            state['pending_native_inputs'] = pending[1:]
+            observation = pending[index]
+            for position, skipped in enumerate(pending[:index]):
+                state['pending_native_inputs'] = pending[position + 1:]
+                _commit(connection, state, dict(ts=utc_now(), event='native-input-superseded', platform=platform,
+                    session_id=session_id, transport_observation_id=skipped['transport_observation_id'],
+                    superseded_by=observation['transport_observation_id']))
+            state['pending_native_inputs'] = pending[index + 1:]
             state['native_input_cursors'] = dict(cursors, **{resolved['cursor_key']: resolved['end_offset']})
             if resolved['actor'] == 'human':
                 promoted = dict(observed_at=observation['observed_at'],

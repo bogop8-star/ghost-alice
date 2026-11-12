@@ -176,7 +176,19 @@ def native_input_actor(entry):
     if (is_actual_user_prompt(entry) and isinstance(origin, dict) and origin.get('kind') == 'human'
             and entry.get('promptSource') != 'system' and entry.get('turnOrigin') in (None, 'human')):
         return 'human'
+    if is_queued_human_prompt(entry):
+        return 'human'
     return None
+
+
+def is_queued_human_prompt(entry):
+    """A prompt the human sent mid-turn; the host stores it as a queued_command attachment."""
+    queued = entry.get('attachment') if entry.get('type') == 'attachment' else None
+    if not isinstance(queued, dict):
+        return False
+    origin = queued.get('origin')
+    return (queued.get('type') == 'queued_command' and queued.get('commandMode') == 'prompt'
+            and queued.get('humanTurn') is True and isinstance(origin, dict) and origin.get('kind') == 'human')
 
 
 def _input_text(entry):
@@ -187,7 +199,8 @@ def _input_text(entry):
     content = message.get('content') if isinstance(message, dict) else None
     if isinstance(content, list):
         texts = [item.get('text') for item in content if isinstance(item, dict) and item.get('type') == 'text']
-        return ''.join(texts) if texts and all(isinstance(text, str) for text in texts) else None
+        # Claude hook prompts join transcript text blocks with "\n"; digests must use the same join.
+        return '\n'.join(texts) if texts and all(isinstance(text, str) for text in texts) else None
     return content if isinstance(content, str) else None
 
 

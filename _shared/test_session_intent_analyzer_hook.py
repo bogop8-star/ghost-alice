@@ -168,6 +168,59 @@ class SessionIntentAnalyzerHookTests(unittest.TestCase):
         self.assertEqual(len(state['pending_native_inputs']), 1)
         self.assertEqual(sum(e['event'] == 'user-input-observed' for e in ledger_api.read_session_events(**coords)), 2)
 
+    def test_claude_multi_block_human_prompt_resolves_with_hook_newline_join(self):
+        # Claude hooks deliver text blocks joined by "\n"; the transcript stores them separately.
+        coords, transcript, before = self.native_fixture('multi-block')
+        blocks = ['<system-reminder>\nInjected context.\n</system-reminder>\n', 'Continue the work.']
+        self.stage_native(coords, transcript, prompt='\n'.join(blocks))
+        row = self.human_native(coords['session_id'])
+        row['message'] = dict(role='user', content=[dict(type='text', text=text) for text in blocks])
+        self.append_native(transcript, row)
+        self.reconcile_native(coords)
+        state = ledger_api.read_session_state(**coords)
+        self.assertEqual(state['pending_native_inputs'], [])
+        self.assertNotEqual(state['latest_input_event_id'], before['latest_input_event_id'])
+
+    def test_claude_queued_human_prompt_requires_every_human_marker(self):
+        # Messages sent while a turn runs are stored as queued_command attachments.
+        queued = dict(type='queued_command', prompt='Delegated work finished.', commandMode='prompt',
+                      origin=dict(kind='human'), humanTurn=True)
+        cases = dict(complete={}, missing_origin=dict(origin=None), other_mode=dict(commandMode='bash'),
+                     not_human_turn=dict(humanTurn=False), notification_origin=dict(
+                         origin=dict(kind='task-notification', producer='session-task')))
+        for case, change in cases.items():
+            with self.subTest(case=case):
+                coords, transcript, before = self.native_fixture('queued-' + case)
+                self.stage_native(coords, transcript)
+                attachment = {key: value for key, value in dict(queued, **change).items() if value is not None}
+                self.append_native(transcript, dict(type='attachment', sessionId=coords['session_id'],
+                                                    attachment=attachment))
+                self.reconcile_native(coords)
+                state = ledger_api.read_session_state(**coords)
+                if case == 'complete':
+                    self.assertEqual(state['pending_native_inputs'], [])
+                    self.assertNotEqual(state['latest_input_event_id'], before['latest_input_event_id'])
+                else:
+                    self.assertEqual(len(state['pending_native_inputs']), 1)
+                    self.assertEqual(state['latest_input_event_id'], before['latest_input_event_id'])
+
+    def test_claude_unresolved_older_transport_does_not_block_later_human_input(self):
+        coords, transcript, before = self.native_fixture('head-of-line')
+        self.stage_native(coords, transcript, prompt='Never written to the transcript.')
+        self.stage_native(coords, transcript, prompt='Later human input.')
+        self.append_native(transcript, self.human_native(coords['session_id'], 'Later human input.'))
+        self.reconcile_native(coords)
+        state = ledger_api.read_session_state(**coords)
+        self.assertEqual(state['pending_native_inputs'], [])
+        self.assertEqual(state['intake_status'], 'observed')
+        self.assertNotEqual(state['latest_input_event_id'], before['latest_input_event_id'])
+        events = ledger_api.read_session_events(**coords)
+        self.assertEqual(sum(e['event'] == 'user-input-observed' for e in events), 2)
+        superseded = [e for e in events if e['event'] == 'native-input-superseded']
+        self.assertEqual(len(superseded), 1)
+        with ledger_api.storage_transaction(self.ledger_root) as connection:
+            self.assertTrue(ledger_api._canonical_input_bound(connection, self.ledger_root, state))
+
     def test_normal_receipt_uses_one_bounded_binding_instruction_without_failure_replay(self):
         first = json.loads(self.run_hook({'session_id': 'receipt-diet', 'prompt': 'first'}).stdout)['systemMessage']
         second = json.loads(self.run_hook({'session_id': 'receipt-diet', 'prompt': 'second'}).stdout)['systemMessage']
