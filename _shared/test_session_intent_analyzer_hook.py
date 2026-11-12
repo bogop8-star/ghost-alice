@@ -104,6 +104,19 @@ class SessionIntentAnalyzerHookTests(unittest.TestCase):
             ledger_api.record_turn(**coords, expected_input_event_id=before['latest_input_event_id'],
                                   intent_delta={'current_goal': 'Old decision'})
 
+    def test_claude_native_multi_block_prompt_matches_newline_joined_hook_prompt(self):
+        # Claude Code passes a multi-block user message to UserPromptSubmit joined by '\n'.
+        coords, transcript, before = self.native_fixture('multi-block')
+        blocks = ['<system-reminder>\ncontext\n</system-reminder>', 'Run the authorized test.']
+        self.stage_native(coords, transcript, prompt='\n'.join(blocks))
+        row = self.human_native(coords['session_id'])
+        row['message'] = dict(role='user', content=[dict(type='text', text=text) for text in blocks])
+        self.append_native(transcript, row)
+        self.reconcile_native(coords)
+        state = ledger_api.read_session_state(**coords)
+        self.assertEqual(state['pending_native_inputs'], [])
+        self.assertNotEqual(state['latest_input_event_id'], before['latest_input_event_id'])
+
     def test_claude_native_notification_preserves_route_and_identical_human_is_new_input(self):
         for kind in ('user', 'attachment'):
             with self.subTest(kind=kind):
@@ -131,6 +144,23 @@ class SessionIntentAnalyzerHookTests(unittest.TestCase):
                 self.reconcile_native(coords)
                 self.assertNotEqual(ledger_api.read_session_state(**coords)['latest_input_event_id'],
                                     before['latest_input_event_id'])
+
+    def test_claude_mid_turn_queued_human_prompt_requires_exact_human_origin(self):
+        # Claude Code stores a message typed mid-turn as a queued_command attachment.
+        human = dict(type='queued_command', commandMode='prompt', origin=dict(kind='human'), humanTurn=True)
+        cases = dict(human=(human, True), no_origin=(dict(human, origin=None), False),
+                     not_human_turn=(dict(human, humanTurn=False), False),
+                     other_mode=(dict(human, commandMode='bash'), False))
+        for name, (attachment, promoted) in cases.items():
+            with self.subTest(case=name):
+                coords, transcript, before = self.native_fixture('queued-' + name)
+                self.stage_native(coords, transcript)
+                self.append_native(transcript, dict(type='attachment', sessionId=coords['session_id'],
+                    attachment=dict(attachment, prompt='Delegated work finished.')))
+                self.reconcile_native(coords)
+                state = ledger_api.read_session_state(**coords)
+                self.assertEqual(state['pending_native_inputs'] == [], promoted)
+                self.assertEqual(state['latest_input_event_id'] != before['latest_input_event_id'], promoted)
 
     def test_claude_unknown_or_ambiguous_native_origin_stays_pending(self):
         for case in ('unknown', 'conflicting-actors', 'replaced-file'):

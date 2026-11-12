@@ -176,7 +176,19 @@ def native_input_actor(entry):
     if (is_actual_user_prompt(entry) and isinstance(origin, dict) and origin.get('kind') == 'human'
             and entry.get('promptSource') != 'system' and entry.get('turnOrigin') in (None, 'human')):
         return 'human'
+    if is_queued_human_prompt(entry):
+        return 'human'
     return None
+
+
+def is_queued_human_prompt(entry):
+    """A mid-turn human message is a queued_command attachment carrying its own human origin."""
+    attachment = entry.get('attachment') if entry.get('type') == 'attachment' else None
+    if not isinstance(attachment, dict):
+        return False
+    origin = attachment.get('origin')
+    return (attachment.get('type') == 'queued_command' and attachment.get('commandMode') == 'prompt'
+            and isinstance(origin, dict) and origin.get('kind') == 'human' and attachment.get('humanTurn') is True)
 
 
 def _input_text(entry):
@@ -187,7 +199,8 @@ def _input_text(entry):
     content = message.get('content') if isinstance(message, dict) else None
     if isinstance(content, list):
         texts = [item.get('text') for item in content if isinstance(item, dict) and item.get('type') == 'text']
-        return ''.join(texts) if texts and all(isinstance(text, str) for text in texts) else None
+        # Claude Code joins text blocks with '\n' in the UserPromptSubmit prompt the digest was taken from.
+        return '\n'.join(texts) if texts and all(isinstance(text, str) for text in texts) else None
     return content if isinstance(content, str) else None
 
 
