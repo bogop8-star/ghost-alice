@@ -563,12 +563,12 @@ class NativeProofBindingTests(unittest.TestCase):
             '  - none', '  - AC1: Native application remains unverified')
         body = proof + '\n\nThe footer observation is retained. Native application remains unverified.'
         response_file = Path(self.owner.fixture.tmp.name) / 'answer.txt'
-        response_file.write_text(body)
+        response_file.write_text(body, encoding='utf-8')
         shared = Path(os.environ.get('GHOST_ALICE_TEST_SHARED_ROOT', Path(__file__).parent))
         env = dict(os.environ, **self.owner.source, PYTHONDONTWRITEBYTECODE='1')
         def cli(*args):
             return subprocess.run([sys.executable, '-B', str(shared / 'completion_assessment.py'), *args],
-                env=env, text=True, capture_output=True)
+                env=env, text=True, encoding='utf-8', capture_output=True)
         prepared = cli('prepare-response', '--response-file', str(response_file),
             '--verified-at', self.owner.time, '--source', str(self.owner.observation))
         self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)

@@ -186,6 +186,45 @@ class CompletionAssessmentTests(unittest.TestCase):
         with self.assertRaises(api.CompletionAssessmentError):
             api.lookup_current_response(self.source, body)
 
+    def review_through_cli(self, body, *flags, **env):
+        """Prepare and record one explanation review through the CLI, in a child process with UTF-8 mode off."""
+        import json, os, subprocess, sys
+        route = self.fixture.candidate(units=())
+        route['response_purpose'] = 'explanation'
+        self.fixture.record(route)
+        folder = Path(self.fixture.tmp.name)
+        response_file, claims_file, judgment_file = (folder / name for name in ('answer.md', 'claims.json', 'review.json'))
+        response_file.write_text(body, encoding='utf-8')
+        claims_file.write_text(json.dumps([body], ensure_ascii=False), encoding='utf-8')
+        script = Path(os.environ.get('GHOST_ALICE_TEST_SHARED_ROOT', Path(__file__).parent)) / 'completion_assessment.py'
+
+        def cli(*args):
+            run = subprocess.run([sys.executable, '-B', *flags, str(script), *args], capture_output=True,
+                env=dict(os.environ, **self.source, PYTHONDONTWRITEBYTECODE='1', PYTHONUTF8='0', **env))
+            self.assertNotIn(b'EncodingWarning', run.stderr)
+            return json.loads(run.stdout.decode('utf-8'))
+
+        candidate = cli('prepare-response', '--response-file', str(response_file),
+                        '--claims-file', str(claims_file), '--source', str(self.observation))
+        self.assertEqual((candidate.get('response_binding') or {}).get('text'), body, candidate)
+        judgment_file.write_text(json.dumps(dict(claims=self.claim_judgments(candidate), response=dict(
+            binding_id=candidate['response_binding']['binding_id'], verdict='supported',
+            source_ids=[candidate['sources'][0]['source_id']],
+            rationale='답변이 캡처한 원래 결과와 일치하고 완료 주장을 하지 않습니다.')), ensure_ascii=False), encoding='utf-8')
+        recorded = cli('record-response', '--candidate', candidate['candidate_reference'],
+                       '--judgment-file', str(judgment_file))
+        self.assertEqual((recorded.get('status'), recorded.get('response_text')), ('reviewed', body), recorded)
+
+    def test_cli_reads_review_files_as_utf8_on_any_locale(self):
+        # Python reports a read that relies on the locale default as an error here, so this fails on every
+        # platform and not only where the locale is not UTF-8. The observed failure was cp949 on Windows.
+        self.review_through_cli('캡처한 결과에서 폴더 탭 푸터가 목록을 가리지 않습니다.',
+            '-X', 'warn_default_encoding', '-W', 'error::EncodingWarning', PYTHONIOENCODING='utf-8')
+
+    def test_cli_writes_utf8_result_on_any_console_encoding(self):
+        # A cp949 console cannot encode every character of a reviewed answer; the tool result stays UTF-8.
+        self.review_through_cli('📖 캡처한 결과에서 폴더 탭 푸터가 목록을 가리지 않습니다. ✅', PYTHONIOENCODING='cp949')
+
     def setUp(self):
         self.fixture = fixtures.ResponseRouteTests()
         self.fixture.setUp()

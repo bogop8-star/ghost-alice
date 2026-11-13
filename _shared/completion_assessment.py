@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
 
 from completion_check_validator import (extract_original_proof, parse_original_completion_evidence,
                                         looks_like_evidence_claim, review_comparison_text)
@@ -825,6 +826,11 @@ def authorize_correction(source, *, criterion, proof, verified_at, contract,
 
 
 def main():
+    # The result echoes reviewed answer text; a console code page such as cp949 cannot encode all of it.
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except (AttributeError, OSError, ValueError):
+        pass  # A replaced or closed stream keeps its own encoding.
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
     response_prepare = commands.add_parser('prepare-response')
@@ -842,13 +848,13 @@ def main():
     try:
         if args.action == 'prepare-response':
             result = prepare_response_review(os.environ,
-                response_text=Path(args.response_file).read_text(), source_paths=args.source,
+                response_text=Path(args.response_file).read_text(encoding='utf-8'), source_paths=args.source,
                 verified_at=args.verified_at, reuse_candidate=args.reuse_candidate,
                 reuse_evidence=args.reuse_evidence, work_unit_id=args.work_unit_id,
-                claim_statements=json.loads(Path(args.claims_file).read_text()) if args.claims_file else None)
+                claim_statements=json.loads(Path(args.claims_file).read_text(encoding='utf-8')) if args.claims_file else None)
         else:
             result = record_response_review(os.environ, args.candidate,
-                json.loads(Path(args.judgment_file).read_text()))
+                json.loads(Path(args.judgment_file).read_text(encoding='utf-8')))
         print(json.dumps(result, ensure_ascii=False))
     except (CompletionAssessmentError, ValueError, OSError) as exc:
         print(json.dumps(dict(status='unavailable', reason=getattr(exc, 'reason', 'assessment-unavailable'), detail=str(exc))))
