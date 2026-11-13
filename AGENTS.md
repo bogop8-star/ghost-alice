@@ -12,3 +12,7 @@ Project work follows the source file that the human user selected as the owner. 
 - Name the actor, action, input, output, recipient and condition. Each owning procedure describes its handoff once; other documents refer to it. Write current behavior without historical alternatives. Keep paired English and Korean documents and their diagrams consistent with each other and with the documents and code that call them.
 - Before editing a skill, follow `official-docs/derived/skill-compliance-checklist.md`, phases 1–5. Keep `SKILL.md` short, detailed procedures in `references/`, and executables in `scripts/`.
 - Write each Markdown prose paragraph on one physical source line unless Markdown, syntax or protocol fields require separate lines.
+
+## Team bug reports
+
+When a team member asks the response model to draft a bug report or GitHub issue, the response model follows `project-docs/bug-report-guide.md`: it writes the body with the fields and order of `.github/ISSUE_TEMPLATE/bug_report.yml`, redacts secrets and personal paths, and creates an issue only when the team member explicitly asks.
