@@ -7,6 +7,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
+import langfuse_sync
+
 ROOT = Path(__file__).resolve().parent
 WORKSPACE = Path(os.environ.get('GHOST_ALICE_WORKSPACE', str(ROOT.parent))).resolve()
 HOME = Path.home()
@@ -22,6 +24,8 @@ SETTINGS = HOME / '.claude' / 'settings.json'
 CASE_FILE = OUTPUT / 'case.json'
 RUNS_FILE = OUTPUT / 'runs.jsonl'
 LIVE_FILE = OUTPUT / 'live-transcripts.jsonl'
+LANGFUSE_PROJECTS = OUTPUT / 'langfuse-projects.json'
+LANGFUSE_SENT = OUTPUT / 'langfuse-sent.json'
 PROJECTS = HOME / '.claude' / 'projects'
 PROJECT_TRANSCRIPTS = PROJECTS / str(WORKSPACE).replace(':', '-').replace('\\', '-').replace('/', '-')
 seen = {}
@@ -29,6 +33,7 @@ events = []
 transcript_seen = {}
 live_sessions = {}
 lock = threading.Lock()
+langfuse_lock = threading.Lock()
 
 def text_blocks(content):
     if isinstance(content, str): return content
@@ -159,6 +164,16 @@ def at_or_before(timestamp, saved_at):
     except ValueError:
         return True
 
+def after_start(timestamp, start):
+    if not start: return True
+    if not timestamp: return False
+    try:
+        observed = datetime.fromisoformat(str(timestamp).replace('Z','+00:00'))
+        boundary = datetime.fromisoformat(str(start).replace('Z','+00:00'))
+        return observed.astimezone() > boundary.astimezone()
+    except ValueError:
+        return False
+
 def saved_results():
     case = json.loads(CASE_FILE.read_text(encoding='utf-8')) if CASE_FILE.exists() else {}
     history = read_jsonl(LIVE_FILE)
@@ -167,9 +182,10 @@ def saved_results():
     for row in read_jsonl(RUNS_FILE):
         if row.get('kind') != 'assessment': continue
         sid = row.get('session')
+        start = row.get('monitor_start')
         results.append({**row, 'case':row.get('case',case),
-                        'messages':row.get('messages') or [{k:v for k,v in m.items() if k!='session'} for m in history if m.get('session')==sid and at_or_before(m.get('ts'),row.get('saved_at'))],
-                        'events':row.get('events') or [e for e in hook_history if e.get('session')==sid and at_or_before(e.get('ts'),row.get('saved_at'))]})
+                        'messages':row['messages'] if 'messages' in row else [{k:v for k,v in m.items() if k!='session'} for m in history if m.get('session')==sid and at_or_before(m.get('ts'),row.get('saved_at')) and after_start(m.get('ts'),start)],
+                        'events':row['events'] if 'events' in row else [e for e in hook_history if e.get('session')==sid and at_or_before(e.get('ts'),row.get('saved_at')) and after_start(e.get('ts'),start)]})
     return results
 
 class Handler(BaseHTTPRequestHandler):
@@ -189,6 +205,20 @@ class Handler(BaseHTTPRequestHandler):
         try: data = json.loads(self.rfile.read(length))
         except ValueError:
             self.reply({'error':'JSON 형식 오류'},400); return
+        if route == '/api/langfuse-projects':
+            try:
+                project = langfuse_sync.register_project(LANGFUSE_PROJECTS, data.get('host',''), data.get('public_key',''), data.get('secret_key',''))
+            except langfuse_sync.SyncError as err:
+                self.reply({'error':str(err)},400); return
+            self.reply({'ok':True,'project':project}); return
+        if route == '/api/langfuse-sync':
+            try:
+                with langfuse_lock:
+                    cfg, name = langfuse_sync.select_project(WORKSPACE, LANGFUSE_PROJECTS, str(data.get('project_id','')))
+                    result = langfuse_sync.sync(WORKSPACE, RUNS_FILE, CASE_FILE, LOG_ROOT, cfg, LANGFUSE_SENT)
+            except langfuse_sync.SyncError as err:
+                self.reply({'error':str(err)},502); return
+            self.reply({'ok':True,'project':name,**result}); return
         if route == '/api/case':
             case = {k:str(data.get(k,''))[:20000] for k in ('id','context','prompt','expected','conditions')}
             CASE_FILE.write_text(json.dumps(case,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -205,12 +235,14 @@ class Handler(BaseHTTPRequestHandler):
             self.reply({'ok':True,'run':run,'path':str(RUNS_FILE)})
         elif route == '/api/verdict':
             sid = str(data.get('session',''))
+            monitor_start = str(data.get('monitor_start',''))
             run = {'saved_at':datetime.now().isoformat(), 'session':str(data.get('session','')),
                    'phase':str(data.get('phase','before')), 'verdict':data.get('verdict',{}),
                    'note':str(data.get('note',''))[:5000], 'kind':'assessment',
+                   'monitor_start':monitor_start,
                    'case':json.loads(CASE_FILE.read_text(encoding='utf-8')) if CASE_FILE.exists() else {},
                    'messages':data.get('messages',[])[:300] if isinstance(data.get('messages'),list) else [],
-                   'events':[e for e in events if e.get('session')==sid]}
+                   'events':[e for e in events if e.get('session')==sid and after_start(e.get('ts'),monitor_start)]}
             with RUNS_FILE.open('a',encoding='utf-8') as out:
                 out.write(json.dumps(run,ensure_ascii=False)+'\n')
             self.reply({'ok':True,'path':str(RUNS_FILE)})
@@ -218,14 +250,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         route = urlparse(self.path).path
+        if route == '/api/langfuse-projects':
+            self.reply({'projects':langfuse_sync.project_choices(WORKSPACE, LANGFUSE_PROJECTS)}); return
         if route == '/api':
             scan()
             with lock: scan_transcripts()
             with lock: body = json.dumps({'events':events, 'settings':settings_status(),
+                                          'monitor_reset_supported':True,
                                           'capture':str(CAPTURE), 'runs_path':str(RUNS_FILE),
                                           'live_path':str(LIVE_FILE), 'live_sessions':live_sessions,
                                           'case':json.loads(CASE_FILE.read_text(encoding='utf-8')) if CASE_FILE.exists() else {},
-                                          'runs':read_jsonl(RUNS_FILE), 'saved_results':saved_results()}, ensure_ascii=False).encode('utf-8')
+                                          'runs':read_jsonl(RUNS_FILE), 'saved_results':saved_results(),
+                                          'langfuse':langfuse_sync.configured(WORKSPACE)}, ensure_ascii=False).encode('utf-8')
             mime = 'application/json; charset=utf-8'
         elif route == '/':
             body = (ROOT / 'index.html').read_bytes()
@@ -242,5 +278,6 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
     if PROJECT_TRANSCRIPTS.exists():
         transcript_seen.update({str(p): p.stat().st_size for p in PROJECT_TRANSCRIPTS.glob('*.jsonl')})
-    print('http://127.0.0.1:8765', flush=True)
-    ThreadingHTTPServer(('127.0.0.1', 8765), Handler).serve_forever()
+    port = int(os.environ.get('GHOST_ALICE_MONITOR_PORT', '8765'))
+    print(f'http://127.0.0.1:{port}', flush=True)
+    ThreadingHTTPServer(('127.0.0.1', port), Handler).serve_forever()
