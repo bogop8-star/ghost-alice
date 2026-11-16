@@ -350,6 +350,36 @@ def read_response_route(root, platform, session_id, *, expected_input_event_id=N
         expected_input_event_id=expected_input_event_id, transaction=transaction)
 
 
+QUICK_PURPOSES = {
+    "explanation": "causal-answer-first-after-necessary-evidence",
+    "execution": "imperative-result-first-after-necessary-work",
+    "approval-wait": "imperative-result-first-after-necessary-work",
+}
+
+
+def quick_candidate(purpose, request, *, reason=None, relation="new"):
+    """Build a route candidate that selects no work from the assistant's purpose and request summary.
+
+    The assistant still supplies the meaning: the response purpose and a compressed request summary.
+    Core fills only neutral routing defaults. Work units, criteria, boundaries and completion or partial
+    submissions need the full candidate, so this form rejects those purposes.
+    """
+    if purpose not in QUICK_PURPOSES:
+        raise RouteSchemaError(f"quick registration supports {sorted(QUICK_PURPOSES)}; use --candidate-json for {purpose!r}")
+    candidate = {
+        "schema_version": SCHEMA_VERSION,
+        "routing_surface": {
+            "intent_relation": relation, "primary_request": request, "causal_axis": "n/a",
+            "response_mode": "normal", "response_order": QUICK_PURPOSES[purpose], "change_depth": "minimal",
+            "focus_layer": "micro", "verification_complexity": "level-1", "boundary_contract": "n/a",
+            "forced_visibility": "no", "reason": reason or f"quick {purpose} registration without selected work",
+        },
+        "work_units": [], "selected_work_unit_ids": [], "selected_criteria": [], "response_purpose": purpose,
+    }
+    _surface(candidate["routing_surface"])
+    return candidate
+
+
 def main(argv=None):
     global ledger
     parser = argparse.ArgumentParser(description=__doc__)
@@ -364,6 +394,12 @@ def main(argv=None):
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--read", action="store_true")
     group.add_argument("--candidate-json", help="compressed route candidate, never answer text")
+    group.add_argument("--quick", choices=sorted(QUICK_PURPOSES),
+        help="register a route that selects no work; requires --request and --expected-input-event-id")
+    parser.add_argument("--request", help="with --quick: compressed summary of the current request, never answer text")
+    parser.add_argument("--reason", help="with --quick: optional compressed routing reason")
+    parser.add_argument("--relation", default="new", choices=sorted(ROUTING_ENUMS["intent_relation"]),
+        help="with --quick: relation of this input to earlier work (default: new)")
     args = parser.parse_args(argv)
     try:
         if ledger is None:
@@ -378,10 +414,17 @@ def main(argv=None):
             bound = bound or os.environ.get("GHOST_ALICE_SESSION_ID", "")
             if bound and bound != args.session_id:
                 raise RouteBindingError("session identity mismatch with the bound host session")
-            try:
-                candidate = json.loads(args.candidate_json)
-            except ValueError as exc:
-                raise RouteSchemaError("candidate-json must be valid JSON") from exc
+            if args.quick:
+                if not args.request or not args.expected_input_event_id:
+                    raise RouteSchemaError("--quick requires --request and --expected-input-event-id")
+                if args.bind_legacy_criteria_json is not None:
+                    raise RouteSchemaError("--quick cannot bind criterion ownership")
+                candidate = quick_candidate(args.quick, args.request, reason=args.reason, relation=args.relation)
+            else:
+                try:
+                    candidate = json.loads(args.candidate_json)
+                except ValueError as exc:
+                    raise RouteSchemaError("candidate-json must be valid JSON") from exc
             result = record_response_route(args.root, args.platform, args.session_id,
                 args.expected_input_event_id, candidate, args.boundary_ref,
                 legacy_criteria_binding=json.loads(args.bind_legacy_criteria_json) if args.bind_legacy_criteria_json is not None else None,

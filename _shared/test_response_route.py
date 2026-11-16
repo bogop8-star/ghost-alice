@@ -672,6 +672,38 @@ class ResponseRouteTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(json.loads(result.stderr)["error"], "route-binding")
 
+    def test_quick_cli_registers_a_purpose_route_from_request_text(self):
+        self.event = self.setup_owned()
+        script = ROOT / "_shared" / "response_route.py"
+        command = [sys.executable, str(script), "--root", str(self.root), "--platform", "codex", "--session-id", "current"]
+        import os
+        env = dict(os.environ, CODEX_THREAD_ID="current", GHOST_ALICE_SESSION_ID="")
+        result = subprocess.run(command + ["--expected-input-event-id", self.event, "--quick", "explanation",
+            "--request", "summarize the recorded work"], capture_output=True, text=True, env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        route = json.loads(result.stdout)
+        self.assertEqual((route["status"], route["response_purpose"], route["selected_work_unit_ids"]),
+                         ("ready", "explanation", []))
+        self.assertEqual(route["routing_surface"]["primary_request"], "summarize the recorded work")
+        self.assertEqual(route["routing_surface"]["response_order"], "causal-answer-first-after-necessary-evidence")
+        # The quick form still binds the exact input; a stale or missing input id is rejected.
+        for extra in (["--quick", "explanation", "--request", "x"], ["--expected-input-event-id", self.event, "--quick",
+                      "explanation"], ["--expected-input-event-id", self.event, "--quick", "completion", "--request", "x"]):
+            with self.subTest(extra=extra):
+                failed = subprocess.run(command + extra, capture_output=True, text=True, env=env)
+                self.assertNotEqual(failed.returncode, 0)
+
+    def test_quick_candidate_fills_only_neutral_defaults(self):
+        candidate = self.api.quick_candidate("execution", "run the daily test", relation="continuation")
+        surface = candidate["routing_surface"]
+        self.assertEqual(candidate["response_purpose"], "execution")
+        self.assertEqual((candidate["work_units"], candidate["selected_criteria"]), ([], []))
+        self.assertEqual(surface["response_order"], "imperative-result-first-after-necessary-work")
+        self.assertEqual((surface["intent_relation"], surface["boundary_contract"]), ("continuation", "n/a"))
+        for bad in (("completion", "x"), ("partial", "x"), ("explanation", " "), ("explanation", "x" * 501)):
+            with self.subTest(bad=bad), self.assertRaises(self.api.RouteSchemaError):
+                self.api.quick_candidate(*bad)
+
     def test_copied_skill_and_shared_helper_use_the_same_authority(self):
         self.event = self.setup_owned()
         install = Path(self.tmp.name) / "isolated-skills"
