@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import sys
 import os
 from pathlib import Path
 import re
@@ -850,6 +851,11 @@ def review_receipt(result):
 
 
 def main():
+    # The result echoes reviewed answer text; a console code page such as cp949 cannot encode all of it.
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except (AttributeError, OSError, ValueError):
+        pass  # A replaced or closed stream keeps its own encoding.
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
     response_prepare = commands.add_parser('prepare-response')
@@ -874,13 +880,13 @@ def main():
             return 0
         if args.action == 'prepare-response':
             result = prepare_response_review(os.environ,
-                response_text=Path(args.response_file).read_text(), source_paths=args.source,
+                response_text=Path(args.response_file).read_text(encoding='utf-8'), source_paths=args.source,
                 verified_at=args.verified_at, reuse_candidate=args.reuse_candidate,
                 work_unit_id=args.work_unit_id,
-                claim_statements=json.loads(Path(args.claims_file).read_text()) if args.claims_file else None)
+                claim_statements=json.loads(Path(args.claims_file).read_text(encoding='utf-8')) if args.claims_file else None)
         else:
             result = record_response_review(os.environ, args.candidate,
-                json.loads(Path(args.judgment_file).read_text()),
+                json.loads(Path(args.judgment_file).read_text(encoding='utf-8')),
                 context_use_judgments=json.loads(args.context_use_judgments_json)
                     if args.context_use_judgments_json is not None else None,
                 expected_input_event_id=args.expected_input_event_id)

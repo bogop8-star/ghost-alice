@@ -148,7 +148,7 @@ def native_context_capability(session_id: str, platform: str = 'codex') -> dict[
             config = os.environ.get('GHOST_ALICE_CONTEXT_CONFIG')
             if not config or not Path(config).is_absolute():
                 return None
-            state = json.loads(Path(config).read_text())
+            state = json.loads(Path(config).read_text(encoding='utf-8'))
             port, scope, home = state.get('port'), state.get('scope'), state.get('claude_dir')
             if (type(port) is not int or not 0 < port < 65536 or not isinstance(scope, str)
                     or not scope or not isinstance(home, str) or not Path(home).is_absolute()):

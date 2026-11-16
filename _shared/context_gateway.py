@@ -491,7 +491,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', required=True, type=Path)
     args = parser.parse_args(argv)
-    config = json.loads(args.config.read_text())
+    config = json.loads(args.config.read_text(encoding='utf-8'))
     if (config.get('schema_version') != 'context-gateway.v1'
         or type(config.get('port')) is not int or not 0 < config['port'] < 65536
         or not isinstance(config.get('scope'), str) or not config['scope']):

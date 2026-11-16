@@ -395,7 +395,7 @@ def _skill_permission_items(record, *, platform, apply_changes):
     import install_hooks
     import addon_skill_permissions
     settings_file = install_hooks.PLATFORMS[platform]["hook_file"]()
-    settings = json.loads(settings_file.read_text()) if settings_file.exists() else {}
+    settings = json.loads(settings_file.read_text(encoding='utf-8')) if settings_file.exists() else {}
     if not isinstance(settings, dict):
         raise ValueError("Claude settings must be a JSON object")
     return addon_skill_permissions.detach(

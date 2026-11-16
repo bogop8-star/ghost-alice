@@ -39,7 +39,7 @@ def _read(settings_file):
     info = path.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_size > 256 * 1024:
         raise ValueError('invalid addon permission ownership file')
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding='utf-8'))
     fields = {'schema_version', 'settings_file', 'addons'}
     if (not isinstance(data, dict) or not fields <= set(data) <= fields | {'pending_detach', 'core'}
             or type(data['schema_version']) is not int or data['schema_version'] not in (1, 2)
@@ -199,7 +199,7 @@ def _detach(addon_id, names, settings_file, settings, core_names, write_settings
         # Read the effect itself: a writer may have committed before raising, and
         # the caller may still hold its old in-memory settings after that error.
         path = Path(settings_file)
-        current = json.loads(path.read_text()) if path.exists() else {}
+        current = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
         fingerprint = _settings_fingerprint(current)
         if (pending.get('addon_id') != addon_id or not set(pending['names']).issubset(names)
                 or fingerprint != _settings_fingerprint(settings)

@@ -130,7 +130,7 @@ def _load_installed_ledger(platform):
         if not platform or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789-_" for c in platform):
             raise RouteBindingError("Explicit installation platform is invalid")
         ghost = Path(os.environ.get("GHOST_ALICE_GHOST_ROOT", str(Path.home() / ".ghost-alice")))
-        installation = json.loads((ghost / "install-state" / f"{platform}.json").read_text())
+        installation = json.loads((ghost / "install-state" / f"{platform}.json").read_text(encoding="utf-8"))
         if not isinstance(installation, dict) or installation.get("platform") != platform:
             raise RouteBindingError("Installation platform does not match --platform")
         root = installation.get("source_root")

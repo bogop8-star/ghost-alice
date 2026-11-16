@@ -1321,7 +1321,7 @@ def main(argv=None):
         raise ContextSelectionRejected('An existing-material disposition requires its exact intake event')
     result = (locate_outputs(source, args.expected_input_event_id, args.locate_text, args.locate_kind) if args.locate_text is not None
               else record_disposition(source, args.expected_input_event_id, json.loads(
-                  args.selection_json if args.selection_json is not None else args.selection_file.read_text()),
+                  args.selection_json if args.selection_json is not None else args.selection_file.read_text(encoding='utf-8')),
                   selection_mode=args.selection_mode, project_replacements=args.project_replacements))
     print(json.dumps(result, ensure_ascii=False))
 
