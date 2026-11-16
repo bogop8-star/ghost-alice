@@ -2555,6 +2555,19 @@ class TestInstallHook(TempHomeTestCase):
 
         self.assertEqual(permissions, ["Skill(demo-addon)"])
 
+    def test_installed_session_intent_registration_is_recognized_as_managed(self):
+        """The recognizer accepts the exact command the installer wrote, including Windows path spelling.
+
+        On Windows the installer writes --root with forward slashes while the binding keeps the native path,
+        so a plain string comparison made doctor report session-intent-binding-missing-or-ambiguous.
+        """
+        self._write_settings("claude", {})
+        self.assertEqual(install_hooks.install_hook("claude"), "installed")
+        commands = [hook["command"] for group in self._read_settings("claude")["hooks"]["UserPromptSubmit"]
+                    for hook in group.get("hooks", []) if "[hook-runner:session-intent]" in hook.get("command", "")]
+        self.assertEqual(len(commands), 1, commands)
+        self.assertIsNotNone(install_hooks._managed_session_intent_options(commands[0]))
+
     def test_install_preserves_non_managed_bash_permissions(self):
         """The installer does not remove unmanaged Bash allow rules."""
         self._write_settings("claude", {

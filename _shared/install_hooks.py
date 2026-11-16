@@ -1749,7 +1749,8 @@ def _managed_session_intent_options(command: str):
                 or len(options) != len(argv[2:]) // 2
                 or options["--platform"] != runner["platform"]
                 or options["--format"] not in {"json", "text"}
-                or options["--root"] != destination.ledger_root
+                # _quote_static_arg writes Windows paths with forward slashes; compare the spelling it wrote.
+                or options["--root"] not in {destination.ledger_root, str(destination.ledger_root).replace("\\", "/")}
                 or options["--context"] != "prompt_submit"):
             return None
         return options
