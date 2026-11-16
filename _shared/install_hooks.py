@@ -242,7 +242,7 @@ def _retained_installed_ledger(platform_key):
     import shlex
     path=(_resolve_codex_dir()/"hooks.json" if platform_key=="codex" else _resolve_claude_dir()/"settings.json")
     try:
-        settings=json.loads(path.read_text())
+        settings=json.loads(path.read_text(encoding="utf-8"))
     except (OSError,ValueError):
         return None
     roots=set()
@@ -3443,7 +3443,7 @@ def main() -> int:
             if args.destination_file: parser.error("explicit location flags conflict with --destination-file")
             os.environ[key]=option
     if args.destination_file:
-        destination = install_destination.InstallDestination.parse(json.loads(Path(args.destination_file).read_text()))
+        destination = install_destination.InstallDestination.parse(json.loads(Path(args.destination_file).read_text(encoding="utf-8")))
         if not args.platform:
             parser.error("--destination-file requires --platform")
         _destination_action(args.platform,destination,"status" if args.status else "uninstall" if args.uninstall else "install",dry_run=args.dry_run)

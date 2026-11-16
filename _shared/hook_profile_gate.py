@@ -884,7 +884,7 @@ def _current_adapter_hash(binding, hook_id, platform, payload):
     if not filename:
         return None
     try:
-        config = json.loads((Path(binding['destination']['platform_dir']) / filename).read_text())
+        config = json.loads((Path(binding['destination']['platform_dir']) / filename).read_text(encoding='utf-8'))
         hashes = []
         for group in config.get('hooks', {}).get(binding['adapter']['event'], []):
             for entry in group.get('hooks', []):
