@@ -4,6 +4,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { isCanonicalIdentityComponent, readSessionIntentSnapshot } from "./session_intent_snapshot.mjs";
 
@@ -347,6 +348,44 @@ function shouldSurfaceToolCheckpoint(platform, input, root = "") {
   });
 }
 
+function forwardSlashes(value) {
+  return String(value).replace(/\\/gu, "/");
+}
+
+// Before a tool call, tell the assistant once per input that the current input has no ready
+// response-route, with the exact quick registration command. The assistant still chooses the
+// purpose and writes the request summary. The command spelling matches the installer's Claude
+// allow rule: the hook runner's interpreter and this runtime's response_route.py, quoted, with
+// forward slashes.
+function routeRegistrationNotice(platform, input, root = "") {
+  const sessionId = inputSessionId(platform, input);
+  if (!sessionId || sessionId === "unknown") return "";
+  const snapshot = readSessionIntentSnapshot(sessionIntentDir(platform, sessionId, root), platform, sessionId);
+  const eventId = firstNonEmpty(snapshot?.latestInput?.event_id);
+  if (!eventId || !/^sha256:[0-9a-f]{64}$/u.test(eventId)) return "";
+  const route = snapshot.state?.response_route;
+  if (route && route.status === "ready" && route.input_event_id === eventId) return "";
+  const statePath = toolCheckpointSurfaceStatePath();
+  const scope = `${platform}:${sessionId}:route-notice`;
+  const shown = withJsonFileLock(statePath, () => {
+    const state = readJsonFile(statePath, {});
+    const surfaces = state && typeof state.surfaces === "object" && state.surfaces ? state.surfaces : {};
+    if (surfaces[scope]?.lineage_key === eventId) return true;
+    surfaces[scope] = { lineage_key: eventId, updated_at: new Date().toISOString() };
+    writeJsonFile(statePath, { schema_version: "tool-checkpoint-surface.v1", surfaces });
+    return false;
+  });
+  if (shown) return "";
+  const python = forwardSlashes(process.env.GHOST_ALICE_PYTHON || "python3");
+  const script = forwardSlashes(path.join(path.dirname(fileURLToPath(import.meta.url)), "response_route.py"));
+  const ledgerRoot = forwardSlashes(sessionIntentRoot(root));
+  return [
+    "route-notice: The current input has no Core response-route yet; Stop will block the answer until one is registered.",
+    "Register it now with this one command. Choose the purpose (explanation, execution or approval-wait) and replace the request text with a one-line summary; use --candidate-json instead when the answer selects owned work or submits completion.",
+    `"${python}" "${script}" --root "${ledgerRoot}" --platform ${platform} --session-id ${sessionId} --expected-input-event-id ${eventId} --quick explanation --request "<one-line request summary>"`,
+  ].join("\n");
+}
+
 try {
   const args = parseArgs(process.argv.slice(2));
   const platform = args.platform || "codex";
@@ -363,7 +402,19 @@ try {
     const surfaceMessage = shouldSurfaceToolCheckpoint(platform, input, args["session-intent-root"])
       ? message
       : "";
-    emit(payloadFor(platform, event, surfaceMessage));
+    let notice = "";
+    try {
+      notice = routeRegistrationNotice(platform, input, args["session-intent-root"]);
+    } catch (error) {
+      process.stderr.write(`[ghost-alice-hook] route notice unavailable: ${error instanceof Error ? error.message : String(error)}\n`);
+    }
+    const payload = payloadFor(platform, event, surfaceMessage);
+    if (notice && platformUsesPreToolContext(platform, event)) {
+      // Claude suppresses the routine checkpoint text, but this notice changes the next action.
+      const existing = payload.hookSpecificOutput?.additionalContext;
+      payload.hookSpecificOutput = { hookEventName: event, additionalContext: existing ? `${existing}\n${notice}` : notice };
+    }
+    emit(payload);
     process.exit(0);
   }
 

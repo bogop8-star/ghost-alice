@@ -54,6 +54,30 @@ class SQLiteIntentConsumerTests(unittest.TestCase):
             capture_output=True, text=True, check=True)
         return json.loads(process.stdout)
 
+    def test_tool_checkpoint_shows_quick_route_command_once_per_unrouted_input(self):
+        import response_route
+        self.platform, self.sid = "claude", "route-notice"
+        self.directory = self.root / self.platform / self.sid
+        self.directory.mkdir(parents=True)
+        self.env = dict(self.env, GHOST_ALICE_PLATFORM="claude")
+        coords = dict(root=self.root, platform=self.platform, session_id=self.sid)
+
+        ledger.record_turn(**coords, raw_user_input="explain the summary", source="hook")
+        event = ledger.read_session_state(**coords)["latest_input_event_id"]
+        context = self.node().get("hookSpecificOutput", {}).get("additionalContext", "")
+        python = sys.executable.replace("\\", "/")
+        script = str(SHARED / "response_route.py").replace("\\", "/")
+        root = str(self.root).replace("\\", "/")
+        self.assertIn(f'"{python}" "{script}" --root "{root}" --platform claude --session-id {self.sid} '
+                      f'--expected-input-event-id {event} --quick explanation --request "', context)
+        self.assertEqual(self.node(), {})  # one notice per input; Claude's routine checkpoint stays silent
+
+        ledger.record_turn(**coords, raw_user_input="next request", source="hook")
+        event = ledger.read_session_state(**coords)["latest_input_event_id"]
+        response_route.record_response_route(**coords, expected_input_event_id=event,
+            candidate=response_route.quick_candidate("explanation", "next request"), boundary_ref=None)
+        self.assertEqual(self.node(), {})  # a ready route for the current input needs no notice
+
     def test_stale_json_cannot_hide_sqlite_current_model_block(self):
         state = self.block()
         state["model_security_decision"] = None
