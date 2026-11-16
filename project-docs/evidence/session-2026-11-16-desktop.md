@@ -63,6 +63,25 @@ Stop 시 Autopilot 기록이 적용되는지는 이 문서 작성 시점에 아�
 
 사용자 보고: "새 브랜치에서 작업하면 내용이 이상해진다". 체크아웃에서 브랜치를 바꾸면 실행 중인 세션이 읽는 skill 본문이 그 브랜치 내용으로 바뀝니다. 반면 훅은 복사본(`~/.ghost-alice/runtime/current/_shared`)을 실행하므로, skill 본문과 훅 코드의 버전이 서로 어긋날 수 있습니다.
 
+## E7. 작업 중 알림이 경로를 stale로 만듦 (O11)
+
+A·B 구현 중 하위 에이전트 보고(권한 문법 조사)와 백그라운드 테스트 완료 알림이 도착한 뒤 Stop 훅:
+
+```text
+[completion-gate] route-unavailable: This input contains native tool calls but has no current Core response-route. ...
+```
+
+그 직후 원장과 경로 상태:
+
+```text
+response_route: status stale, input_event_id = current_input_event_id = sha256:b1743e67…, response_purpose completion
+intake_status: pending-native-origin, pending_native_inputs: [ ... ]
+```
+
+같은 입력 ID인데도 경로가 stale로 바뀌었고, 원장이 `pending-native-origin`인 동안 `response_route.py` 등록은 `ready`를 돌려주지 않았습니다. 다음 도구 호출 뒤 `intake_status`가 `observed`로 바뀌자 같은 후보로 등록에 성공했습니다(`status: ready`). 입력 때 훅 안내는 "A confirmed native notification retains the preceding human input and route."라고 적고 있어 기대 동작과 다릅니다.
+
+같은 날 12:07에 백그라운드 테스트 완료 알림만 단독으로 도착했을 때는 경로가 `ready`로 유지됐습니다. 따라서 모든 알림이 아니라 하위 에이전트 보고가 끼었을 때 생긴 것으로 보이며, 조건은 더 확인이 필요합니다.
+
 ## E6. hook-monitor Langfuse 전송 잠금 파일 (보조 도구)
 
 ```text

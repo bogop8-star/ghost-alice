@@ -24,6 +24,7 @@ PRD는 기준 commit을 Core `v0.5.1` 태그로 제안합니다. 이 진단은 �
 | O8 | 11-16 | yesan | 위와 같음 | 경로를 미리 등록한 읽기 전용 재요약(explanation) | 요약만 전달 | Stop 훅 `criterion-unbound`로 응답 검토 요구. 검토 기록에 도구 호출 약 10회. 검토가 실제 수치 오류 1건을 잡아 앞 답변 `unsupported`, 정정문 `reviewed` | D (비용) · 검토 효과 확인 | 1/1. [증거 E2](evidence/session-2026-11-16-desktop.md#e2-설명-답변에-응답-검토-요구-criterion-unbound-o8). 위험도별 가벼운 검토 경로 필요 여부 검토 |
 | O9 | 11-16 | yesan | 위와 같음 | `completion_assessment.py prepare-response --claims-file` | 일치하지 않는 주장을 지목 | `response-unbound` "Name each source-backed claim with its exact statement…"만 반환, 어느 주장이 문제인지 없음 | D (오류 안내 부족) | 1/1. [증거 E3](evidence/session-2026-11-16-desktop.md#e3-주장-문장-불일치-시-오류-메시지-o9) |
 | O10 | 11-16 | yesan | Windows 11 · skills가 체크아웃 junction인 설치 | 설치에 쓰인 체크아웃에서 브랜치 전환 | 설치된 동작은 그대로 | 실행 중인 세션이 읽는 skill 본문이 바뀐 브랜치 내용이 됨(사용자 보고 "내용이 이상해짐"). 훅은 런타임 복사본을 실행해 skill 본문과 훅 코드 버전이 어긋날 수 있음 | A 후보 | junction 3건 확인, 사용자 보고. [증거 E5](evidence/session-2026-11-16-desktop.md#e5-체크아웃-브랜치-전환이-설치된-skill을-바꿈-o10). 작업은 별도 clone(`ghost_alice`)이나 worktree에서 하도록 안내 필요 |
+| O11 | 11-16 | yesan | Windows 11 · Claude Code 데스크톱(대화형) · claude-opus-5-5 | 작업 중 하위 에이전트 보고와 백그라운드 작업 완료 알림이 도착 | 사람 입력이 아니므로 진행 중 작업의 응답 경로 유지 | 알림이 새 입력으로 기록되어 경로가 stale이 되고 Stop 훅 `route-unavailable` 차단. 원장이 `pending-native-origin`인 동안은 경로를 다시 등록할 수도 없었음(다음 도구 호출 뒤 `observed`로 바뀌고 나서 등록 성공) | D·E 후보 | 1/1. [증거 E7](evidence/session-2026-11-16-desktop.md#e7-작업-중-알림이-경로를-stale로-만듦-o11). 수신 훅의 원문 안내는 "확인된 알림은 앞선 사람 입력과 경로를 유지한다"고 하므로 기대와 실제가 다름 |
 
 ### 기록에서 뺀 사례
 

@@ -12,6 +12,7 @@ python project-docs/metrics/governance_metrics.py --json project-docs/metrics/ba
 - 출력: 묶음별 요약(표준 출력)과, `--json`을 주면 세션별 행과 요약을 담은 JSON 파일.
 - 로컬 파일만 읽고 아무 데이터도 밖으로 보내지 않습니다. 출력에는 세션 ID 앞 8자리와 묶음 이름만 남고, 질문·답변·도구 출력·경로는 남지 않습니다.
 - 테스트: `python -m unittest project-docs/metrics/test_governance_metrics.py`(가짜 대화 기록 사용).
+- 차단 턴 분류: `python project-docs/metrics/route_block_tools.py [projects 폴더]`는 `route-unavailable` 차단이 난 턴을 그 턴에 쓴 도구로 나눕니다(읽기만 / 읽기+공유 기록 추가 / 셸 기타 / 파일 수정 / MCP 등). 셸 명령의 읽기 전용 판정은 명령 앞부분 허용 목록과 쓰기 흔적 목록으로 추정합니다.
 
 ## 지표 정의
 
