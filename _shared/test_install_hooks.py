@@ -4459,6 +4459,32 @@ class TestInstallHook(TempHomeTestCase):
 
         self.assertEqual(permissions, ["Skill(autopilot-mode)"])
 
+    def test_install_allows_only_the_quick_route_registration_command(self):
+        """Claude may run response_route.py from the installed runtime with the installing interpreter, nothing else."""
+        self._write_settings("claude", {"permissions": {"allow": [
+            "Bash(rg ghost-alice README.md)",
+            'Bash("C:/old/python.exe" "C:/old/_shared/response_route.py" *)',
+        ]}})
+
+        self.assertEqual(install_hooks.install_hook("claude"), "installed")
+        rule = install_hooks._claude_route_registration_permission()
+        python = sys.executable.replace("\\", "/")
+        self.assertTrue(rule.startswith(f'Bash("{python}" "'), rule)
+        self.assertTrue(rule.endswith('/_shared/response_route.py" *)'), rule)
+        self.assertNotIn("\\", rule)
+        allow = self._read_settings("claude")["permissions"]["allow"]
+        self.assertEqual(allow.count(rule), 1)
+        self.assertNotIn('Bash("C:/old/python.exe" "C:/old/_shared/response_route.py" *)', allow)
+        self.assertIn("Bash(rg ghost-alice README.md)", allow)
+
+        self.assertEqual(install_hooks.install_hook("claude"), "already")
+        self.assertEqual(self._read_settings("claude")["permissions"]["allow"].count(rule), 1)
+
+        self.assertEqual(install_hooks.uninstall_hook("claude"), "removed")
+        allow = self._read_settings("claude")["permissions"]["allow"]
+        self.assertNotIn(rule, allow)
+        self.assertIn("Bash(rg ghost-alice README.md)", allow)
+
     def test_install_preserves_non_managed_bash_permissions(self):
         """The installer does not remove unmanaged Bash allow rules."""
         self._write_settings("claude", {

@@ -672,6 +672,39 @@ def _claude_ghost_alice_skill_permissions(addon_sources: Any = ()) -> list[str]:
     return [f"Skill({name})" for name in sorted(names)]
 
 
+ROUTE_REGISTRATION_SCRIPT = "response_route.py"
+
+
+def _claude_route_registration_permission() -> str:
+    """Allow rule for the one route-registration command the tool-checkpoint hook tells Claude to run.
+
+    Claude Code matches Bash rules against the literal command text, so the rule repeats the exact
+    spelling of that command: the installing interpreter and the installed runtime script, both quoted
+    with forward slashes. The trailing " *" admits only that script's own arguments; Claude Code does
+    not extend an allow rule to commands chained with &&, ; or |.
+    """
+    script = _resolve_shared_hook_script(ROUTE_REGISTRATION_SCRIPT)
+    if not script:
+        return ""
+    python = sys.executable.replace("\\", "/")
+    return f'Bash("{python}" "{script}" *)'
+
+
+def _is_route_registration_permission(item: Any) -> bool:
+    return (isinstance(item, str) and item.startswith('Bash("')
+            and item.replace("\\", "/").endswith(f'/_shared/{ROUTE_REGISTRATION_SCRIPT}" *)'))
+
+
+def _remove_claude_route_registration_permissions(settings: dict[str, Any], keep: str = "") -> int:
+    permissions = settings.get("permissions")
+    allow = permissions.get("allow") if isinstance(permissions, dict) else None
+    if not isinstance(allow, list):
+        return 0
+    before = len(allow)
+    allow[:] = [item for item in allow if item == keep or not _is_route_registration_permission(item)]
+    return before - len(allow)
+
+
 def _is_stale_legacy_checkout_path_permission(item: Any) -> bool:
     if not isinstance(item, str):
         return False
@@ -2282,6 +2315,13 @@ def _ensure_claude_ghost_alice_skill_permissions(
         allow.append(rule)
         existing.add(rule)
         changed = True
+    route_rule = _claude_route_registration_permission()
+    if route_rule:
+        # Replace a rule left by an earlier install path or interpreter; keep exactly one current rule.
+        changed = _remove_claude_route_registration_permissions(settings, keep=route_rule) > 0 or changed
+        if route_rule not in allow:
+            allow.append(route_rule)
+            changed = True
     return changed
 
 
@@ -3044,6 +3084,8 @@ def uninstall_hook(platform_key: str, dry_run: bool = False, *, destination=None
         if isinstance(ev_list, list):
             total_removed += _remove_managed_addon_entries(ev_list)
             total_removed += _remove_managed_adapter_entries(ev_list)
+    if platform_key == "claude":
+        total_removed += _remove_claude_route_registration_permissions(settings)
 
     if total_removed == 0:
         _log(_t("  No hooks found. Nothing to remove", "  No hooks found. Nothing to remove"))
