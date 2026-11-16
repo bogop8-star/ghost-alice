@@ -1,0 +1,52 @@
+{
+  "observation": "O1",
+  "checked_at": "2026-11-12T08:11:54+00:00",
+  "environment": {
+    "os": "Windows 11 (10.0.26100)",
+    "python": "3.14.7",
+    "claude_cli": "2.1.321 (Claude Code)",
+    "hook_mode": "normal",
+    "ledger_root": "<home>\\ghost-alice\\.tmp\\session-intent"
+  },
+  "question_chars": 25,
+  "cases": [
+    {
+      "mode": "claude -p",
+      "started_at": "2026-11-12T08:10:35+00:00",
+      "session_id": "f3628b7e-86d2-4328-b2a5-e82e246210a1",
+      "claude_is_error": false,
+      "answer_chars": 362,
+      "ledger": {
+        "ledger_revision": 1,
+        "intake_status": "pending-native-origin",
+        "latest_input_event_id_set": false,
+        "pending_native_inputs": 1,
+        "current_goal_set": false,
+        "response_route_set": false,
+        "events": [
+          "native-input-staged"
+        ]
+      },
+      "verdict": "REPRODUCED"
+    },
+    {
+      "mode": "claude -p",
+      "started_at": "2026-11-12T08:11:14+00:00",
+      "session_id": "ce27b4b5-ebbf-42dd-883f-68fbb65ff074",
+      "claude_is_error": false,
+      "answer_chars": 274,
+      "ledger": {
+        "ledger_revision": 1,
+        "intake_status": "pending-native-origin",
+        "latest_input_event_id_set": false,
+        "pending_native_inputs": 1,
+        "current_goal_set": false,
+        "response_route_set": false,
+        "events": [
+          "native-input-staged"
+        ]
+      },
+      "verdict": "REPRODUCED"
+    }
+  ]
+}

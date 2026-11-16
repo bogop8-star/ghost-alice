@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>문지기와 쪽지 이야기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+/* Layout: picture-book pages, one big picture and one or two short lines per page, stacked vertically */
+:root {
+  --bg: #fbf8f2; --page: #ffffff; --ink: #2b2a33; --soft: #6b6878; --line: #e7e1d6;
+  --gate: #4a6fd1; --note: #f2b134; --stop: #e0574f; --go: #3aa676; --fix: #8f6ad8;
+  --font-title: "Jua", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --font-body: "Gowun Dodum", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17161c; --page: #211f28; --ink: #f0eef5; --soft: #aaa6b8; --line: #34313f;
+  --gate: #86a3f0; --note: #f6c564; --stop: #f08a82; --go: #6fcf9f; --fix: #b79cf0; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #17161c; --page: #211f28; --ink: #f0eef5; --soft: #aaa6b8; --line: #34313f;
+  --gate: #86a3f0; --note: #f6c564; --stop: #f08a82; --go: #6fcf9f; --fix: #b79cf0; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; }
+main { max-width: 720px; margin: 0 auto; display: grid; gap: 28px; }
+h1 { font-family: var(--font-title); font-weight: 400; font-size: 34px; line-height: 1.25; margin: 0; text-align: center; text-wrap: balance; }
+.sub { text-align: center; color: var(--soft); margin: 6px 0 0; }
+.page { background: var(--page); border: 2px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 12px; }
+.no { font-family: var(--font-title); color: var(--soft); font-size: 15px; }
+.page h2 { font-family: var(--font-title); font-weight: 400; font-size: 25px; margin: 0; text-wrap: balance; }
+.page p { margin: 0; max-width: 60ch; }
+svg { width: 100%; height: auto; max-width: 100%; display: block; }
+svg text { font-family: var(--font-title); }
+.big { font-family: var(--font-title); font-size: 46px; line-height: 1; }
+.stop-c { color: var(--stop); } .go-c { color: var(--go); } .fix-c { color: var(--fix); } .note-c { color: var(--note); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.card { border: 2px dashed var(--line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 4px; min-width: 0; }
+.card b { font-family: var(--font-title); font-weight: 400; font-size: 19px; }
+.card span { color: var(--soft); font-size: 14.5px; }
+.tiny { font-size: 13.5px; color: var(--soft); }
+code { font-size: .85em; background: var(--bg); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+</style>
+
+<main>
+<header>
+  <h1>문지기와 쪽지 이야기</h1>
+  <p class="sub">Ghost-ALICE 11월 16일 작업을 그림으로 쉽게</p>
+</header>
+
+<!-- 1 -->
+<section class="page" aria-labelledby="p1">
+  <div class="no">1쪽</div>
+  <h2 id="p1">Ghost-ALICE는 답장을 검사하는 문지기예요</h2>
+  <svg viewBox="0 0 640 220" role="img" aria-label="로봇이 답장을 들고 문으로 가고, 문지기가 서 있다">
+    <rect x="20" y="60" width="120" height="120" rx="22" fill="var(--gate)" opacity=".18"/>
+    <circle cx="80" cy="95" r="28" fill="var(--gate)"/><circle cx="70" cy="90" r="5" fill="var(--page)"/><circle cx="90" cy="90" r="5" fill="var(--page)"/>
+    <rect x="52" y="128" width="56" height="44" rx="10" fill="var(--gate)"/>
+    <rect x="150" y="110" width="70" height="48" rx="6" fill="var(--page)" stroke="var(--ink)" stroke-width="3"/>
+    <path d="M150 110 L185 138 L220 110" fill="none" stroke="var(--ink)" stroke-width="3"/>
+    <path d="M240 134 H360" stroke="var(--soft)" stroke-width="4" stroke-dasharray="10 8"/>
+    <rect x="380" y="30" width="120" height="170" rx="10" fill="none" stroke="var(--ink)" stroke-width="5"/>
+    <rect x="395" y="45" width="90" height="140" rx="6" fill="var(--go)" opacity=".2"/>
+    <circle cx="560" cy="88" r="30" fill="var(--note)"/><rect x="532" y="120" width="56" height="64" rx="12" fill="var(--note)"/>
+    <circle cx="550" cy="84" r="5" fill="var(--ink)"/><circle cx="570" cy="84" r="5" fill="var(--ink)"/>
+    <text x="80" y="210" text-anchor="middle" font-size="18" fill="var(--ink)">AI</text>
+    <text x="560" y="210" text-anchor="middle" font-size="18" fill="var(--ink)">문지기</text>
+  </svg>
+  <p>AI가 답장을 보내기 전에, 문지기가 "제대로 된 답장인지" 확인해요.</p>
+</section>
+
+<!-- 2 -->
+<section class="page" aria-labelledby="p2">
+  <div class="no">2쪽</div>
+  <h2 id="p2">문지기는 먼저 "쪽지"를 찾아요</h2>
+  <svg viewBox="0 0 640 200" role="img" aria-label="쪽지가 있으면 통과, 없으면 멈춤">
+    <rect x="40" y="40" width="120" height="80" rx="8" fill="var(--note)"/>
+    <path d="M60 65 H140 M60 85 H125 M60 105 H110" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M190 80 H270" stroke="var(--go)" stroke-width="6"/><path d="M262 66 L282 80 L262 94" fill="var(--go)"/>
+    <circle cx="330" cy="80" r="38" fill="var(--go)"/><path d="M312 80 L326 94 L350 66" fill="none" stroke="var(--page)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="420" y="40" width="120" height="80" rx="8" fill="none" stroke="var(--soft)" stroke-width="4" stroke-dasharray="10 8"/>
+    <text x="480" y="90" text-anchor="middle" font-size="28" fill="var(--soft)">?</text>
+    <circle cx="590" cy="80" r="38" fill="var(--stop)"/><rect x="568" y="72" width="44" height="16" rx="4" fill="var(--page)"/>
+    <text x="100" y="160" text-anchor="middle" font-size="18" fill="var(--ink)">쪽지 있음 → 통과</text>
+    <text x="510" y="160" text-anchor="middle" font-size="18" fill="var(--ink)">쪽지 없음 → 멈춤</text>
+  </svg>
+  <p>쪽지(응답 경로)에는 "이건 설명이에요" 또는 "이건 작업이에요" 같은 표시가 있어요. AI가 이걸 깜빡하면 답장이 멈춰요.</p>
+</section>
+
+<!-- 3 -->
+<section class="page" aria-labelledby="p3">
+  <div class="no">3쪽</div>
+  <h2 id="p3">멈춘 이유를 세어 봤어요</h2>
+  <svg viewBox="0 0 640 170" role="img" aria-label="100칸 중 98칸이 쪽지 없음">
+    <g id="dots"></g>
+    <text x="320" y="160" text-anchor="middle" font-size="18" fill="var(--ink)">빨간 칸 = 쪽지가 없어서 멈춘 것</text>
+  </svg>
+  <p><span class="big stop-c">416번</span> 멈췄는데, 그중 <span class="big stop-c">406번</span>은 쪽지가 없어서였어요(97.6%).</p>
+  <p class="tiny">이 PC의 대화 기록 419개를 세어 본 숫자예요. 다른 사람 PC에서는 다를 수 있어요.</p>
+</section>
+
+<!-- 4 -->
+<section class="page" aria-labelledby="p4">
+  <div class="no">4쪽</div>
+  <h2 id="p4">작은 고장 4개를 고쳤어요</h2>
+  <div class="grid">
+    <div class="card"><b class="fix-c">글자 깨짐</b><span>한국어 Windows에서 파일을 읽다 깨지던 곳 4군데</span></div>
+    <div class="card"><b class="fix-c">친절한 오류</b><span>"몇 번째 문장이 틀렸는지" 알려 줘요</span></div>
+    <div class="card"><b class="fix-c">기록장</b><span>멈춘 이유를 기록장에 따로 적어요</span></div>
+    <div class="card"><b class="fix-c">경고등</b><span>설치한 것과 폴더 내용이 다르면 알려 줘요</span></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="page" aria-labelledby="p5">
+  <div class="no">5쪽</div>
+  <h2 id="p5">쪽지 쓰기를 쉽게 만들었어요</h2>
+  <svg viewBox="0 0 640 190" role="img" aria-label="한 줄 쪽지, 미리 알림, 통과증">
+    <rect x="30" y="40" width="160" height="70" rx="10" fill="var(--note)"/>
+    <path d="M50 75 H170" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="320" cy="75" r="40" fill="var(--gate)"/><path d="M320 52 V80" stroke="var(--page)" stroke-width="8" stroke-linecap="round"/><circle cx="320" cy="96" r="5" fill="var(--page)"/>
+    <rect x="450" y="40" width="160" height="70" rx="10" fill="var(--go)"/><circle cx="485" cy="75" r="14" fill="var(--page)"/>
+    <path d="M510 68 H590 M510 84 H570" stroke="var(--page)" stroke-width="6" stroke-linecap="round"/>
+    <text x="110" y="150" text-anchor="middle" font-size="19" fill="var(--ink)">A. 한 줄 쪽지</text>
+    <text x="320" y="150" text-anchor="middle" font-size="19" fill="var(--ink)">A. 미리 알림</text>
+    <text x="530" y="150" text-anchor="middle" font-size="19" fill="var(--ink)">B. 통과증</text>
+  </svg>
+  <p>쪽지를 <b>한 줄</b>로 쓸 수 있게 했고, 문지기가 <b>미리</b> "쪽지 써 주세요"라고 알려 줘요. 자동 모드(<code>claude -p</code>)에서도 쪽지를 쓸 수 있게 <b>통과증</b>을 줬어요.</p>
+</section>
+
+<!-- 6 -->
+<section class="page" aria-labelledby="p6">
+  <div class="no">6쪽</div>
+  <h2 id="p6">문지기가 대신 써 주면 안 될까? (C안)</h2>
+  <svg viewBox="0 0 640 170" role="img" aria-label="문지기가 쪽지를 써 주면 다음 검사에서 다시 멈춤">
+    <circle cx="80" cy="70" r="30" fill="var(--note)"/><rect x="52" y="102" width="56" height="50" rx="12" fill="var(--note)"/>
+    <rect x="130" y="60" width="70" height="44" rx="6" fill="var(--note)" stroke="var(--ink)" stroke-width="3"/>
+    <path d="M220 82 H330" stroke="var(--soft)" stroke-width="5"/><path d="M322 70 L340 82 L322 94" fill="var(--soft)"/>
+    <rect x="360" y="40" width="90" height="90" rx="10" fill="none" stroke="var(--ink)" stroke-width="4"/>
+    <text x="405" y="95" text-anchor="middle" font-size="30" fill="var(--ink)">2</text>
+    <circle cx="540" cy="85" r="40" fill="var(--stop)"/><rect x="518" y="77" width="44" height="16" rx="4" fill="var(--page)"/>
+    <text x="405" y="160" text-anchor="middle" font-size="17" fill="var(--ink)">두 번째 검사</text>
+  </svg>
+  <p>대신 써 줘도, 다음 검사("설명이 맞는지 확인")에서 또 멈춰요. 그래서 "읽기만 한 답장은 검사를 빼 줄까?" 하는 규칙을 <b>팀이 먼저 정해야</b> 해요.</p>
+</section>
+
+<!-- 7 -->
+<section class="page" aria-labelledby="p7">
+  <div class="no">7쪽</div>
+  <h2 id="p7">지금 어디까지 왔나요?</h2>
+  <div class="grid">
+    <div class="card"><b class="go-c">올림</b><span>모든 작업이 <code>dev/improvement</code> 브랜치에 있어요</span></div>
+    <div class="card"><b class="go-c">올림</b><span>이 그림책과 문서는 <code>skproject</code>에 있어요</span></div>
+    <div class="card"><b class="note-c">아직</b><span>고친 코드는 최신 <code>skproject</code>(=main)에 맞게 옮겨야 해요</span></div>
+    <div class="card"><b class="note-c">아직</b><span>설치해서 정말 덜 멈추는지 다시 세어 봐야 해요</span></div>
+  </div>
+  <p class="tiny">자세한 내용: <code>project-docs/reports/2026-11-16-summary.md</code></p>
+</section>
+</main>
+
+<script>
+(function () {
+  var g = document.getElementById('dots');
+  if (!g) return;
+  var ns = 'http://www.w3.org/2000/svg', cols = 25, size = 20, gap = 4, left = (640 - cols * (size + gap) + gap) / 2;
+  for (var i = 0; i < 100; i++) {
+    var r = document.createElementNS(ns, 'rect');
+    r.setAttribute('x', left + (i % cols) * (size + gap));
+    r.setAttribute('y', 20 + Math.floor(i / cols) * (size + gap));
+    r.setAttribute('width', size); r.setAttribute('height', size); r.setAttribute('rx', 4);
+    r.setAttribute('fill', i < 98 ? 'var(--stop)' : 'var(--line)');
+    g.appendChild(r);
+  }
+})();
+</script>
+
+</html>

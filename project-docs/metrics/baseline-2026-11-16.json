@@ -1,0 +1,5038 @@
+{
+ "sessions": [
+  {
+   "session": "36bc1a8c",
+   "group": "scratch",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1727
+  },
+  {
+   "session": "e4178e38",
+   "group": "scratch",
+   "user_turns": 3,
+   "tool_calls": 5,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1672
+  },
+  {
+   "session": "d0dac4d2",
+   "group": "scratch",
+   "user_turns": 22,
+   "tool_calls": 145,
+   "gov_tool_calls": 14,
+   "stop_blocks": 6,
+   "stop_reasons": {
+    "route-unavailable": 6
+   },
+   "output_tokens": 68288
+  },
+  {
+   "session": "69e2d64d",
+   "group": "scratch",
+   "user_turns": 28,
+   "tool_calls": 171,
+   "gov_tool_calls": 51,
+   "stop_blocks": 6,
+   "stop_reasons": {
+    "route-unavailable": 3,
+    "criterion-unbound": 2,
+    "other": 1
+   },
+   "output_tokens": 111225
+  },
+  {
+   "session": "fd265eee",
+   "group": "scratch",
+   "user_turns": 17,
+   "tool_calls": 176,
+   "gov_tool_calls": 41,
+   "stop_blocks": 2,
+   "stop_reasons": {
+    "route-unavailable": 2
+   },
+   "output_tokens": 113193
+  },
+  {
+   "session": "0ba16081",
+   "group": "scratch",
+   "user_turns": 33,
+   "tool_calls": 260,
+   "gov_tool_calls": 57,
+   "stop_blocks": 10,
+   "stop_reasons": {
+    "route-unavailable": 6,
+    "criterion-unbound": 4
+   },
+   "output_tokens": 156589
+  },
+  {
+   "session": "3d3dcf04",
+   "group": "scratch",
+   "user_turns": 5,
+   "tool_calls": 25,
+   "gov_tool_calls": 6,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 24864
+  },
+  {
+   "session": "ea169720",
+   "group": "scratch",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 0
+  },
+  {
+   "session": "fd42b4a6",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 573
+  },
+  {
+   "session": "03f6e5e1",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 852
+  },
+  {
+   "session": "cabfa825",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 292
+  },
+  {
+   "session": "6c12f605",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 223
+  },
+  {
+   "session": "682ca5f1",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 214
+  },
+  {
+   "session": "0abdcf1b",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 518
+  },
+  {
+   "session": "6dc8c76e",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 1,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 500
+  },
+  {
+   "session": "d6f2e9cc",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 638
+  },
+  {
+   "session": "0c0e5f74",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1042
+  },
+  {
+   "session": "d8ac24ae",
+   "group": "daily-off",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 69
+  },
+  {
+   "session": "d057d1b2",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1716
+  },
+  {
+   "session": "0822f4cf",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1625
+  },
+  {
+   "session": "a229360d",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 419
+  },
+  {
+   "session": "58a9ae81",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 998
+  },
+  {
+   "session": "51661c51",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1432
+  },
+  {
+   "session": "2482421e",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1493
+  },
+  {
+   "session": "c00fd4ec",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1066
+  },
+  {
+   "session": "774f1c6b",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 204
+  },
+  {
+   "session": "8dad4e06",
+   "group": "daily-on",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 516
+  },
+  {
+   "session": "f3628b7e",
+   "group": "ga-o1",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 670
+  },
+  {
+   "session": "ce27b4b5",
+   "group": "ga-o1",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 582
+  },
+  {
+   "session": "1e899ada",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1884
+  },
+  {
+   "session": "f6029593",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1019
+  },
+  {
+   "session": "fa3d6da1",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1511
+  },
+  {
+   "session": "cb22722b",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1267
+  },
+  {
+   "session": "aa0245dc",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1066
+  },
+  {
+   "session": "99c4f86b",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1490
+  },
+  {
+   "session": "f1c80e8a",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 755
+  },
+  {
+   "session": "7b83ec8a",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 950
+  },
+  {
+   "session": "b87555d0",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 2124
+  },
+  {
+   "session": "a0ef843a",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 2029
+  },
+  {
+   "session": "4ae8ddf7",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1171
+  },
+  {
+   "session": "21e8a179",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 722
+  },
+  {
+   "session": "c9a079e1",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1202
+  },
+  {
+   "session": "e6ef0274",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 536
+  },
+  {
+   "session": "6d8fc5b2",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1130
+  },
+  {
+   "session": "c379832d",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1120
+  },
+  {
+   "session": "716f1ed0",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 645
+  },
+  {
+   "session": "6d897949",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 850
+  },
+  {
+   "session": "e2a69665",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1019
+  },
+  {
+   "session": "e211a248",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 813
+  },
+  {
+   "session": "b01b2875",
+   "group": "life-check",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3724
+  },
+  {
+   "session": "a5e411e4",
+   "group": "scratch",
+   "user_turns": 25,
+   "tool_calls": 132,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 113609
+  },
+  {
+   "session": "f9b5fd8d",
+   "group": "scratch",
+   "user_turns": 88,
+   "tool_calls": 445,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 274424
+  },
+  {
+   "session": "246366f5",
+   "group": "scratch",
+   "user_turns": 3,
+   "tool_calls": 1,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 1675
+  },
+  {
+   "session": "7798c73f",
+   "group": "scratch",
+   "user_turns": 2,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 2120
+  },
+  {
+   "session": "c36a5599",
+   "group": "scratch",
+   "user_turns": 37,
+   "tool_calls": 8,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 33077
+  },
+  {
+   "session": "3edf23c1",
+   "group": "scratch",
+   "user_turns": 10,
+   "tool_calls": 10,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 8205
+  },
+  {
+   "session": "21760954",
+   "group": "other",
+   "user_turns": 93,
+   "tool_calls": 332,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 206945
+  },
+  {
+   "session": "4931e01a",
+   "group": "other",
+   "user_turns": 59,
+   "tool_calls": 357,
+   "gov_tool_calls": 25,
+   "stop_blocks": 21,
+   "stop_reasons": {
+    "route-unavailable": 21
+   },
+   "output_tokens": 203190
+  },
+  {
+   "session": "c8129217",
+   "group": "other",
+   "user_turns": 20,
+   "tool_calls": 135,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 148384
+  },
+  {
+   "session": "030fc8ad",
+   "group": "ghost-alice",
+   "user_turns": 27,
+   "tool_calls": 275,
+   "gov_tool_calls": 46,
+   "stop_blocks": 10,
+   "stop_reasons": {
+    "route-unavailable": 8,
+    "response-assessment-required": 1,
+    "criterion-unbound": 1
+   },
+   "output_tokens": 191041
+  },
+  {
+   "session": "4f1f262d",
+   "group": "ghost-alice",
+   "user_turns": 11,
+   "tool_calls": 134,
+   "gov_tool_calls": 45,
+   "stop_blocks": 3,
+   "stop_reasons": {
+    "route-unavailable": 2,
+    "criterion-unbound": 1
+   },
+   "output_tokens": 106076
+  },
+  {
+   "session": "91462842",
+   "group": "ghost-alice",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2197
+  },
+  {
+   "session": "c8707ed4",
+   "group": "ghost-alice",
+   "user_turns": 32,
+   "tool_calls": 372,
+   "gov_tool_calls": 78,
+   "stop_blocks": 3,
+   "stop_reasons": {
+    "route-unavailable": 3
+   },
+   "output_tokens": 469117
+  },
+  {
+   "session": "c9f3299e",
+   "group": "ghost-alice",
+   "user_turns": 47,
+   "tool_calls": 499,
+   "gov_tool_calls": 102,
+   "stop_blocks": 3,
+   "stop_reasons": {
+    "route-unavailable": 3
+   },
+   "output_tokens": 690876
+  },
+  {
+   "session": "090b1ea7",
+   "group": "other",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 0
+  },
+  {
+   "session": "66404bd4",
+   "group": "other",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 0
+  },
+  {
+   "session": "ebfbcebb",
+   "group": "other",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1414
+  },
+  {
+   "session": "f1128076",
+   "group": "other",
+   "user_turns": 1,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 0
+  },
+  {
+   "session": "006c4f30",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1756
+  },
+  {
+   "session": "008ea12c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1488
+  },
+  {
+   "session": "00eef449",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1803
+  },
+  {
+   "session": "01132c11",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1920
+  },
+  {
+   "session": "0130d1f2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2197
+  },
+  {
+   "session": "0183ea3c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2494
+  },
+  {
+   "session": "03b0ce4f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1574
+  },
+  {
+   "session": "03ddf623",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2169
+  },
+  {
+   "session": "046ae9e2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1792
+  },
+  {
+   "session": "048bab45",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2288
+  },
+  {
+   "session": "05671a13",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 1,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2494
+  },
+  {
+   "session": "059124d7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2338
+  },
+  {
+   "session": "06d15579",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2030
+  },
+  {
+   "session": "07707e48",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2167
+  },
+  {
+   "session": "077883fe",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1578
+  },
+  {
+   "session": "0974f29b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1955
+  },
+  {
+   "session": "0aaa2eac",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2223
+  },
+  {
+   "session": "0b230d23",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1550
+  },
+  {
+   "session": "0bac0b41",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2324
+  },
+  {
+   "session": "0c14d6a6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2002
+  },
+  {
+   "session": "0d3ed591",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1760
+  },
+  {
+   "session": "0d45bc31",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2723
+  },
+  {
+   "session": "0e2765dc",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2126
+  },
+  {
+   "session": "0fa8f234",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2001
+  },
+  {
+   "session": "100202a6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1912
+  },
+  {
+   "session": "1062e7f8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2496
+  },
+  {
+   "session": "1091550d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2072
+  },
+  {
+   "session": "118d9b8f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1508
+  },
+  {
+   "session": "129a1278",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2206
+  },
+  {
+   "session": "135bc4df",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2123
+  },
+  {
+   "session": "1381d24c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2419
+  },
+  {
+   "session": "13f24026",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2555
+  },
+  {
+   "session": "163fa099",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1378
+  },
+  {
+   "session": "16e55590",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2223
+  },
+  {
+   "session": "18028fbe",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1790
+  },
+  {
+   "session": "181393ff",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2119
+  },
+  {
+   "session": "190dacd9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1722
+  },
+  {
+   "session": "1b1c2c7f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 12,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2563
+  },
+  {
+   "session": "1b407112",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 12,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3152
+  },
+  {
+   "session": "1ca6edb0",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1492
+  },
+  {
+   "session": "1da09280",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1885
+  },
+  {
+   "session": "1e2ea232",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2034
+  },
+  {
+   "session": "1f155f07",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1183
+  },
+  {
+   "session": "1f71c839",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2247
+  },
+  {
+   "session": "1fcb5394",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2497
+  },
+  {
+   "session": "1fed3b9b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 12,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2701
+  },
+  {
+   "session": "2224d709",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2410
+  },
+  {
+   "session": "22f00bb2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2090
+  },
+  {
+   "session": "23dcae04",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1956
+  },
+  {
+   "session": "24bda27b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1965
+  },
+  {
+   "session": "25c729cb",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2145
+  },
+  {
+   "session": "275ab18d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1957
+  },
+  {
+   "session": "28e18bca",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1403
+  },
+  {
+   "session": "2a141d75",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2487
+  },
+  {
+   "session": "2b764f17",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2768
+  },
+  {
+   "session": "2e01aad5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1471
+  },
+  {
+   "session": "2ec0b750",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2335
+  },
+  {
+   "session": "2f653325",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2352
+  },
+  {
+   "session": "3034f06d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1594
+  },
+  {
+   "session": "320e0860",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1696
+  },
+  {
+   "session": "32900a91",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1989
+  },
+  {
+   "session": "336b56af",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2004
+  },
+  {
+   "session": "346e86f7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2425
+  },
+  {
+   "session": "372a41d8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2281
+  },
+  {
+   "session": "37f25936",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1478
+  },
+  {
+   "session": "38919753",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2062
+  },
+  {
+   "session": "3901d4b5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1884
+  },
+  {
+   "session": "39decd2e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 13,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3165
+  },
+  {
+   "session": "39e8d21c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 817
+  },
+  {
+   "session": "3a2edc45",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1570
+  },
+  {
+   "session": "3acaeb3b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1777
+  },
+  {
+   "session": "3b13c44a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1013
+  },
+  {
+   "session": "3c307f44",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1764
+  },
+  {
+   "session": "3cd545ba",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1605
+  },
+  {
+   "session": "3d33235f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2066
+  },
+  {
+   "session": "3d8673d3",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2016
+  },
+  {
+   "session": "3daa369e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2300
+  },
+  {
+   "session": "3e3eb976",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1877
+  },
+  {
+   "session": "40a2b49b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2004
+  },
+  {
+   "session": "42ac992d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1742
+  },
+  {
+   "session": "432830a8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2338
+  },
+  {
+   "session": "437ec118",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2457
+  },
+  {
+   "session": "43c1e434",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2028
+  },
+  {
+   "session": "43fd302e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2304
+  },
+  {
+   "session": "448a931e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1864
+  },
+  {
+   "session": "46a271b5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2097
+  },
+  {
+   "session": "46bdff0c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1867
+  },
+  {
+   "session": "488e99a6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2136
+  },
+  {
+   "session": "48d56096",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1567
+  },
+  {
+   "session": "4ace563a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1455
+  },
+  {
+   "session": "4b400c66",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2166
+  },
+  {
+   "session": "4b538fc6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2354
+  },
+  {
+   "session": "4bf0eb7b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1929
+  },
+  {
+   "session": "4dc042c9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1652
+  },
+  {
+   "session": "4e018117",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2255
+  },
+  {
+   "session": "4f23f96d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 970
+  },
+  {
+   "session": "50538e30",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2512
+  },
+  {
+   "session": "51c7c800",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2390
+  },
+  {
+   "session": "52bf63ce",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2339
+  },
+  {
+   "session": "53f12bc6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1809
+  },
+  {
+   "session": "5480f0c8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1411
+  },
+  {
+   "session": "548d0607",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1371
+  },
+  {
+   "session": "548fd68c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2516
+  },
+  {
+   "session": "555f5c2d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2546
+  },
+  {
+   "session": "57f7dd2f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1747
+  },
+  {
+   "session": "5a6820d7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1840
+  },
+  {
+   "session": "5ac43f1a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2560
+  },
+  {
+   "session": "5af89758",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2133
+  },
+  {
+   "session": "5cdd75bd",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1447
+  },
+  {
+   "session": "5d857062",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1866
+  },
+  {
+   "session": "5e6d3fb6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1644
+  },
+  {
+   "session": "60ae9b14",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1737
+  },
+  {
+   "session": "621c5938",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1929
+  },
+  {
+   "session": "62a0633b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2283
+  },
+  {
+   "session": "65003c25",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2123
+  },
+  {
+   "session": "65b65f1c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1943
+  },
+  {
+   "session": "660e32e7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1871
+  },
+  {
+   "session": "6618d80f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1255
+  },
+  {
+   "session": "6660e94e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1572
+  },
+  {
+   "session": "66e5964a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1651
+  },
+  {
+   "session": "68556f0b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2474
+  },
+  {
+   "session": "68c23581",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2227
+  },
+  {
+   "session": "6a381723",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 1,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1665
+  },
+  {
+   "session": "6abbfb89",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2038
+  },
+  {
+   "session": "6b74d1a5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2215
+  },
+  {
+   "session": "6c451587",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1977
+  },
+  {
+   "session": "6c74dbf2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1321
+  },
+  {
+   "session": "6c97ab73",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1413
+  },
+  {
+   "session": "6de3d12f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2754
+  },
+  {
+   "session": "6e75af18",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1664
+  },
+  {
+   "session": "6ea17a2e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1997
+  },
+  {
+   "session": "6ece3097",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1575
+  },
+  {
+   "session": "71beddf7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 17,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3409
+  },
+  {
+   "session": "7221073e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2124
+  },
+  {
+   "session": "72bed50a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2059
+  },
+  {
+   "session": "735a98b0",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2307
+  },
+  {
+   "session": "738edd94",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2237
+  },
+  {
+   "session": "73c77b16",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2341
+  },
+  {
+   "session": "75c15034",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2217
+  },
+  {
+   "session": "75e8ae6c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1750
+  },
+  {
+   "session": "75f84c8d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2088
+  },
+  {
+   "session": "7665d72d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2610
+  },
+  {
+   "session": "76f28039",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1963
+  },
+  {
+   "session": "77176b57",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1528
+  },
+  {
+   "session": "7956a04f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1436
+  },
+  {
+   "session": "798e78dd",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2127
+  },
+  {
+   "session": "7c8b02ec",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1964
+  },
+  {
+   "session": "7d047bf6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2825
+  },
+  {
+   "session": "7d6ff3a2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1947
+  },
+  {
+   "session": "7db34b6f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1941
+  },
+  {
+   "session": "7dce82d3",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2197
+  },
+  {
+   "session": "7e30c0a1",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1517
+  },
+  {
+   "session": "803de966",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1647
+  },
+  {
+   "session": "80e8958f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2488
+  },
+  {
+   "session": "8102ee73",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1580
+  },
+  {
+   "session": "811f915e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2114
+  },
+  {
+   "session": "83223cea",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2649
+  },
+  {
+   "session": "8345c7ed",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 1,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2219
+  },
+  {
+   "session": "84a659d4",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 14,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3161
+  },
+  {
+   "session": "859152c9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2092
+  },
+  {
+   "session": "860167ba",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1898
+  },
+  {
+   "session": "8664b8fc",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1628
+  },
+  {
+   "session": "86df10b2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1306
+  },
+  {
+   "session": "876dd283",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1765
+  },
+  {
+   "session": "8815b247",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1924
+  },
+  {
+   "session": "887a0d3a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2086
+  },
+  {
+   "session": "89888f6b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1664
+  },
+  {
+   "session": "8ad1ae65",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1710
+  },
+  {
+   "session": "8b5da134",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2219
+  },
+  {
+   "session": "8c1fd8e0",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2176
+  },
+  {
+   "session": "8c21744e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2103
+  },
+  {
+   "session": "8c880678",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1295
+  },
+  {
+   "session": "8f301f5e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1313
+  },
+  {
+   "session": "8f5d3e07",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1746
+  },
+  {
+   "session": "8f6055bc",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2068
+  },
+  {
+   "session": "8fbd382a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2107
+  },
+  {
+   "session": "8fea820c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1891
+  },
+  {
+   "session": "901d45bd",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2297
+  },
+  {
+   "session": "905f0218",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 14,
+   "gov_tool_calls": 6,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3534
+  },
+  {
+   "session": "90739037",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1830
+  },
+  {
+   "session": "93770d1e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2050
+  },
+  {
+   "session": "93a27747",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1700
+  },
+  {
+   "session": "9470d04e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1767
+  },
+  {
+   "session": "9503cd6c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2472
+  },
+  {
+   "session": "959f10eb",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1753
+  },
+  {
+   "session": "9643dc4a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2196
+  },
+  {
+   "session": "96e6057c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1528
+  },
+  {
+   "session": "97594a69",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2728
+  },
+  {
+   "session": "99352a7a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2295
+  },
+  {
+   "session": "9a04dce2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1457
+  },
+  {
+   "session": "9a600511",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1892
+  },
+  {
+   "session": "9adac579",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1971
+  },
+  {
+   "session": "9bb9b0db",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1430
+  },
+  {
+   "session": "9ca987d7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2148
+  },
+  {
+   "session": "9cfe8d7f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2565
+  },
+  {
+   "session": "9d613a70",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1713
+  },
+  {
+   "session": "9daf42fc",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2380
+  },
+  {
+   "session": "9e05fc07",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1812
+  },
+  {
+   "session": "9eb04592",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1359
+  },
+  {
+   "session": "9ed33a0e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1724
+  },
+  {
+   "session": "9eeb601e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2392
+  },
+  {
+   "session": "9f983072",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2164
+  },
+  {
+   "session": "a114c1de",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2380
+  },
+  {
+   "session": "a19600a5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1905
+  },
+  {
+   "session": "a1a5b2f3",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1613
+  },
+  {
+   "session": "a2abdc38",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1638
+  },
+  {
+   "session": "a442a7dc",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2683
+  },
+  {
+   "session": "a4aea97c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1669
+  },
+  {
+   "session": "a4e2499d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2517
+  },
+  {
+   "session": "a65dd16b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2265
+  },
+  {
+   "session": "a766e28e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2231
+  },
+  {
+   "session": "aa545387",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1480
+  },
+  {
+   "session": "aad98766",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1915
+  },
+  {
+   "session": "ab855795",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1305
+  },
+  {
+   "session": "ac2fbb21",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2183
+  },
+  {
+   "session": "acb829d0",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1885
+  },
+  {
+   "session": "ad22be70",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2106
+  },
+  {
+   "session": "ad6da882",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2002
+  },
+  {
+   "session": "b00ae5ef",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1840
+  },
+  {
+   "session": "b20f7c99",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1781
+  },
+  {
+   "session": "b2d60017",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1723
+  },
+  {
+   "session": "b2f6b8c7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2334
+  },
+  {
+   "session": "b4ddac15",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1605
+  },
+  {
+   "session": "b4f972a7",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2114
+  },
+  {
+   "session": "b5a11991",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1221
+  },
+  {
+   "session": "b612a856",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2038
+  },
+  {
+   "session": "b64a56d5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1899
+  },
+  {
+   "session": "b7775d5a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2051
+  },
+  {
+   "session": "b793d118",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1785
+  },
+  {
+   "session": "b8853c6e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1877
+  },
+  {
+   "session": "b896bbd1",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 14,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3034
+  },
+  {
+   "session": "b8ad70d2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2840
+  },
+  {
+   "session": "b9928d4d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1540
+  },
+  {
+   "session": "ba5eddfd",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2265
+  },
+  {
+   "session": "baabe45a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2187
+  },
+  {
+   "session": "bb206082",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2406
+  },
+  {
+   "session": "bb4680d2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1301
+  },
+  {
+   "session": "bcbd7baa",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2062
+  },
+  {
+   "session": "bce151cf",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2137
+  },
+  {
+   "session": "bd840899",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1884
+  },
+  {
+   "session": "bd9567ef",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1308
+  },
+  {
+   "session": "beaef68c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1745
+  },
+  {
+   "session": "bfa7dcb3",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2231
+  },
+  {
+   "session": "c015b9db",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1730
+  },
+  {
+   "session": "c0844be4",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1432
+  },
+  {
+   "session": "c0c4554e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1512
+  },
+  {
+   "session": "c100953d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2091
+  },
+  {
+   "session": "c11e931d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1724
+  },
+  {
+   "session": "c1fb74bb",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1953
+  },
+  {
+   "session": "c2c0e93d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1727
+  },
+  {
+   "session": "c36bdda8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1735
+  },
+  {
+   "session": "c42f4c92",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2171
+  },
+  {
+   "session": "c4f568c8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2917
+  },
+  {
+   "session": "c516e567",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1789
+  },
+  {
+   "session": "c6ab68af",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2298
+  },
+  {
+   "session": "c700aaec",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1704
+  },
+  {
+   "session": "c7242e24",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1279
+  },
+  {
+   "session": "c735223b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1700
+  },
+  {
+   "session": "c7397aca",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1689
+  },
+  {
+   "session": "c7a644ed",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1632
+  },
+  {
+   "session": "c824a1f3",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2514
+  },
+  {
+   "session": "c82ead34",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2256
+  },
+  {
+   "session": "c8e45386",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1507
+  },
+  {
+   "session": "c98e65eb",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2053
+  },
+  {
+   "session": "c9b8bbc9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1681
+  },
+  {
+   "session": "ca26bbca",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2287
+  },
+  {
+   "session": "cc2d310c",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2123
+  },
+  {
+   "session": "cc5cbeb9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 11,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2221
+  },
+  {
+   "session": "ccb62d21",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1745
+  },
+  {
+   "session": "cd0aaa5e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2050
+  },
+  {
+   "session": "cd4e6815",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2201
+  },
+  {
+   "session": "cfc44894",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2074
+  },
+  {
+   "session": "d04d5f87",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1974
+  },
+  {
+   "session": "d0a19801",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1937
+  },
+  {
+   "session": "d115c1f9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1504
+  },
+  {
+   "session": "d2232e58",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2978
+  },
+  {
+   "session": "d23c8bc8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2470
+  },
+  {
+   "session": "d28a6c3d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2335
+  },
+  {
+   "session": "d29e8303",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1944
+  },
+  {
+   "session": "d4dc79a2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1995
+  },
+  {
+   "session": "d532bfba",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1809
+  },
+  {
+   "session": "d5ef3823",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2176
+  },
+  {
+   "session": "d6917c54",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1502
+  },
+  {
+   "session": "d69fb6d6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2181
+  },
+  {
+   "session": "d748c6b5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1505
+  },
+  {
+   "session": "d762010a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2474
+  },
+  {
+   "session": "d7a04dc6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2276
+  },
+  {
+   "session": "d913e225",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1673
+  },
+  {
+   "session": "da0c4c98",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2509
+  },
+  {
+   "session": "dac93d4b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2016
+  },
+  {
+   "session": "dbb106a5",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2551
+  },
+  {
+   "session": "dbf76b15",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1744
+  },
+  {
+   "session": "dc859a2a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1958
+  },
+  {
+   "session": "dcf9c136",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1800
+  },
+  {
+   "session": "dd540065",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2712
+  },
+  {
+   "session": "dd5e3305",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2020
+  },
+  {
+   "session": "ddba5c31",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2034
+  },
+  {
+   "session": "ddc2d06f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1984
+  },
+  {
+   "session": "de2c06b8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2684
+  },
+  {
+   "session": "de8463b6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2275
+  },
+  {
+   "session": "de8e4c70",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2073
+  },
+  {
+   "session": "df0173bc",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1549
+  },
+  {
+   "session": "e091044d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1769
+  },
+  {
+   "session": "e1036e7f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2074
+  },
+  {
+   "session": "e251a4bb",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1718
+  },
+  {
+   "session": "e2e69160",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1682
+  },
+  {
+   "session": "e635b062",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1625
+  },
+  {
+   "session": "e7b36e70",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2185
+  },
+  {
+   "session": "e7f12dfd",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1875
+  },
+  {
+   "session": "e878525f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2130
+  },
+  {
+   "session": "ea558dff",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 3,
+   "gov_tool_calls": 1,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1910
+  },
+  {
+   "session": "ece1d4aa",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2216
+  },
+  {
+   "session": "eefab641",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1619
+  },
+  {
+   "session": "ef1b66fb",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2046
+  },
+  {
+   "session": "f055f5ca",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 10,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2266
+  },
+  {
+   "session": "f0f6e9a6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1744
+  },
+  {
+   "session": "f15ddc06",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1869
+  },
+  {
+   "session": "f170c430",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2380
+  },
+  {
+   "session": "f1ae0835",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 9,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2465
+  },
+  {
+   "session": "f2bf28f2",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 12,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2893
+  },
+  {
+   "session": "f2d12d45",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1452
+  },
+  {
+   "session": "f2f672c6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1639
+  },
+  {
+   "session": "f357e09d",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1144
+  },
+  {
+   "session": "f3822465",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1815
+  },
+  {
+   "session": "f3860698",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2113
+  },
+  {
+   "session": "f3fc9c58",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1866
+  },
+  {
+   "session": "f4ed524f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 4,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1644
+  },
+  {
+   "session": "f57b434b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1656
+  },
+  {
+   "session": "f607f35b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2202
+  },
+  {
+   "session": "f6a43a82",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2222
+  },
+  {
+   "session": "f6ac4882",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2392
+  },
+  {
+   "session": "f6c4740e",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1813
+  },
+  {
+   "session": "f7ab19db",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1869
+  },
+  {
+   "session": "f7c9f478",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1765
+  },
+  {
+   "session": "f7ea845a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2774
+  },
+  {
+   "session": "fa7ebad6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 8,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2272
+  },
+  {
+   "session": "fb076ac6",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1850
+  },
+  {
+   "session": "fb931e8a",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 6,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1882
+  },
+  {
+   "session": "fc044f2b",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2038
+  },
+  {
+   "session": "fc87adb9",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 3,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2105
+  },
+  {
+   "session": "fcd1ff3f",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 12,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 3069
+  },
+  {
+   "session": "fda8b8a8",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 7,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 2322
+  },
+  {
+   "session": "fe31afb0",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 2,
+   "gov_tool_calls": 0,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1052
+  },
+  {
+   "session": "ffd49d09",
+   "group": "ghost-chat-bench",
+   "user_turns": 1,
+   "tool_calls": 5,
+   "gov_tool_calls": 2,
+   "stop_blocks": 1,
+   "stop_reasons": {
+    "route-unavailable": 1
+   },
+   "output_tokens": 1579
+  },
+  {
+   "session": "f9058f33",
+   "group": "other",
+   "user_turns": 27,
+   "tool_calls": 241,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 170343
+  },
+  {
+   "session": "fb33b307",
+   "group": "other",
+   "user_turns": 37,
+   "tool_calls": 87,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 73315
+  },
+  {
+   "session": "62ea3206",
+   "group": "other",
+   "user_turns": 5,
+   "tool_calls": 80,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 174316
+  },
+  {
+   "session": "5001082c",
+   "group": "other",
+   "user_turns": 9,
+   "tool_calls": 70,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 46584
+  },
+  {
+   "session": "f917b489",
+   "group": "other",
+   "user_turns": 11,
+   "tool_calls": 47,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 39741
+  },
+  {
+   "session": "a908fa1b",
+   "group": "other",
+   "user_turns": 66,
+   "tool_calls": 313,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 183477
+  },
+  {
+   "session": "f96e13b0",
+   "group": "other",
+   "user_turns": 42,
+   "tool_calls": 132,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "stop_reasons": {},
+   "output_tokens": 135908
+  }
+ ],
+ "groups": {
+  "daily-off": {
+   "sessions": 10,
+   "sessions_blocked": 0,
+   "user_turns": 10,
+   "tool_calls": 11,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "output_tokens": 4921,
+   "blocks_per_turn": 0.0,
+   "gov_calls_per_turn": 0.0,
+   "gov_share_of_tool_calls": 0.0,
+   "output_tokens_per_turn": 492
+  },
+  "daily-on": {
+   "sessions": 9,
+   "sessions_blocked": 4,
+   "user_turns": 9,
+   "tool_calls": 14,
+   "gov_tool_calls": 4,
+   "stop_blocks": 4,
+   "output_tokens": 9469,
+   "reason:route-unavailable": 4,
+   "blocks_per_turn": 0.44,
+   "gov_calls_per_turn": 0.44,
+   "gov_share_of_tool_calls": 0.29,
+   "output_tokens_per_turn": 1052
+  },
+  "ga-o1": {
+   "sessions": 2,
+   "sessions_blocked": 0,
+   "user_turns": 2,
+   "tool_calls": 0,
+   "gov_tool_calls": 0,
+   "stop_blocks": 0,
+   "output_tokens": 1252,
+   "blocks_per_turn": 0.0,
+   "gov_calls_per_turn": 0.0,
+   "gov_share_of_tool_calls": 0.0,
+   "output_tokens_per_turn": 626
+  },
+  "ghost-alice": {
+   "sessions": 5,
+   "sessions_blocked": 5,
+   "user_turns": 118,
+   "tool_calls": 1284,
+   "gov_tool_calls": 273,
+   "stop_blocks": 20,
+   "output_tokens": 1459307,
+   "reason:route-unavailable": 17,
+   "reason:response-assessment-required": 1,
+   "reason:criterion-unbound": 2,
+   "blocks_per_turn": 0.17,
+   "gov_calls_per_turn": 2.31,
+   "gov_share_of_tool_calls": 0.21,
+   "output_tokens_per_turn": 12367
+  },
+  "ghost-chat-bench": {
+   "sessions": 344,
+   "sessions_blocked": 344,
+   "user_turns": 344,
+   "tool_calls": 2199,
+   "gov_tool_calls": 665,
+   "stop_blocks": 344,
+   "output_tokens": 687767,
+   "reason:route-unavailable": 344,
+   "blocks_per_turn": 1.0,
+   "gov_calls_per_turn": 1.93,
+   "gov_share_of_tool_calls": 0.3,
+   "output_tokens_per_turn": 1999
+  },
+  "life-check": {
+   "sessions": 21,
+   "sessions_blocked": 1,
+   "user_turns": 21,
+   "tool_calls": 9,
+   "gov_tool_calls": 4,
+   "stop_blocks": 1,
+   "output_tokens": 27027,
+   "reason:route-unavailable": 1,
+   "blocks_per_turn": 0.05,
+   "gov_calls_per_turn": 0.19,
+   "gov_share_of_tool_calls": 0.44,
+   "output_tokens_per_turn": 1287
+  },
+  "other": {
+   "sessions": 14,
+   "sessions_blocked": 2,
+   "user_turns": 373,
+   "tool_calls": 1797,
+   "gov_tool_calls": 27,
+   "stop_blocks": 22,
+   "output_tokens": 1383617,
+   "reason:route-unavailable": 22,
+   "blocks_per_turn": 0.06,
+   "gov_calls_per_turn": 0.07,
+   "gov_share_of_tool_calls": 0.02,
+   "output_tokens_per_turn": 3709
+  },
+  "scratch": {
+   "sessions": 14,
+   "sessions_blocked": 5,
+   "user_turns": 275,
+   "tool_calls": 1382,
+   "gov_tool_calls": 169,
+   "stop_blocks": 25,
+   "output_tokens": 910668,
+   "reason:route-unavailable": 18,
+   "reason:criterion-unbound": 6,
+   "reason:other": 1,
+   "blocks_per_turn": 0.09,
+   "gov_calls_per_turn": 0.61,
+   "gov_share_of_tool_calls": 0.12,
+   "output_tokens_per_turn": 3312
+  }
+ }
+}
