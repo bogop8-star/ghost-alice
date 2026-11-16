@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ghost-ALICE 개선 여행 지도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+/* Layout: one column of picture-book "pages"; every page is mostly a drawing or a chart with one short caption */
+:root {
+  --bg: #f7f4ee; --page: #ffffff; --ink: #29283a; --soft: #6c6a7c; --line: #e6dfd2;
+  --gate: #4a6fd1; --note: #f2b134; --stop: #e0574f; --go: #3aa676; --fix: #8f6ad8; --sky: #3fa7c9; --mute: #c9c3b6;
+  --font-title: "Jua", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --font-body: "Gowun Dodum", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #16151c; --page: #201e28; --ink: #f0eef6; --soft: #a9a5b8; --line: #34303f;
+  --gate: #86a3f0; --note: #f6c564; --stop: #f08a82; --go: #6fcf9f; --fix: #b79cf0; --sky: #79c9e3; --mute: #4a4558; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #16151c; --page: #201e28; --ink: #f0eef6; --soft: #a9a5b8; --line: #34303f;
+  --gate: #86a3f0; --note: #f6c564; --stop: #f08a82; --go: #6fcf9f; --fix: #b79cf0; --sky: #79c9e3; --mute: #4a4558; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 26px; }
+header { text-align: center; display: grid; gap: 6px; }
+h1 { font-family: var(--font-title); font-weight: 400; font-size: 36px; line-height: 1.2; margin: 0; text-wrap: balance; }
+.sub { color: var(--soft); margin: 0; }
+.page { background: var(--page); border: 2px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 12px; }
+.no { font-family: var(--font-title); color: var(--soft); font-size: 15px; }
+h2 { font-family: var(--font-title); font-weight: 400; font-size: 26px; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 62ch; }
+.cap { color: var(--soft); font-size: 14.5px; }
+svg { width: 100%; height: auto; max-width: 100%; display: block; overflow: visible; }
+svg text { font-family: var(--font-title); fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14.5px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.card { border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; display: grid; gap: 4px; min-width: 0; }
+.card b { font-family: var(--font-title); font-weight: 400; font-size: 19px; }
+.card span { color: var(--soft); font-size: 14.5px; }
+.tag { font-family: var(--font-title); font-size: 13px; padding: 1px 8px; border-radius: 999px; justify-self: start; }
+.t-go { background: color-mix(in srgb, var(--go) 22%, transparent); color: var(--go); }
+.t-note { background: color-mix(in srgb, var(--note) 25%, transparent); color: var(--note); }
+.t-fix { background: color-mix(in srgb, var(--fix) 22%, transparent); color: var(--fix); }
+.t-stop { background: color-mix(in srgb, var(--stop) 20%, transparent); color: var(--stop); }
+code { font-size: .84em; background: var(--bg); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: no-preference) { .pop { animation: pop .6s ease-out both; } @keyframes pop { from { transform: scale(.96); opacity: .5 } to { transform: none; opacity: 1 } } }
+</style>
+
+<main>
+<header>
+  <h1>Ghost-ALICE 개선 여행 지도</h1>
+  <p class="sub">11월 12일부터 16일까지 한 일을 그림으로</p>
+</header>
+
+<!-- 1. Journey -->
+<section class="page pop" aria-labelledby="h1x">
+  <div class="no">1쪽 · 여행 경로</div>
+  <h2 id="h1x">5일 동안 이렇게 걸어왔어요</h2>
+  <svg viewBox="0 0 700 300" role="img" aria-label="11월 12일, 13일, 16일에 한 일 타임라인">
+    <path d="M40 150 C 180 40, 260 260, 360 150 S 560 40, 660 150" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M40 150 C 180 40, 260 260, 360 150 S 560 40, 660 150" fill="none" stroke="var(--gate)" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+    <circle cx="40" cy="150" r="26" fill="var(--sky)"/><text x="40" y="157" text-anchor="middle" font-size="16" style="fill:var(--page)">12일</text>
+    <circle cx="360" cy="150" r="26" fill="var(--note)"/><text x="360" y="157" text-anchor="middle" font-size="16" style="fill:var(--ink)">13일</text>
+    <circle cx="660" cy="150" r="26" fill="var(--go)"/><text x="660" y="157" text-anchor="middle" font-size="16" style="fill:var(--page)">16일</text>
+    <g font-size="15">
+      <text x="20" y="40">🔍 20문항 점검</text><text x="20" y="62">📝 계획서(PRD)</text><text x="20" y="84">🧪 문제 O1 재현</text>
+      <text x="220" y="230">🔁 문제 O6 재현</text><text x="220" y="252">📺 훅 모니터·분석기</text><text x="220" y="274">🔤 인코딩 첫 수정</text><text x="390" y="230">📡 Langfuse 연결</text>
+      <text x="470" y="40">📏 차단 수치 측정</text><text x="470" y="62">🔧 7가지 수리</text><text x="470" y="84">🗺️ 설계 검토</text><text x="560" y="230">📦 팀 브랜치에 올림</text><text x="560" y="252">🚚 최신 코드로 옮김</text>
+    </g>
+  </svg>
+</section>
+
+<!-- 2. Gatekeeper -->
+<section class="page pop" aria-labelledby="h2x">
+  <div class="no">2쪽 · Ghost-ALICE가 뭐예요?</div>
+  <h2 id="h2x">답장을 검사하는 문지기, 그리고 쪽지</h2>
+  <svg viewBox="0 0 700 230" role="img" aria-label="AI가 답장을 보내면 문지기가 쪽지를 확인해 통과 또는 멈춤">
+    <circle cx="80" cy="90" r="32" fill="var(--gate)"/><circle cx="68" cy="84" r="6" style="fill:var(--page)"/><circle cx="92" cy="84" r="6" style="fill:var(--page)"/>
+    <rect x="50" y="126" width="60" height="50" rx="12" fill="var(--gate)"/><text x="80" y="205" text-anchor="middle" font-size="17">AI</text>
+    <rect x="140" y="100" width="70" height="46" rx="6" style="fill:var(--page)" stroke="var(--ink)" stroke-width="3"/><path d="M140 100 L175 126 L210 100" fill="none" stroke="var(--ink)" stroke-width="3"/>
+    <rect x="215" y="72" width="44" height="34" rx="5" fill="var(--note)"/><path d="M223 85 H251 M223 95 H243" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+    <text x="237" y="64" text-anchor="middle" font-size="14">쪽지</text>
+    <path d="M280 122 H370" stroke="var(--soft)" stroke-width="4" stroke-dasharray="9 7"/>
+    <circle cx="420" cy="92" r="32" fill="var(--note)"/><rect x="390" y="126" width="60" height="50" rx="12" fill="var(--note)"/>
+    <circle cx="410" cy="88" r="5" style="fill:var(--ink)"/><circle cx="430" cy="88" r="5" style="fill:var(--ink)"/><text x="420" y="205" text-anchor="middle" font-size="17">문지기</text>
+    <path d="M470 100 L560 60" stroke="var(--go)" stroke-width="5"/><circle cx="600" cy="55" r="30" fill="var(--go)"/><path d="M586 55 L597 66 L616 44" fill="none" style="stroke:var(--page)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M470 150 L560 180" stroke="var(--stop)" stroke-width="5"/><circle cx="600" cy="185" r="30" fill="var(--stop)"/><rect x="582" y="178" width="36" height="14" rx="4" style="fill:var(--page)"/>
+    <text x="645" y="62" font-size="16">쪽지 있음</text><text x="645" y="192" font-size="16">쪽지 없음</text>
+  </svg>
+  <p>쪽지(응답 경로)는 "이건 설명 / 이건 작업"이라는 표시예요. 예전 문지기는 쪽지가 없으면 답장을 멈췄어요.</p>
+</section>
+
+<!-- 3. Blocks waffle -->
+<section class="page pop" aria-labelledby="h3x">
+  <div class="no">3쪽 · 얼마나 멈췄나</div>
+  <h2 id="h3x">멈춘 416번 중 406번이 "쪽지 없음"</h2>
+  <svg id="waffle" viewBox="0 0 700 200" role="img" aria-label="100칸 중 98칸이 쪽지 없음으로 멈춘 것"></svg>
+  <div class="legend"><span><i style="background:var(--stop)"></i>쪽지 없음 (97.6%)</span><span><i style="background:var(--mute)"></i>다른 이유 (2.4%)</span></div>
+  <p class="cap">이 PC의 대화 기록 419개를 세었어요. 칸 하나 = 1%.</p>
+</section>
+
+<!-- 4. On vs off -->
+<section class="page pop" aria-labelledby="h4x">
+  <div class="no">4쪽 · 켰을 때와 껐을 때</div>
+  <h2 id="h4x">같은 질문, 문지기를 켜면?</h2>
+  <svg id="onoff" viewBox="0 0 700 260" role="img" aria-label="끔과 켬 비교 막대 그래프"></svg>
+  <div class="legend"><span><i style="background:var(--mute)"></i>끔 (10번)</span><span><i style="background:var(--gate)"></i>켬 (9번)</span></div>
+  <p class="cap">질문 수가 적고, 끔 모드는 다른 규칙도 같이 꺼서 차이가 전부 문지기 때문이라고는 못 해요.</p>
+</section>
+
+<!-- 5. Which turns -->
+<section class="page pop" aria-labelledby="h5x">
+  <div class="no">5쪽 · 어떤 답장이 멈췄나</div>
+  <h2 id="h5x">읽기만 한 답장은 거의 자동 실행에서 멈췄어요</h2>
+  <svg id="kinds" viewBox="0 0 700 220" role="img" aria-label="자동 실행과 대화형 작업에서 멈춘 답장의 종류"></svg>
+  <div class="legend">
+    <span><i style="background:var(--go)"></i>읽기만</span><span><i style="background:var(--sky)"></i>읽기 + 기록 남김</span>
+    <span><i style="background:var(--note)"></i>다른 명령</span><span><i style="background:var(--stop)"></i>파일 고침</span><span><i style="background:var(--fix)"></i>기타 도구</span>
+  </div>
+  <p class="cap">자동 실행(<code>claude -p</code>) 351번, 대화형 작업 57번(11:32 기준).</p>
+</section>
+
+<!-- 6. Fixes -->
+<section class="page pop" aria-labelledby="h6x">
+  <div class="no">6쪽 · 고친 것</div>
+  <h2 id="h6x">7가지를 고쳤어요</h2>
+  <svg viewBox="0 0 700 250" role="img" aria-label="공구 상자와 일곱 개의 수리 항목">
+    <rect x="250" y="120" width="200" height="100" rx="14" fill="var(--fix)"/><rect x="310" y="96" width="80" height="30" rx="10" fill="none" stroke="var(--fix)" stroke-width="10"/>
+    <rect x="250" y="150" width="200" height="10" style="fill:var(--page)" opacity=".35"/>
+    <g font-size="15">
+      <g transform="translate(40,40)"><circle r="22" fill="var(--sky)"/><text y="6" text-anchor="middle" style="fill:var(--page)">가</text><text x="32" y="6">글자 깨짐</text></g>
+      <g transform="translate(40,110)"><circle r="22" fill="var(--sky)"/><text y="6" text-anchor="middle" style="fill:var(--page)">!</text><text x="32" y="6">친절한 오류</text></g>
+      <g transform="translate(40,180)"><circle r="22" fill="var(--sky)"/><text y="6" text-anchor="middle" style="fill:var(--page)">✎</text><text x="32" y="6">기록장 칸 추가</text></g>
+      <g transform="translate(500,40)"><circle r="22" fill="var(--sky)"/><text y="6" text-anchor="middle" style="fill:var(--page)">◉</text><text x="32" y="6">경고등</text></g>
+      <g transform="translate(500,110)"><circle r="22" fill="var(--note)"/><text y="6" text-anchor="middle">1</text><text x="32" y="6">한 줄 쪽지 (A)</text></g>
+      <g transform="translate(500,180)"><circle r="22" fill="var(--note)"/><text y="6" text-anchor="middle">🔔</text><text x="32" y="6">미리 알림 (A)</text></g>
+      <g transform="translate(350,30)"><circle r="22" fill="var(--note)"/><text y="6" text-anchor="middle">🎫</text><text x="0" y="-30" text-anchor="middle">통과증 (B)</text></g>
+    </g>
+  </svg>
+  <svg id="tests" viewBox="0 0 700 150" role="img" aria-label="테스트 비교: 새로 생긴 실패 없음"></svg>
+  <p class="cap">예전 줄기에서는 새 테스트마다 "고치기 전 실패 → 고친 뒤 통과"를 확인했어요. 두 줄기 모두 고친 코드와 고치기 전 코드를 함께 돌려, 고쳐서 새로 생긴 실패가 없는지 봤어요.</p>
+</section>
+
+<!-- 7. Design options -->
+<section class="page pop" aria-labelledby="h7x">
+  <div class="no">7쪽 · 쪽지 문제를 푸는 4가지 방법</div>
+  <h2 id="h7x">A·B는 만들었고, C는 팀이 정할 일</h2>
+  <div class="cards">
+    <div class="card"><span class="tag t-go">만듦</span><b>A. 쉬운 쪽지</b><span>한 줄로 쓰고, 문지기가 미리 알려 줘요</span></div>
+    <div class="card"><span class="tag t-go">만듦</span><b>B. 통과증</b><span>자동 실행에서도 쪽지를 쓸 수 있어요</span></div>
+    <div class="card"><span class="tag t-note">팀 결정</span><b>C. 문지기가 대신</b><span>대신 써 줘도 다음 검사에서 또 멈춰요. 규칙을 바꿔야 해요</span></div>
+    <div class="card"><span class="tag t-stop">비추천</span><b>D. 그냥 통과</b><span>기록이 사라져요</span></div>
+  </div>
+</section>
+
+<!-- 8. Surprise -->
+<section class="page pop" aria-labelledby="h8x">
+  <div class="no">8쪽 · 깜짝 발견</div>
+  <h2 id="h8x">최신 문지기는 이미 달라져 있었어요</h2>
+  <svg viewBox="0 0 700 200" role="img" aria-label="예전 문지기는 쪽지 없으면 멈춤, 최신 문지기는 통과">
+    <g transform="translate(140,0)">
+      <circle cx="0" cy="70" r="34" fill="var(--note)"/><rect x="-32" y="106" width="64" height="56" rx="12" fill="var(--note)"/>
+      <circle cx="0" cy="40" r="10" fill="var(--stop)"/><text x="0" y="190" text-anchor="middle" font-size="17">예전 (0.5.1)</text>
+      <rect x="50" y="90" width="70" height="40" rx="8" fill="var(--stop)"/><text x="85" y="116" text-anchor="middle" font-size="15" style="fill:var(--page)">멈춤</text>
+    </g>
+    <path d="M330 100 H390" stroke="var(--soft)" stroke-width="6"/><path d="M384 86 L404 100 L384 114" fill="var(--soft)"/>
+    <g transform="translate(500,0)">
+      <circle cx="0" cy="70" r="34" fill="var(--go)"/><rect x="-32" y="106" width="64" height="56" rx="12" fill="var(--go)"/>
+      <path d="M-14 66 Q0 80 14 66" fill="none" style="stroke:var(--page)" stroke-width="4" stroke-linecap="round"/><text x="0" y="190" text-anchor="middle" font-size="17">최신 (main)</text>
+      <rect x="50" y="90" width="70" height="40" rx="8" fill="var(--go)"/><text x="85" y="116" text-anchor="middle" font-size="15" style="fill:var(--page)">통과</text>
+    </g>
+  </svg>
+  <p>최신 코드는 쪽지 없는 일반 답장을 막지 않아요. 그래서 A·B는 최신 코드로 옮기지 않았고, 작은 수리 4개만 옮겼어요.</p>
+</section>
+
+<!-- 9. Observations -->
+<section class="page pop" aria-labelledby="h9x">
+  <div class="no">9쪽 · 새로 찾은 문제</div>
+  <h2 id="h9x">관찰 노트 5장</h2>
+  <div class="cards">
+    <div class="card"><b>O7 💬</b><span>대화 중 읽기만 해도 멈춤</span></div>
+    <div class="card"><b>O8 🧾</b><span>설명에도 검사가 길게 붙음 (대신 진짜 실수 1개를 잡음)</span></div>
+    <div class="card"><b>O9 ❓</b><span>오류가 어느 문장인지 안 알려 줌 → 고침</span></div>
+    <div class="card"><b>O10 🔀</b><span>설치 폴더에서 브랜치를 바꾸면 내용이 바뀜 → 경고등</span></div>
+    <div class="card"><b>O11 📨</b><span>작업 중 도우미 보고가 오면 쪽지가 무효가 됨</span></div>
+  </div>
+</section>
+
+<!-- 10. Branch map -->
+<section class="page pop" aria-labelledby="h10x">
+  <div class="no">10쪽 · 어디에 올렸나</div>
+  <h2 id="h10x">브랜치 지도</h2>
+  <svg viewBox="0 0 700 300" role="img" aria-label="예전 줄기와 최신 줄기, 각 브랜치에 올린 커밋">
+    <text x="20" y="40" font-size="16" style="fill:var(--soft)">예전 줄기 (0.5.1)</text>
+    <path d="M30 80 H660" stroke="var(--mute)" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="70" cy="80" r="11" fill="var(--mute)"/><circle cx="150" cy="80" r="11" fill="var(--mute)"/><text x="150" y="112" text-anchor="middle" font-size="13">수정 시작</text>
+    <circle cx="230" cy="80" r="11" fill="var(--sky)"/><text x="230" y="112" text-anchor="middle" font-size="13">인코딩 1차</text>
+    <g fill="var(--fix)"><circle cx="300" cy="80" r="9"/><circle cx="340" cy="80" r="9"/><circle cx="380" cy="80" r="9"/><circle cx="420" cy="80" r="9"/><circle cx="460" cy="80" r="9"/><circle cx="500" cy="80" r="9"/><circle cx="540" cy="80" r="9"/><circle cx="580" cy="80" r="9"/><circle cx="620" cy="80" r="9"/><circle cx="660" cy="80" r="11"/></g>
+    <rect x="520" y="22" width="160" height="34" rx="17" fill="var(--fix)"/><text x="600" y="45" text-anchor="middle" font-size="15" style="fill:var(--page)">dev/improvement</text>
+    <text x="480" y="112" text-anchor="middle" font-size="13">오늘 커밋 10개 (A·B 포함)</text>
+
+    <text x="20" y="170" font-size="16" style="fill:var(--soft)">최신 줄기 (main)</text>
+    <path d="M30 220 H660" stroke="var(--gate)" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="90" cy="220" r="11" fill="var(--gate)"/><circle cx="170" cy="220" r="11" fill="var(--gate)"/><circle cx="250" cy="220" r="11" fill="var(--gate)"/><text x="170" y="252" text-anchor="middle" font-size="13">팀이 만든 111개 커밋</text>
+    <circle cx="420" cy="220" r="12" fill="var(--note)"/><text x="420" y="252" text-anchor="middle" font-size="13">문서 + 그림책</text>
+    <g fill="var(--go)"><circle cx="490" cy="220" r="9"/><circle cx="530" cy="220" r="9"/><circle cx="570" cy="220" r="9"/><circle cx="610" cy="220" r="9"/><circle cx="660" cy="220" r="11"/></g>
+    <text x="575" y="252" text-anchor="middle" font-size="13">수리 4개 + 정리</text>
+    <rect x="560" y="160" width="120" height="34" rx="17" fill="var(--go)"/><text x="620" y="183" text-anchor="middle" font-size="15" style="fill:var(--page)">skproject</text>
+    <path d="M300 92 C 380 150, 420 170, 480 208" fill="none" stroke="var(--soft)" stroke-width="3" stroke-dasharray="6 6"/>
+    <text x="335" y="160" font-size="13" style="fill:var(--soft)">수리 4개만 옮김</text>
+  </svg>
+  <p class="cap">설치된 Ghost-ALICE는 아직 그대로예요. <code>main</code>에는 아무것도 직접 올리지 않았어요.</p>
+</section>
+
+<!-- 11. Next -->
+<section class="page pop" aria-labelledby="h11x">
+  <div class="no">11쪽 · 다음 할 일</div>
+  <h2 id="h11x">남은 일 5가지</h2>
+  <svg viewBox="0 0 700 120" role="img" aria-label="다섯 개의 계단">
+    <g>
+      <rect x="20" y="80" width="120" height="30" rx="6" fill="var(--gate)"/><rect x="155" y="60" width="120" height="50" rx="6" fill="var(--gate)" opacity=".85"/>
+      <rect x="290" y="40" width="120" height="70" rx="6" fill="var(--gate)" opacity=".7"/><rect x="425" y="20" width="120" height="90" rx="6" fill="var(--gate)" opacity=".55"/>
+      <rect x="560" y="0" width="120" height="110" rx="6" fill="var(--gate)" opacity=".4"/>
+      <g font-size="22" text-anchor="middle" style="fill:var(--page)"><text x="80" y="102" style="fill:var(--page)">1</text><text x="215" y="92" style="fill:var(--page)">2</text><text x="350" y="82" style="fill:var(--page)">3</text><text x="485" y="72" style="fill:var(--page)">4</text><text x="620" y="62" style="fill:var(--page)">5</text></g>
+    </g>
+  </svg>
+  <div class="cards">
+    <div class="card"><b>1. 최신으로 설치</b><span>main 계열로 바꿔 설치</span></div>
+    <div class="card"><b>2. 다시 세기</b><span>같은 도구로 멈춘 횟수 재측정</span></div>
+    <div class="card"><b>3. PR 검토</b><span>skproject 변경을 팀이 검토</span></div>
+    <div class="card"><b>4. C 규칙 결정</b><span>읽기만 한 답장 검사 면제?</span></div>
+    <div class="card"><b>5. O11 이슈</b><span>도우미 보고가 쪽지를 무효로 만드는 문제</span></div>
+  </div>
+</section>
+</main>
+
+<script>
+(function () {
+  var ns = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent, text) {
+    var e = document.createElementNS(ns, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    (parent || null) && parent.appendChild(e);
+    return e;
+  }
+  // Waffle: 100 cells, 98 = 97.6% rounded
+  var w = document.getElementById('waffle');
+  if (w) {
+    var cols = 20, size = 26, gap = 6, left = (700 - cols * (size + gap) + gap) / 2;
+    for (var i = 0; i < 100; i++) {
+      el('rect', { x: left + (i % cols) * (size + gap), y: 10 + Math.floor(i / cols) * (size + gap), width: size, height: size, rx: 6,
+        fill: i < 98 ? 'var(--stop)' : 'var(--mute)' }, w);
+    }
+  }
+  // On/off: three grouped metrics, each scaled to its own maximum
+  var o = document.getElementById('onoff');
+  if (o) {
+    var metrics = [
+      { name: '멈춤 / 질문', off: 0, on: 0.44, fmt: function (v) { return v.toFixed(2); } },
+      { name: '문지기 일 비중', off: 0, on: 29, fmt: function (v) { return v + '%'; } },
+      { name: '답장 길이(토큰)', off: 492, on: 1052, fmt: function (v) { return v.toLocaleString('ko-KR'); } }
+    ];
+    var base = 210, maxH = 160, gw = 700 / metrics.length;
+    metrics.forEach(function (m, i) {
+      var cx = gw * i + gw / 2, max = Math.max(m.off, m.on) || 1;
+      [['off', 'var(--mute)', -38], ['on', 'var(--gate)', 8]].forEach(function (s) {
+        var v = m[s[0]], h = Math.max(v / max * maxH, v ? 4 : 2);
+        el('rect', { x: cx + s[2], y: base - h, width: 30, height: h, rx: 5, fill: s[1] }, o);
+        el('text', { x: cx + s[2] + 15, y: base - h - 8, 'text-anchor': 'middle', 'font-size': 15 }, o, m.fmt(v));
+      });
+      el('text', { x: cx, y: base + 28, 'text-anchor': 'middle', 'font-size': 16 }, o, m.name);
+    });
+    el('line', { x1: 20, x2: 680, y1: base, y2: base, stroke: 'var(--line)', 'stroke-width': 2 }, o);
+  }
+  // Which turns: stacked 100% bars
+  var k = document.getElementById('kinds');
+  if (k) {
+    var rows = [
+      { name: '자동 실행', total: 351, parts: [199, 139, 13, 0, 0] },
+      { name: '대화형 작업', total: 57, parts: [8, 1, 22, 21, 5] }
+    ];
+    var colors = ['var(--go)', 'var(--sky)', 'var(--note)', 'var(--stop)', 'var(--fix)'];
+    var x0 = 130, width = 540;
+    rows.forEach(function (r, i) {
+      var y = 40 + i * 90, x = x0;
+      el('text', { x: 10, y: y + 30, 'font-size': 17 }, k, r.name);
+      el('text', { x: 10, y: y + 52, 'font-size': 13, style: 'fill:var(--soft)' }, k, r.total + '번');
+      r.parts.forEach(function (p, j) {
+        if (!p) return;
+        var wd = p / r.total * width;
+        el('rect', { x: x, y: y, width: Math.max(wd - 2, 1), height: 48, rx: 6, fill: colors[j] }, k);
+        if (wd > 34) el('text', { x: x + wd / 2, y: y + 30, 'text-anchor': 'middle', 'font-size': 15, style: 'fill:var(--page)' }, k, p);
+        x += wd;
+      });
+    });
+  }
+  // Tests: total vs failures, before and after, for both lines
+  var t = document.getElementById('tests');
+  if (t) {
+    var runs = [
+      { name: '예전 줄기', before: [489, 8], after: [493, 8] },
+      { name: '최신 줄기', before: [760, 20], after: [769, 21] }
+    ];
+    runs.forEach(function (r, i) {
+      var y = 20 + i * 60;
+      el('text', { x: 10, y: y + 22, 'font-size': 16 }, t, r.name);
+      [['고치기 전', r.before, 140], ['고친 뒤', r.after, 420]].forEach(function (s) {
+        var pass = s[1][0] - s[1][1], full = 220;
+        el('rect', { x: s[2], y: y, width: full, height: 30, rx: 6, fill: 'var(--go)' }, t);
+        el('rect', { x: s[2] + full * pass / s[1][0], y: y, width: Math.max(full * s[1][1] / s[1][0], 3), height: 30, rx: 3, fill: 'var(--mute)' }, t);
+        el('text', { x: s[2] + 8, y: y + 21, 'font-size': 13, style: 'fill:var(--page)' }, t, s[0] + ' ' + s[1][0] + '개');
+      });
+    });
+    el('text', { x: 350, y: 145, 'text-anchor': 'middle', 'font-size': 15 }, t, '회색 = 원래부터 실패하던 테스트 (최신 줄기 +1은 매번 결과가 바뀌는 테스트)');
+  }
+})();
+</script>
+
+</html>
