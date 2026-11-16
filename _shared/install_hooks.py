@@ -877,7 +877,23 @@ def _platform_io_trace_entry(platform_key: str, event: str) -> Optional[dict[str
     io_command = _io_trace_hook_command(payload_mode=True)
     if not io_command:
         return None
-    return _command_entry(_hook_runner_command("io-trace", io_command, IO_TRACE_MARKER, platform_key=platform_key))
+    entry = _command_entry(_hook_runner_command("io-trace", io_command, IO_TRACE_MARKER, platform_key=platform_key))
+    if platform_key == "claude":
+        # The hook only appends one audit row under the log's lock and prints nothing, so Claude Code
+        # need not wait for it after every tool call. Codex is unchanged: async is part of its hook trust hash.
+        entry["hooks"][0]["async"] = True
+    return entry
+
+
+def _upgrade_io_trace_async(hooks_list: list, io_command: str) -> bool:
+    """Mark an already installed Claude io-trace entry async; return whether anything changed."""
+    changed = False
+    for group in hooks_list:
+        for hook in group.get("hooks", []) if isinstance(group, dict) else []:
+            if isinstance(hook, dict) and hook.get("command") == io_command and hook.get("async") is not True:
+                hook["async"] = True
+                changed = True
+    return changed
 
 
 def _ensure_hook_dispatcher_installed(dry_run: bool = False) -> bool:
@@ -2131,6 +2147,9 @@ def install_hook(
             ):
                 pt_list.append(io_entry)
                 _log(f"  {post_tool_key} io-trace hook added")
+                changed = True
+            elif platform_key == "claude" and _upgrade_io_trace_async(pt_list, io_command):
+                _log(f"  {post_tool_key} io-trace hook set to async")
                 changed = True
             else:
                 _log(f"  {post_tool_key} io-trace hook already exists. Skipping")

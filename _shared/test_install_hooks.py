@@ -4243,6 +4243,29 @@ class TestForegroundHookPayloads(TempHomeTestCase):
         self.assertNotIn("decision", payload)
         self.assertNotIn("systemMessage", payload)
 
+    def test_claude_io_trace_hook_runs_async_and_an_installed_sync_entry_is_upgraded(self):
+        """The io-trace hook only appends an audit row, so Claude Code need not wait for it after every tool."""
+        def io_hooks():
+            return [hook for event in ("PostToolUse", "PostToolUseFailure")
+                    for group in self._read_settings("claude")["hooks"].get(event, [])
+                    for hook in group.get("hooks", []) if install_hooks.IO_TRACE_MARKER in hook.get("command", "")]
+
+        self._write_settings("claude", {})
+        self.assertEqual(install_hooks.install_hook("claude"), "installed")
+        self.assertTrue(io_hooks())
+        self.assertTrue(all(hook.get("async") is True for hook in io_hooks()), io_hooks())
+
+        settings = self._read_settings("claude")
+        for event in ("PostToolUse", "PostToolUseFailure"):
+            for group in settings["hooks"].get(event, []):
+                for hook in group.get("hooks", []):
+                    hook.pop("async", None)  # the entry an earlier installer wrote
+        self._write_settings("claude", settings)
+        self.assertEqual(install_hooks.install_hook("claude"), "installed")
+        self.assertTrue(all(hook.get("async") is True for hook in io_hooks()), io_hooks())
+        self.assertEqual(install_hooks.install_hook("claude"), "already")
+        self.assertNotIn("async", install_hooks._platform_io_trace_entry("codex", "PostToolUse")["hooks"][0])
+
     def test_claude_io_trace_hook_does_not_depend_on_bare_bash(self):
         command = install_hooks._entry_command(
             install_hooks._platform_io_trace_entry("claude", "PostToolUse")
