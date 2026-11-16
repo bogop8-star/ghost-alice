@@ -46,6 +46,52 @@ def _sidecar(addon_id, target, *, install_mode="copy", content_hash):
     }
 
 
+class SourceCheckoutDriftTest(unittest.TestCase):
+    """Skills can be linked into the source checkout, so its HEAD can move away from the installed head."""
+
+    def setUp(self):
+        import subprocess
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.repo = Path(self.tmp.name) / "core"
+        self.repo.mkdir()
+        self.git = lambda *args: subprocess.run(["git", "-C", str(self.repo), "-c", "user.name=t", "-c",
+            "user.email=t@example.invalid", *args], check=True, capture_output=True, text=True).stdout.strip()
+        self.git("init", "-q", "-b", "main")
+        self.git("commit", "-q", "--allow-empty", "-m", "first")
+        self.first = self.git("rev-parse", "HEAD")
+        self.manifest = Path(self.tmp.name) / "claude.json"
+
+    def write_manifest(self, **fields):
+        data = dict(schema_version=1, platform="claude", source_root=str(self.repo), source_branch="main",
+                    source_head=self.first, targets=[])
+        data.update(fields)
+        self.manifest.write_text(json.dumps(data), encoding="utf-8")
+
+    def test_matching_head_is_ok(self):
+        self.write_manifest()
+        status, detail = install_doctor._source_checkout_drift(self.manifest)
+        self.assertEqual(status, install_doctor.STATUS_OK)
+        self.assertIn(self.first[:7], detail)
+
+    def test_moved_head_or_branch_is_a_warning_that_names_both(self):
+        self.write_manifest()
+        self.git("commit", "-q", "--allow-empty", "-m", "second")
+        self.git("checkout", "-q", "-b", "feature")
+        second = self.git("rev-parse", "HEAD")
+        status, detail = install_doctor._source_checkout_drift(self.manifest)
+        self.assertEqual(status, install_doctor.STATUS_WARNING)
+        self.assertIn(f"main@{self.first[:7]}", detail)
+        self.assertIn(f"feature@{second[:7]}", detail)
+
+    def test_missing_manifest_fields_or_non_git_root_are_not_reported(self):
+        self.assertIsNone(install_doctor._source_checkout_drift(None))
+        self.write_manifest(source_head=None)
+        self.assertIsNone(install_doctor._source_checkout_drift(self.manifest))
+        self.write_manifest(source_root=str(Path(self.tmp.name) / "not-a-repo"))
+        self.assertIsNone(install_doctor._source_checkout_drift(self.manifest))
+
+
 class AddonRegistryAuditTest(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
