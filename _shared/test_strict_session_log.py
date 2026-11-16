@@ -92,6 +92,26 @@ class TestStrictSessionLogPath(unittest.TestCase):
         self.assertEqual(row["visible_decision"], "show")
         self.assertRegex(row["payload_digest"], r"^sha256:[0-9a-f]{64}$")
 
+    def test_append_event_records_gate_decision_and_reason_as_fields(self):
+        cases = (
+            (json.dumps({"decision": "block", "reason": "[completion-gate] route-unavailable: register the route"}),
+             "block", "completion-gate", "route-unavailable"),
+            (json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                         "permissionDecisionReason": "[boundary-gate] surface-prohibited: outside the contract"}}),
+             "deny", "boundary-gate", "surface-prohibited"),
+            ("hook-reminder", "none", None, None),
+            ("", "none", None, None),
+        )
+        for index, (stdout, decision, gate, reason) in enumerate(cases):
+            with self.subTest(stdout=stdout):
+                path = strict_session_log.append_event(home=self.home, platform="claude", session_id=f"g-{index}",
+                    event={"hook_id": "completion", "event": "Stop", "stdout": stdout, "exit_code": 0})
+                row = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+                self.assertEqual(row["gate_decision"], decision)
+                self.assertEqual(row.get("gate"), gate)
+                self.assertEqual(row.get("gate_reason"), reason)
+                self.assertEqual(row["exit_code"], 0)
+
     def test_append_event_handles_surrogate_payload_text(self):
         path = strict_session_log.append_event(
             home=self.home,

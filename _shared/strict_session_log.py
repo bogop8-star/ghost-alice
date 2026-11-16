@@ -15,6 +15,32 @@ SAFE_COMPONENT_RE = re.compile(r"[^A-Za-z0-9._-]+")
 VISIBLE_DECISIONS = {"show", "hide", "force_show"}
 AGENT_VISIBILITY_PROFILES = {"strict", "dynamic", "minimal"}
 OBSERVED_DURATION_SOURCES = {"hook-runner", "tool-wrapper", "ledger", "agent-reported"}
+GATE_REASON_RE = re.compile(r"\[([a-z0-9-]+)\]\s*([a-z0-9-]+):")
+
+
+def gate_fields(stdout: str) -> dict[str, str]:
+    """Structured gate decision from a hook's native JSON output, so log readers need not parse stdout.
+
+    Claude Code hooks block with exit code 0 and a JSON decision, so exit_code alone cannot show a block.
+    gate_decision is the native decision ("block", "deny", ...) or "none". gate and gate_reason come from a
+    leading "[<gate>] <reason-code>:" in that decision's reason text only.
+    """
+    try:
+        payload = json.loads(stdout) if stdout.strip().startswith("{") else None
+    except ValueError:
+        payload = None
+    if not isinstance(payload, dict):
+        return {"gate_decision": "none"}
+    specific = payload.get("hookSpecificOutput") if isinstance(payload.get("hookSpecificOutput"), dict) else {}
+    decision = payload.get("decision") or specific.get("permissionDecision")
+    if not isinstance(decision, str) or not decision:
+        return {"gate_decision": "none"}
+    fields = {"gate_decision": SAFE_COMPONENT_RE.sub("-", decision)[:32]}
+    reason_text = payload.get("reason") if payload.get("decision") else specific.get("permissionDecisionReason")
+    match = GATE_REASON_RE.match(reason_text.strip()) if isinstance(reason_text, str) else None
+    if match:
+        fields.update(gate=match.group(1), gate_reason=match.group(2))
+    return fields
 
 
 def _safe_text(value: Any) -> str:
@@ -140,6 +166,7 @@ def append_event(home: Path | None, platform: str, session_id: str, event: dict[
         "stderr": _safe_text(event.get("stderr") or ""),
         "payload_digest": _payload_digest(event),
     }
+    row.update(gate_fields(row["stdout"]))
     duration = observed_duration_s(event.get("observed_duration_s"))
     if duration is not None:
         row["observed_duration_s"] = duration
