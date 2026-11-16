@@ -20,6 +20,10 @@ PRD는 기준 commit을 Core `v0.5.1` 태그로 제안합니다. 이 진단은 �
 | O3 | 11-12 | yesan | Windows 11 · Claude Code 데스크톱 | O1·O2가 일어나는 상태에서 doctor 실행 | 거버넌스가 실제로 기록되지 않는 상태를 경고 | `overall: ok` | A | O1·O2와 같은 시점에 확인. 재현 필요 |
 | O4 | 11-12 | yesan | Windows 11 · Claude Code | 세션 시작 | SessionStart 훅 정상 동작 | `expected SessionStart got UserPromptSubmit` 이벤트명 오류(공유 작업 기록 15:22 항목) | A 후보 | 재현 필요 |
 | O5 | 11-12 | yesan | Windows 11 · Claude Code | Stop 시 Autopilot 어댑터 실행 | 오류 없이 완료 기록 | Autopilot adapter 오류(공유 작업 기록 15:22 항목) | C 후보 | 재현 필요 |
+| O7 | 11-16 | yesan | Windows 11 · Claude Code 데스크톱(대화형) · claude-opus-5-5 | 공유 기록 파일을 읽어 작업 내용을 요약(읽기 전용 Bash 2회) | 요약만 전달 | 답변 뒤 Stop 훅 `route-unavailable` 차단. 경로 등록용 추가 턴 발생, 원장 스크립트 위치 탐색에 도구 호출 4회 추가 | D (O2·O6과 같은 흐름) | O6이 `claude -p`뿐 아니라 대화형 읽기 전용 턴에서도 1/1 발생. [증거 E1](evidence/session-2026-11-16-desktop.md#e1-읽기-전용-요약-턴에서-stop-훅-route-unavailable-o7). 재현 필요 |
+| O8 | 11-16 | yesan | 위와 같음 | 경로를 미리 등록한 읽기 전용 재요약(explanation) | 요약만 전달 | Stop 훅 `criterion-unbound`로 응답 검토 요구. 검토 기록에 도구 호출 약 10회. 검토가 실제 수치 오류 1건을 잡아 앞 답변 `unsupported`, 정정문 `reviewed` | D (비용) · 검토 효과 확인 | 1/1. [증거 E2](evidence/session-2026-11-16-desktop.md#e2-설명-답변에-응답-검토-요구-criterion-unbound-o8). 위험도별 가벼운 검토 경로 필요 여부 검토 |
+| O9 | 11-16 | yesan | 위와 같음 | `completion_assessment.py prepare-response --claims-file` | 일치하지 않는 주장을 지목 | `response-unbound` "Name each source-backed claim with its exact statement…"만 반환, 어느 주장이 문제인지 없음 | D (오류 안내 부족) | 1/1. [증거 E3](evidence/session-2026-11-16-desktop.md#e3-주장-문장-불일치-시-오류-메시지-o9) |
+| O10 | 11-16 | yesan | Windows 11 · skills가 체크아웃 junction인 설치 | 설치에 쓰인 체크아웃에서 브랜치 전환 | 설치된 동작은 그대로 | 실행 중인 세션이 읽는 skill 본문이 바뀐 브랜치 내용이 됨(사용자 보고 "내용이 이상해짐"). 훅은 런타임 복사본을 실행해 skill 본문과 훅 코드 버전이 어긋날 수 있음 | A 후보 | junction 3건 확인, 사용자 보고. [증거 E5](evidence/session-2026-11-16-desktop.md#e5-체크아웃-브랜치-전환이-설치된-skill을-바꿈-o10). 작업은 별도 clone(`ghost_alice`)이나 worktree에서 하도록 안내 필요 |
 
 ### 기록에서 뺀 사례
 
@@ -29,8 +33,8 @@ PRD는 기준 commit을 Core `v0.5.1` 태그로 제안합니다. 이 진단은 �
 
 | 유형 | 사례 | 반복 조건(지금까지) | 다음 확인 |
 | --- | --- | --- | --- |
-| A. 거버넌스가 조용히 꺼짐 | O1, O3, O4 | Windows 11 · Claude Code. O1은 비대화형 `claude -p` 입력에서만 확인 | macOS·Linux, Codex에서 같은 절차 실행. 대화형 입력과 비교 |
+| A. 거버넌스가 조용히 꺼짐 | O1, O3, O4, O10(후보) | Windows 11 · Claude Code. O1은 비대화형 `claude -p` 입력에서만 확인 | macOS·Linux, Codex에서 같은 절차 실행. 대화형 입력과 비교 |
 | C. 완료 판정 오류 | O5 | Stop 훅 Autopilot 어댑터 | 오류 메시지 원문 확보 후 재현 |
-| D. 안내 메시지 과다 | O2 | 데스크톱 앱에서 도구를 쓴 입력 다수(이 세션 6회) | visibility 프로필(현재 `dynamic`)별로 차이가 있는지 비교 |
-| E. 반복 검증 루프 | O2(후보) | 같은 세션에서 입력마다 재발 | 경로를 미리 등록하면 사라지는지 확인 |
+| D. 안내 메시지 과다 | O2, O7, O8, O9 | 데스크톱 앱에서 도구를 쓴 입력 다수(11-12 세션 6회, 11-16 세션 2회) | visibility 프로필(현재 `dynamic`)별로 차이가 있는지 비교 |
+| E. 반복 검증 루프 | O2(후보) | 같은 세션에서 입력마다 재발 | 경로를 미리 등록하면 사라지는지 확인. 11-16: 미리 등록하면 `route-unavailable`은 사라지지만 explanation에는 `criterion-unbound` 검토가 이어짐(O8). 작업 전 등록 시 Autopilot `prepared` 즉시 통지([증거 E4](evidence/session-2026-11-16-desktop.md#e4-작업-전-등록-순서-r3-e-확인)) |
 | B. 이전 의도 재사용 | 없음 | — | 관찰 계속 |

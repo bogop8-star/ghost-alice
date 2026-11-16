@@ -16,3 +16,5 @@
 | 11-13 | Claude Code | 사용자 선택("D03 3회 재실행")에 따라 D03을 켬·끔 각 3회 재실행 시작(`run_daily_test.py --ids D03` 3번, 끔은 대조군) | 결과는 `results/`의 새 run 파일 3개 |
 | 11-13 08:45 | Claude Code | D03 반복 실행 완료: 6회, 오류 0, $1.2974. 켬 3/3 실패(최종 답이 응답 경로 기록 실패 설명, 2회는 영어), 끔 3/3 통과 | `results/20261113-083949.jsonl`, `-084145.jsonl`, `-084326.jsonl` |
 | 11-13 08:5x | Claude Code | 답변 원문 채점, 반복 실행 요약 작성, `observations.md` O6 재현 기록 갱신 | `results/20261113-D03-rerun-summary.md`, `../observations.md` |
+| 11-13 | Claude Code | 사용자 요청으로 지금까지의 테스트 기록을 커밋(`fix/native-intake-reconcile`, push 안 함). 결과 파일에 사용자 이름·로컬 경로 없음 확인 | commit c22f16a |
+| 11-13 | Claude Code | 사용자 요청으로 팀 fork(bogop8-star/ghost-alice)의 `fix/native-intake-reconcile`에 push(9ef62c3..c22f16a) | 원격 head = c22f16a |
