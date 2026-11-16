@@ -30,6 +30,7 @@ class CompletionAssessmentError(ValueError):
     def __init__(self, reason, detail):
         super().__init__(detail)
         self.reason = reason
+        self.detail = detail
 
 
 def _require(condition, reason, detail):
@@ -254,11 +255,17 @@ def prepare_response_review(source, *, response_text, source_paths, verified_at=
     core, root, owner = _coordinates(source)
     _require(verified_at is None, 'response-unbound', 'An explanation does not create a verification timestamp')
     _require(bool(source_paths), 'source-unavailable', 'Explanation sources are required')
+    unbound = 'Name each source-backed claim with its exact statement from the explanation draft'
     _require(isinstance(claim_statements, list) and bool(claim_statements)
-        and all(isinstance(statement, str) and bool(statement.strip())
-            and statement in response_text for statement in claim_statements)
-        and len(claim_statements) == len(set(claim_statements)),
-        'response-unbound', 'Name each source-backed claim with its exact statement from the explanation draft')
+        and all(isinstance(statement, str) and bool(statement.strip()) for statement in claim_statements),
+        'response-unbound', unbound)
+    # Name the offending claims by index so the caller can correct only those; the statements stay with the caller.
+    missing = [str(index) for index, statement in enumerate(claim_statements) if statement not in response_text]
+    repeated = [str(index) for index, statement in enumerate(claim_statements)
+        if statement in claim_statements[:index]]
+    problems = ([f'not found in the draft: claim_index {", ".join(missing)}'] if missing else []) + (
+        [f'duplicated: claim_index {", ".join(repeated)}'] if repeated else [])
+    _require(not problems, 'response-unbound', f'{unbound}; {"; ".join(problems)}')
     bindings = []
     for index, statement in enumerate(claim_statements):
         binding = dict(claim_index=index, claim=statement)

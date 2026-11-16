@@ -47,6 +47,19 @@ class CompletionAssessmentTests(unittest.TestCase):
                 api.prepare_response_review(self.source, response_text='The footer is clear.',
                     source_paths=[str(self.observation)], claim_statements=claims)
 
+    def test_explanation_claim_mismatch_names_the_offending_claim_indexes(self):
+        route = self.fixture.candidate(units=())
+        route['response_purpose'] = 'explanation'
+        self.fixture.record(route)
+        api = self.api()
+        claims = ['The footer is clear.', 'not in the draft', 'The list ends.', 'The footer is clear.', 'also missing']
+        with self.assertRaises(api.CompletionAssessmentError) as raised:
+            api.prepare_response_review(self.source, response_text='The footer is clear. The list ends.',
+                source_paths=[str(self.observation)], claim_statements=claims)
+        self.assertEqual(raised.exception.reason, 'response-unbound')
+        self.assertIn('not found in the draft: claim_index 1, 4', raised.exception.detail)
+        self.assertIn('duplicated: claim_index 3', raised.exception.detail)
+
     def test_explanation_review_survives_planning_changes_on_the_same_owned_input(self):
         api = self.api()
         route = self.fixture.candidate()
