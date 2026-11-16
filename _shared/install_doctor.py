@@ -338,6 +338,43 @@ def _install_state_target_names(manifest_path: Path | None) -> tuple[str | None,
     return STATUS_OK, f"present ({len(names)} targets)", names
 
 
+def _source_checkout_drift(manifest_path: Path | None) -> tuple[str, str] | None:
+    """Compare the recorded install source head with the source checkout's current HEAD.
+
+    Installed skills can be directory links into the source checkout, while hooks run a copied runtime.
+    A branch switch or new commit in that checkout therefore changes the skill text a live session reads
+    without changing the hook code. Returns None when the manifest or the checkout cannot be read as git.
+    """
+    if manifest_path is None:
+        return None
+    try:
+        data = json.loads(manifest_path.expanduser().read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    root, head = (data.get(key) if isinstance(data, dict) else None for key in ("source_root", "source_head"))
+    if not isinstance(root, str) or not isinstance(head, str) or not head:
+        return None
+
+    def git(*args: str) -> str | None:
+        try:
+            result = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True, encoding="utf-8",
+                                    timeout=10, check=False)
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return result.stdout.strip() if result.returncode == 0 else None
+
+    current = git("rev-parse", "HEAD")
+    if not current:
+        return None
+    branch = git("rev-parse", "--abbrev-ref", "HEAD") or "?"
+    recorded = f"{data.get('source_branch') or '?'}@{head[:7]}"
+    if current == head:
+        return STATUS_OK, f"matches install ({recorded})"
+    return STATUS_WARNING, (f"{root} is at {branch}@{current[:7]} but was installed from {recorded}; "
+        "skills linked to this checkout now read its current files while hooks run the installed runtime copy. "
+        "Develop in a separate clone or worktree, or reinstall from this checkout")
+
+
 def _repo_direct_skill_names(repo_root: Path) -> set[str]:
     names: set[str] = set()
     try:
@@ -943,6 +980,10 @@ def run(args: argparse.Namespace) -> int:
     if install_state_status is not None and install_state_detail is not None:
         statuses.append(install_state_status)
         print(f"install-state: {install_state_detail}")
+    source_drift = _source_checkout_drift(args.install_state_manifest)
+    if source_drift is not None:
+        statuses.append(source_drift[0])
+        print(f"source-checkout: {source_drift[0]} {source_drift[1]}")
 
     target_args = args.target
     if install_state_targets is not None:
