@@ -21,7 +21,10 @@ jobs:
       - name: Check out Ghost-ALICE core
         uses: actions/checkout@v4
         with:
-          repository: AidALL/ghost-alice
+          # Pin Core to the team test baseline (Core c6019ac) instead of following
+          # AidALL main, so CI checks the same Core the Windows runs used.
+          repository: bogop8-star/ghost-alice
+          ref: test-baseline-2026-11-16
           path: ghost-alice
 
       - name: Set up Python
