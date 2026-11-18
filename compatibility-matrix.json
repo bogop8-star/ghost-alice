@@ -41,11 +41,13 @@
       "status": "not-run",
       "full_compatibility_blocker": true,
       "evidence": [
-        "target listed but no Windows Command Prompt runner evidence is attached in this checkout"
+        "Command Prompt with the same environment as scripts/run_windows_tests.ps1 runs the full addon suite (tests, scripts/run_project_tests.py) with zero failures; four tests skip on Windows with recorded reasons and one is an expected failure for a documented Windows difference",
+        "tests/test_privileged_adapter.py installs and fully uninstalls the official adapter hook through the Core installer API in an isolated location on Windows",
+        "Known Windows difference: when GHOST_ALICE_AUTOPILOT_RUN_DIR names a regular file, Windows reports FileNotFoundError instead of NotADirectoryError and Stop returns authority-missing without recovery guidance (tests/test_completion_behavior_repair.py, expected failure on Windows)"
       ],
       "next_evidence_required": [
-        "run install/status/remove and adapter subprocess checks from Command Prompt",
-        "attach command, exit code, and test summary"
+        "run install/status/remove from Command Prompt against an isolated destination and attach command, exit code and output",
+        "observe the installed hooks in a running native host on Windows"
       ]
     },
     {
@@ -55,11 +57,13 @@
       "status": "not-run",
       "full_compatibility_blocker": true,
       "evidence": [
-        "target listed but no Windows PowerShell 5 runner evidence is attached in this checkout"
+        "scripts/run_windows_tests.ps1 run from Windows PowerShell 5.1 executes the full addon suite (tests, scripts/run_project_tests.py) with zero failures; four tests skip on Windows with recorded reasons and one is an expected failure for a documented Windows difference",
+        "tests/test_privileged_adapter.py installs and fully uninstalls the official adapter hook through the Core installer API in an isolated location on Windows",
+        "Known Windows difference: when GHOST_ALICE_AUTOPILOT_RUN_DIR names a regular file, Windows reports FileNotFoundError instead of NotADirectoryError and Stop returns authority-missing without recovery guidance (tests/test_completion_behavior_repair.py, expected failure on Windows)"
       ],
       "next_evidence_required": [
-        "run install/status/remove and adapter subprocess checks from Windows PowerShell 5",
-        "attach command, exit code, and test summary"
+        "run install/status/remove from Windows PowerShell 5 against an isolated destination and attach command, exit code and output",
+        "observe the installed hooks in a running native host on Windows"
       ]
     },
     {
@@ -69,11 +73,13 @@
       "status": "not-run",
       "full_compatibility_blocker": true,
       "evidence": [
-        "target listed but no Windows PowerShell 7 runner evidence is attached in this checkout"
+        "scripts/run_windows_tests.ps1 run from PowerShell 7 executes the full addon suite (tests, scripts/run_project_tests.py) with zero failures; four tests skip on Windows with recorded reasons and one is an expected failure for a documented Windows difference",
+        "tests/test_privileged_adapter.py installs and fully uninstalls the official adapter hook through the Core installer API in an isolated location on Windows",
+        "Known Windows difference: when GHOST_ALICE_AUTOPILOT_RUN_DIR names a regular file, Windows reports FileNotFoundError instead of NotADirectoryError and Stop returns authority-missing without recovery guidance (tests/test_completion_behavior_repair.py, expected failure on Windows)"
       ],
       "next_evidence_required": [
-        "run install/status/remove and adapter subprocess checks from Windows PowerShell 7",
-        "attach command, exit code, and test summary"
+        "run install/status/remove from Windows PowerShell 7 against an isolated destination and attach command, exit code and output",
+        "observe the installed hooks in a running native host on Windows"
       ]
     },
     {

@@ -1,7 +1,7 @@
 # 설계: Ghost-ALICE Autopilot Windows 검증 (단점 6번 개선)
 
 - 작성: 2026-11-18 · 기준: `test-baseline-2026-11-16` (Core `c6019ac`, Autopilot `v0.5.1` `2075768`)
-- 상태: 초안. kyu 확인 대기 항목은 7절에 있습니다.
+- 상태: 진행 중. 진행 기록은 8절, 발견 사항은 `docs/windows-verification/2026-11-18-findings.md` 에 있습니다.
 
 ## 1. 목표
 
@@ -39,7 +39,7 @@ Autopilot 0.5.1이 Windows에서 동작한다는 것을 테스트 결과로 보�
 ### 4.1 Windows 테스트 실행기 (`scripts/run_windows_tests.ps1`)
 
 - 역할: POSIX CI와 같은 명령으로 전체 테스트를 Windows에서 돌립니다. UTF-8 모드, Git `env.exe` 경로, Core 위치를 맞춥니다.
-- 고칠 점: PowerShell 5에서 pytest가 없으면 `$ErrorActionPreference='Stop'` 때문에 설치 단계로 가지 못하고 바로 멈춥니다(2026-11-18 관찰). 파이썬 선택과 pytest 확인을 보완합니다.
+- 고친 점: PowerShell 5에서 pytest가 없으면 `$ErrorActionPreference='Stop'` 때문에 바로 멈추던 문제를 고쳤습니다. 이제 파이썬 3.11 이상과 pytest 설치 여부를 먼저 확인하고, 없으면 무엇이 없는지 알려 주고 멈춥니다. 패키지는 자동 설치하지 않습니다.
 - 결과: 종료 코드와 요약 줄(`N passed, M failed`)을 남깁니다.
 
 ### 4.2 Windows 테스트 보조 (`tests/conftest.py`, `.gitattributes`)
@@ -91,5 +91,17 @@ Autopilot 0.5.1이 Windows에서 동작한다는 것을 테스트 결과로 보�
 ## 7. kyu 확인이 필요한 것
 
 1. (결정됨) Autopilot 변경은 기존 팀 저장소 `bogop8-star/ghost-alice` 의 `autopilot/` 브랜치에 올립니다. 저장소 README에 Autopilot 브랜치 안내 한 줄을 추가합니다.
-2. (A-3을 할 경우) CI의 Core 기준: 팀 저장소 `test-baseline-2026-11-16` 태그로 고정(추천) 또는 AidALL 최신 main
-3. 어댑터 동작 차이가 실제 버그로 확인될 때: 기록만 할지, 고칠지(고치면 설치본 지문과 달라져 재설치가 필요해짐)
+2. (대기) (A-3을 할 경우) CI의 Core 기준: 팀 저장소 `test-baseline-2026-11-16` 태그로 고정(추천) 또는 AidALL 최신 main
+3. (결정됨) 어댑터 동작 차이는 고치지 않고 기록만 합니다. 해당 테스트는 Windows에서 xfail로 표시합니다.
+4. (결정됨) 호환표 Windows 항목은 `not-run` 을 유지하고 확인한 범위를 근거로 추가합니다. 셸별 install/status/remove를 격리 위치에서 실행한 뒤 `verified-local` 로 바꿉니다.
+
+## 8. 진행 기록
+
+| 순서 | 상태 | 결과 |
+|---|---|---|
+| 1. 전체 테스트 재실행 | 완료 | 740 통과, 22 실패 (PowerShell 5, 47분) |
+| 2. 실행기 보완 | 완료 | pytest·파이썬 확인 개선, PowerShell 5·7에서 확인 |
+| 3. 실패 분류와 수정 | 완료 | 테스트 쪽 21건 수정, 어댑터 1건 xfail. 커밋 `69455f4` |
+| 4. 셸별 실행과 호환표 갱신 | 완료 | PowerShell 5·7, CMD 모두 759 통과, 0 실패, 4 건너뜀, 1 xfail. 호환표 Windows 항목에 근거 추가, 상태는 `not-run` 유지 (7절 4번) |
+| 5. Windows CI | 대기 | 7절 2번 결정 필요 |
+| 6. 팀 저장소 반영과 PR | 대기 | `team` remote 연결만 해 둠. push 전 확인 필요 |

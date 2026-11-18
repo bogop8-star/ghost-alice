@@ -6,7 +6,10 @@
 #
 # Environment:
 #   GHOST_ALICE_CORE_ROOT  Ghost-ALICE Core checkout. Default: $HOME\ghost-alice
-#   PYTHON                 Python 3.11+ executable. Default: python on PATH
+#   PYTHON                 Python 3.11+ executable with pytest installed.
+#                          Default: python on PATH. The script stops with a
+#                          message when Python or pytest is missing; it does
+#                          not install packages.
 #
 # Windows-only differences handled here or in tests\conftest.py:
 #   - PYTHONUTF8=1 so file reads use UTF-8 instead of the cp949/ANSI code page.
@@ -45,10 +48,31 @@ if (-not (Get-Command env -CommandType Application -ErrorAction SilentlyContinue
 $python = if ($env:PYTHON) { $env:PYTHON } else { 'python' }
 $pytestArgs = if ($args.Count -gt 0) { $args } else { @('tests', '-q') }
 
+# Probe Python and pytest in one child that never writes to stderr. Under
+# Windows PowerShell 5, $ErrorActionPreference='Stop' turns any native stderr
+# line into a terminating error, so `python -m pytest --version` on a Python
+# without pytest stopped the script before it could report what was missing.
+# The code uses only single quotes: Windows PowerShell 5 drops embedded double
+# quotes when it passes an argument to a native program.
+$probe = 'import importlib.util, sys; print(''%d.%d %s'' % (sys.version_info[0], sys.version_info[1], ''yes'' if importlib.util.find_spec(''pytest'') else ''no''))'
+try {
+    $probeResult = & $python -c $probe
+} catch {
+    throw "Python not found: $python (set PYTHON to a Python 3.11+ executable)"
+}
+if ($LASTEXITCODE -ne 0 -or -not $probeResult) {
+    throw "Python probe failed: $python (set PYTHON to a Python 3.11+ executable)"
+}
+$version, $hasPytest = "$probeResult".Trim().Split(' ')
+if ([version]$version -lt [version]'3.11') {
+    throw "Python $version is too old: $python (set PYTHON to a Python 3.11+ executable)"
+}
+if ($hasPytest -ne 'yes') {
+    throw "pytest is not installed for $python. Install it with '$python -m pip install pytest' or set PYTHON to a Python that has pytest."
+}
+
 Push-Location $repo
 try {
-    & $python -m pytest --version *> $null
-    if ($LASTEXITCODE -ne 0) { & $python -m pip install -q pytest }
     & $python scripts\run_project_tests.py @pytestArgs -p no:cacheprovider
     exit $LASTEXITCODE
 } finally {
