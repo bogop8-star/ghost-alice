@@ -102,6 +102,6 @@ Autopilot 0.5.1이 Windows에서 동작한다는 것을 테스트 결과로 보�
 | 1. 전체 테스트 재실행 | 완료 | 740 통과, 22 실패 (PowerShell 5, 47분) |
 | 2. 실행기 보완 | 완료 | pytest·파이썬 확인 개선, PowerShell 5·7에서 확인 |
 | 3. 실패 분류와 수정 | 완료 | 테스트 쪽 21건 수정, 어댑터 1건 xfail. 커밋 `69455f4` |
-| 4. 셸별 실행과 호환표 갱신 | 완료 | PowerShell 5·7, CMD 모두 759 통과, 0 실패, 4 건너뜀, 1 xfail. 호환표 Windows 항목에 근거 추가, 상태는 `not-run` 유지 (7절 4번) |
+| 4. 셸별 실행과 호환표 갱신 | 완료 | PowerShell 5·7, CMD 모두 759 통과, 0 실패, 4 건너뜀, 1 xfail. 셸별 격리 install/status/uninstall 성공 후 호환표 Windows 항목 3개를 `verified-local` 로 올림 (7절 4번) |
 | 5. Windows CI | 대기 | 7절 2번 결정 필요 |
-| 6. 팀 저장소 반영과 PR | 대기 | `team` remote 연결만 해 둠. push 전 확인 필요 |
+| 6. 팀 저장소 반영과 PR | 진행 중 | PR #2 (`autopilot/windows-verify` → `autopilot/main`), CI Core를 팀 태그로 고정해 Linux CI 762 통과 |

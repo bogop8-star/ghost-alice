@@ -38,49 +38,52 @@
       "id": "shell-windows-command-prompt",
       "kind": "shell",
       "name": "Windows Command Prompt",
-      "status": "not-run",
-      "full_compatibility_blocker": true,
+      "status": "verified-local",
+      "full_compatibility_blocker": false,
       "evidence": [
         "Command Prompt with the same environment as scripts/run_windows_tests.ps1 runs the full addon suite (tests, scripts/run_project_tests.py) with zero failures; four tests skip on Windows with recorded reasons and one is an expected failure for a documented Windows difference",
+        "Core _shared/install_hooks.py run from Command Prompt with --platform claude, --destination-file naming an isolated destination and --addon-source this repository: install, --status and --uninstall each exit 0; install registers the [adapter:autopilot-mode] prepare-origin PreToolUse and continue Stop hooks, status reports installed, uninstall removes all eight hook entries, and fingerprints of the real user installation are unchanged before and after",
         "tests/test_privileged_adapter.py installs and fully uninstalls the official adapter hook through the Core installer API in an isolated location on Windows",
         "Known Windows difference: when GHOST_ALICE_AUTOPILOT_RUN_DIR names a regular file, Windows reports FileNotFoundError instead of NotADirectoryError and Stop returns authority-missing without recovery guidance (tests/test_completion_behavior_repair.py, expected failure on Windows)"
       ],
       "next_evidence_required": [
-        "run install/status/remove from Command Prompt against an isolated destination and attach command, exit code and output",
-        "observe the installed hooks in a running native host on Windows"
-      ]
+        "observe the installed hooks in a running native host on Windows and retain the exact installed hashes and hook audit for that observation"
+      ],
+      "verification_scope": "Local addon tests and isolated install/status/uninstall launched from Command Prompt against the pinned Core test baseline; live native host behavior on Windows remains unverified, and one documented Windows difference is an expected test failure."
     },
     {
       "id": "shell-windows-powershell-5",
       "kind": "shell",
       "name": "Windows PowerShell 5",
-      "status": "not-run",
-      "full_compatibility_blocker": true,
+      "status": "verified-local",
+      "full_compatibility_blocker": false,
       "evidence": [
         "scripts/run_windows_tests.ps1 run from Windows PowerShell 5.1 executes the full addon suite (tests, scripts/run_project_tests.py) with zero failures; four tests skip on Windows with recorded reasons and one is an expected failure for a documented Windows difference",
+        "Core _shared/install_hooks.py run from Windows PowerShell 5.1 with --platform claude, --destination-file naming an isolated destination and --addon-source this repository: install, --status and --uninstall each exit 0; install registers the [adapter:autopilot-mode] prepare-origin PreToolUse and continue Stop hooks, status reports installed, uninstall removes all eight hook entries, and fingerprints of the real user installation are unchanged before and after",
         "tests/test_privileged_adapter.py installs and fully uninstalls the official adapter hook through the Core installer API in an isolated location on Windows",
         "Known Windows difference: when GHOST_ALICE_AUTOPILOT_RUN_DIR names a regular file, Windows reports FileNotFoundError instead of NotADirectoryError and Stop returns authority-missing without recovery guidance (tests/test_completion_behavior_repair.py, expected failure on Windows)"
       ],
       "next_evidence_required": [
-        "run install/status/remove from Windows PowerShell 5 against an isolated destination and attach command, exit code and output",
-        "observe the installed hooks in a running native host on Windows"
-      ]
+        "observe the installed hooks in a running native host on Windows and retain the exact installed hashes and hook audit for that observation"
+      ],
+      "verification_scope": "Local addon tests and isolated install/status/uninstall launched from Windows PowerShell 5.1 against the pinned Core test baseline; live native host behavior on Windows remains unverified, and one documented Windows difference is an expected test failure."
     },
     {
       "id": "shell-windows-powershell-7",
       "kind": "shell",
       "name": "Windows PowerShell 7",
-      "status": "not-run",
-      "full_compatibility_blocker": true,
+      "status": "verified-local",
+      "full_compatibility_blocker": false,
       "evidence": [
         "scripts/run_windows_tests.ps1 run from PowerShell 7 executes the full addon suite (tests, scripts/run_project_tests.py) with zero failures; four tests skip on Windows with recorded reasons and one is an expected failure for a documented Windows difference",
+        "Core _shared/install_hooks.py run from PowerShell 7 with --platform claude, --destination-file naming an isolated destination and --addon-source this repository: install, --status and --uninstall each exit 0; install registers the [adapter:autopilot-mode] prepare-origin PreToolUse and continue Stop hooks, status reports installed, uninstall removes all eight hook entries, and fingerprints of the real user installation are unchanged before and after",
         "tests/test_privileged_adapter.py installs and fully uninstalls the official adapter hook through the Core installer API in an isolated location on Windows",
         "Known Windows difference: when GHOST_ALICE_AUTOPILOT_RUN_DIR names a regular file, Windows reports FileNotFoundError instead of NotADirectoryError and Stop returns authority-missing without recovery guidance (tests/test_completion_behavior_repair.py, expected failure on Windows)"
       ],
       "next_evidence_required": [
-        "run install/status/remove from Windows PowerShell 7 against an isolated destination and attach command, exit code and output",
-        "observe the installed hooks in a running native host on Windows"
-      ]
+        "observe the installed hooks in a running native host on Windows and retain the exact installed hashes and hook audit for that observation"
+      ],
+      "verification_scope": "Local addon tests and isolated install/status/uninstall launched from PowerShell 7 against the pinned Core test baseline; live native host behavior on Windows remains unverified, and one documented Windows difference is an expected test failure."
     },
     {
       "id": "agent-platform-claude",
