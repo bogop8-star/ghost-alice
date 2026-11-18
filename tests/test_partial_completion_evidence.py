@@ -15,7 +15,7 @@ class PartialEvidenceV2Test(_CompletionV2Fixture):
     def publish_cli(self, receipt, proof):
         import os, shlex, subprocess
         command=shlex.split(receipt['publish_command'].replace('ORIGINAL_ISO_TIME',self.verified_at))
-        return subprocess.run(command,input=proof,text=True,capture_output=True,
+        return fixture.run_exact_stdin(command,input=proof,capture_output=True,
             env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1'})
 
     def test_partial_cli_derives_original_top_level_evidence_without_override(self):

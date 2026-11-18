@@ -12,6 +12,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
 import sqlite3
 import subprocess
 import sys
@@ -27,6 +28,65 @@ sys.path.insert(0, str(ROOT / "tests"))
 import autopilot_state as adapter
 import autopilot_work_items as work_items
 from response_route_fixture import native_ledger, register_route
+
+
+def run_exact_stdin(args, *, input, **kwargs):
+    """Run a text-mode command but send ``input`` as its exact UTF-8 bytes.
+
+    Text-mode stdin translates LF to CRLF on Windows, while publish compares
+    the completion block byte-for-byte with its recorded review. POSIX
+    behavior is identical to ``subprocess.run(..., text=True)``.
+    """
+    kwargs.pop("text", None)
+    kwargs.pop("universal_newlines", None)
+    result = subprocess.run(args, input=input.encode("utf-8"), **kwargs)
+    for name in ("stdout", "stderr"):
+        value = getattr(result, name)
+        if isinstance(value, bytes):
+            setattr(result, name, value.decode("utf-8").replace("\r\n", "\n"))
+    return result
+
+
+def deny_read(testcase, path):
+    """Make ``path`` unreadable for the rest of ``testcase`` and restore it afterwards.
+
+    POSIX uses ``chmod(0)``. Windows ``chmod`` only toggles the read-only flag,
+    so an explicit deny read-data ACE for the current user produces the same
+    PermissionError. Only read-data is denied so icacls can still restore it.
+
+    Returns an idempotent ``restore`` callable for tests that make the file
+    readable again before cleanup.
+    """
+    path = Path(path)
+    if sys.platform != "win32":
+        path.chmod(0)
+        restore_command = lambda: path.chmod(0o600)
+    else:
+        user = os.environ.get("USERNAME") or os.getlogin()
+        subprocess.run(["icacls", str(path), "/deny", f"{user}:(RD)"], check=True, capture_output=True)
+        restore_command = lambda: subprocess.run(["icacls", str(path), "/remove:d", user], check=True, capture_output=True)
+    restored = []
+
+    def restore():
+        if not restored:
+            restored.append(True)
+            restore_command()
+
+    testcase.addCleanup(restore)
+    return restore
+
+
+def is_publish_command(line):
+    """True when ``line`` is a generated ``autopilot_completion.py publish`` command.
+
+    ``shlex.join`` quotes Windows paths, so the script name and ``publish`` may
+    be separated by a closing quote.
+    """
+    try:
+        argv = shlex.split(line)
+    except ValueError:
+        return False
+    return any(Path(arg).name == "autopilot_completion.py" and nxt == "publish" for arg, nxt in zip(argv, argv[1:]))
 
 
 class CompletionPublicationTest(unittest.TestCase):
@@ -243,7 +303,7 @@ class CompletionPublicationTest(unittest.TestCase):
         text = self.stop()["systemMessage"]
         self.assertIn("completion-publication: missing", text)
         self.assertIn(receipt["receipt_token"], text)
-        self.assertIn("autopilot_completion.py publish", text)
+        self.assertTrue(any(is_publish_command(line) for line in text.splitlines()), text)
         self.assertNotIn("observation_verdict:reopen_focus", text)
         self.assertNotIn("fresh resolved decision only after verification", text)
 

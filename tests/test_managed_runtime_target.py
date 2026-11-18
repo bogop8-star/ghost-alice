@@ -1,4 +1,5 @@
 """Managed v2 records live in owned runtime storage, not business cwd."""
+import os
 from pathlib import Path
 from unittest import mock
 
@@ -89,7 +90,8 @@ class ManagedRuntimeTargetTest(_CompletionV2Fixture):
     def test_managed_target_survives_later_business_cwd_change(self):
         import autopilot_runtime_context as runtime
         expected=self.managed();self.prepare()
-        source=dict(self.source,GHOST_ALICE_AUTOPILOT_CWD='/Library',PWD='/Library')
+        later=os.path.abspath(os.sep+'Library')  # '/Library' on POSIX, '<drive>:\Library' on Windows
+        source=dict(self.source,GHOST_ALICE_AUTOPILOT_CWD=later,PWD=later)
         self.assertEqual(runtime.resolve_run_target(source)['run_dir'],expected)
 
     def test_project_off_prevents_owned_runtime_acquisition(self):
@@ -106,7 +108,8 @@ class ManagedRuntimeTargetTest(_CompletionV2Fixture):
     def test_legacy_bound_target_survives_business_cwd_change(self):
         import autopilot_runtime_context as runtime
         receipt=self.prepare();self.managed()
-        source=dict(self.source,GHOST_ALICE_AUTOPILOT_CWD='/Library',PWD='/Library')
+        later=os.path.abspath(os.sep+'Library')  # '/Library' on POSIX, '<drive>:\Library' on Windows
+        source=dict(self.source,GHOST_ALICE_AUTOPILOT_CWD=later,PWD=later)
         self.assertEqual(runtime.resolve_run_target(source)['run_dir'],Path(receipt['run_dir']))
 
     def test_missing_bound_descriptor_cannot_silently_relocate_origin(self):

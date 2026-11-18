@@ -71,7 +71,7 @@ class CompletionEvidenceSourceTest(unittest.TestCase):
     def test_recovery_command_executes_without_locator_placeholder(self):
         self.prepare(); self.default_proof()
         message = self.stop()["systemMessage"]
-        command = next(line for line in message.splitlines() if "autopilot_completion.py publish" in line)
+        command = next(line for line in message.splitlines() if publication_tests.is_publish_command(line))
         self.assertNotIn("--evidence-source", command)
         self.assertNotIn("ORIGINAL_LOCATOR", message)
         self.assertIn("Explicit v1 callers", message)
