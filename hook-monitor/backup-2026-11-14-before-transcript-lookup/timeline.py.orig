@@ -1,0 +1,529 @@
+"""Build the per-turn hook flow of one Claude Code session and keep it for later replay.
+
+`assemble` is pure: it turns already-loaded records into turns with stages, steps and findings.
+`build` reads one session's sources, calls `assemble`, adds the current ledger state and saves the result
+under <snapshots>/<session>.json, so the session can be reopened after the sources are gone.
+
+Sources of one session:
+- hook runs and their judgments: <log_root>/<session>/strict-hook-output.jsonl
+- intent ledger events and state: <ledger_root>/ghost-state.sqlite3 (opened read-only)
+- tool names: the io-trace file
+- user input preview, refused ledger commands and the declared boundary contract: the Claude Code transcript
+
+Dependencies: Python 3.11+ standard library only.
+"""
+import hashlib
+import json
+import os
+import re
+import sqlite3
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from urllib.parse import quote
+
+import explain
+
+SEVERITY = {level: rank for rank, level in enumerate(explain.LEVELS)}
+SESSION_ID = re.compile(r'^[0-9A-Za-z][0-9A-Za-z_-]{5,80}$')
+LEDGER_COMMANDS = ('response_route.py', 'session_intent_ledger.py', 'completion_assessment.py')
+_TYPED_ERROR = re.compile(r'\{"error": "([a-z][a-z0-9-]*)", "message": "((?:[^"\\]|\\.)*)"\}')
+BOUNDARY_MARKER = '[boundary-contract]'
+BOUNDARY_NOTE = ('Ghost-ALICE 0.5.1은 경계 계약의 내용을 기계로 검사하지 않습니다. 에이전트가 대화에 계약을 선언하고, '
+                 'Core는 "계약이 필요하다고 했으면 계약 ID가 등록됐는가"만 확인합니다. 허용·금지 대상을 실제 도구 호출과 '
+                 '맞춰 보는 일은 사람이 아래 선언문과 도구 사용 기록을 비교해서 해야 합니다.')
+
+
+INPUT_KIND_LABEL = {
+    'human': '사람이 입력', 'slash-command': '슬래시 명령', 'queued-human': '작업 중에 보낸 메시지',
+    'peer': '다른 에이전트가 보낸 메시지', 'task-notification': '앱 작업 알림', 'queued-other': '대기열 메시지'}
+_SECRETS = (
+    (re.compile(r'\b[sp]k-lf-[0-9A-Za-z-]{8,}'), '<Langfuse 키 가림>'),
+    (re.compile(r'\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|xox[abprs]-[A-Za-z0-9-]{10,})'), '<키 가림>'),
+    (re.compile(r'(?i)\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|API_?KEY|PRIVATE_?KEY)[A-Z0-9_]*)\s*[=:]\s*'
+                r'''("[^"]*"|'[^']*'|\S+)'''), r'\1=<가림>'),
+)
+_TAG = re.compile(r'<[^>]{1,200}>')
+
+
+def redact(text):
+    """Mask values that look like credentials before a user input preview is shown or saved."""
+    text = str(text or '')
+    for pattern, replacement in _SECRETS:
+        text = pattern.sub(replacement, text)
+    return text
+
+
+def _preview(text):
+    return redact(' '.join(_TAG.sub(' ', str(text or '')).split()))[:200]
+
+
+def classify_input(row):
+    """Return (kind, preview) when a transcript row is something that starts a turn, else None.
+
+    Kinds are the keys of INPUT_KIND_LABEL. Skill bodies, reminders and tool results are not inputs.
+    """
+    attachment = row.get('attachment') if isinstance(row.get('attachment'), dict) else None
+    if attachment is not None:
+        if attachment.get('type') != 'queued_command':
+            return None
+        sender = attachment.get('origin', {}).get('kind') if isinstance(attachment.get('origin'), dict) else None
+        if attachment.get('commandMode') == 'task-notification' or sender == 'task-notification':
+            kind = 'task-notification'
+        else:
+            kind = {'human': 'queued-human', 'peer': 'peer'}.get(sender, 'queued-other')
+        return kind, _preview(attachment.get('prompt'))
+    message = row.get('message') if isinstance(row.get('message'), dict) else None
+    if message is None or (message.get('role') or row.get('type')) != 'user':
+        return None
+    content = message.get('content')
+    parts = content if isinstance(content, list) else []
+    if any(isinstance(part, dict) and part.get('type') == 'tool_result' for part in parts):
+        return None
+    text = content if isinstance(content, str) else '\n'.join(
+        str(part.get('text') or '') for part in parts if isinstance(part, dict) and part.get('type') == 'text')
+    sender = row.get('origin', {}).get('kind') if isinstance(row.get('origin'), dict) else None
+    if sender == 'peer':
+        return 'peer', _preview(text.split(':', 1)[1] if text.startswith('Another Claude session sent a message:') else text)
+    if row.get('isMeta') or not text.strip():
+        return None
+    command = re.search(r'<command-name>(.*?)</command-name>', text, re.S)
+    if command:
+        arguments = re.search(r'<command-args>(.*?)</command-args>', text, re.S)
+        return 'slash-command', _preview(command.group(1).strip() + (' ' + arguments.group(1).strip() if arguments else ''))
+    if text.lstrip().startswith('<'):
+        return None
+    return 'human', _preview(text)
+
+
+def parse_time(value):
+    try:
+        moment = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    return moment if moment.tzinfo else moment.astimezone()
+
+
+def _public(item):
+    return {key: value for key, value in item.items() if not key.startswith('_')}
+
+
+def _step(item):
+    return dict(_public(item), count=1, ts_end=item.get('ts'))
+
+
+def _new_turn(index, start):
+    return {'index': index, '_start': start, '_items': [], '_tools': Counter(), 'user_text': '', 'input_kind': None}
+
+
+def _place(turns, moment):
+    """Return the turn whose time window holds `moment`; records before the first input go to the session-start group."""
+    chosen = None
+    for turn in turns:
+        if turn['_start'] <= moment:
+            chosen = turn
+    if chosen is None:
+        if not turns or turns[0]['index'] != 0:
+            turns.insert(0, _new_turn(0, moment))
+        chosen = turns[0]
+        chosen['_start'] = min(chosen['_start'], moment)
+    return chosen
+
+
+def _headline(outcome, ended, blocks, findings, turn_index, is_latest):
+    top = findings[0]['title'] if findings else ''
+    if outcome == 'ok':
+        if ended:
+            return '막힘 없이 진행됐습니다'
+        if turn_index == 0:
+            return '첫 입력 전의 점검을 마쳤습니다'
+        return '진행 중입니다' if is_latest else '답변 종료 점검 기록 없이 다음 입력으로 넘어갔습니다'
+    if outcome == 'resumed':
+        return f'{len(blocks)}번 막혔다가 다시 진행됐습니다 · {top}'
+    if outcome == 'unresolved':
+        return ('막힌 문제가 풀리지 않은 채 끝났습니다 · ' if ended else '막혀 있습니다 · ') + top
+    if outcome == 'error':
+        return '훅 실행 오류가 있었습니다 · ' + top
+    return f'막히지는 않았지만 주의할 점이 {len(findings)}가지 있습니다 · {top}'
+
+
+def _finish(turn, end, staged, resolved):
+    items = sorted(turn['_items'], key=lambda item: item['_t'])
+    steps, open_steps = [], {}
+    stages = {stage['key']: {'level': 'none', 'count': 0} for stage in explain.STAGES}
+    findings = {}
+    for item in items:
+        stage = stages[item['stage']]
+        stage['count'] += 1
+        if SEVERITY[item['level']] > SEVERITY[stage['level']]:
+            stage['level'] = item['level']
+        # Repeated per-tool-call rows collapse into one counted step until something else happens.
+        if item['source'] == 'hook' and item['stage'] == 'tool' and item['level'] in ('ok', 'info', 'warn'):
+            key = (item['name'], item['code'], item['level'], item['title'])
+            if key in open_steps:
+                step = open_steps[key]
+                step['count'] += 1
+                step['ts_end'] = item['ts']
+                step['duration_s'] = round(step.get('duration_s', 0) + item.get('duration_s', 0), 3)
+            else:
+                open_steps[key] = _step(item)
+                steps.append(open_steps[key])
+        else:
+            open_steps = {}
+            steps.append(_step(item))
+        if SEVERITY[item['level']] >= SEVERITY['warn']:
+            key = (item['source'], item['name'], item['code'], item['level'])
+            if key in findings:
+                findings[key]['count'] += 1
+                findings[key]['ts_end'] = item['ts']
+            else:
+                findings[key] = _step(item)
+    ordered = sorted(findings.values(), key=lambda finding: -SEVERITY[finding['level']])
+    blocks = [item for item in items if item['level'] == 'block']
+    stops = [item for item in items if item['source'] == 'hook' and item['stage'] == 'stop']
+    if blocks:
+        passed = stops and stops[-1]['level'] == 'ok' and stops[-1]['_t'] > blocks[-1]['_t']
+        outcome = 'resumed' if passed else 'unresolved'
+    elif any(item['level'] == 'error' for item in items):
+        outcome = 'error'
+    elif ordered:
+        outcome = 'warn'
+    else:
+        outcome = 'ok'
+    checkpoints = [item for item in items if item['name'] == 'PreToolUse · tool-checkpoint']
+    routes = [item for item in items if item.get('event') == 'response-route-recorded']
+    pending = sum(1 for key, moment in staged.items()
+                  if (end is None or moment < end) and (key not in resolved or (end is not None and resolved[key] >= end)))
+    if pending:
+        # The unconfirmed input is the root of what follows, so the intake stage must not read as normal.
+        if SEVERITY[stages['intake']['level']] < SEVERITY['warn']:
+            stages['intake']['level'] = 'warn'
+        for finding in ordered:
+            if finding['code'] == 'route-unavailable':
+                finding['resume'] = ('단, 이 턴에는 확정되지 않은 입력이 남아 있어 경로 등록이 거부됩니다. 대기열이 풀리기 전에는 '
+                                     '아래 방법이 통하지 않으며, 새 채팅에서 이어가야 합니다. ' + finding['resume'])
+    return {
+        'index': turn['index'], 'label': '세션 시작' if turn['index'] == 0 else f'턴 {turn["index"]}',
+        'started': turn['_start'].astimezone(timezone.utc).isoformat().replace('+00:00', 'Z'),
+        'ended_at': items[-1]['ts'] if items else None, 'ended': bool(stops), 'user_text': turn.get('user_text', ''),
+        'input_kind': turn.get('input_kind'), 'input_kind_label': INPUT_KIND_LABEL.get(turn.get('input_kind'), ''),
+        'stages': stages, 'steps': steps, 'findings': ordered, 'outcome': outcome,
+        'headline': _headline(outcome, bool(stops), blocks, ordered, turn['index'], end is None), 'blocks': len(blocks),
+        'pending_at_end': pending, 'route_registered': bool(routes), 'tool_calls': len(checkpoints),
+        'tools_before_route': sum(1 for item in checkpoints if not routes or item['_t'] < routes[0]['_t']),
+        'tools': dict(turn['_tools'].most_common()),
+    }
+
+
+def _notes(turn, previous_pending):
+    """Plain facts about the turn that explain its findings: stuck input queue, missing or late route registration."""
+    notes = []
+    kind = turn['input_kind_label'] or '종류를 알 수 없는 입력'
+    turn['pending_started'] = previous_pending == 0 and turn['pending_at_end'] > 0
+    if turn['pending_started']:
+        notes.append({'level': 'warn', 'text':
+                      f'이 입력({kind})부터 확정 대기열이 쌓이기 시작했습니다. Ghost-ALICE가 이 입력을 "사람이 보낸 입력"으로 확정하지 못했습니다. '
+                      '확정되지 않은 입력이 남아 있는 동안에는 작업 경로 등록이 거부되고(route-binding) Autopilot 기록도 되지 않습니다.'})
+    elif turn['pending_at_end'] > 0:
+        notes.append({'level': 'warn', 'text':
+                      f'확정되지 않은 입력이 {turn["pending_at_end"]}개 쌓여 있습니다. 앞선 입력이 대기열을 막고 있어 이 턴의 입력도 확정되지 못했고, '
+                      '그동안 작업 경로 등록이 거부됩니다. 새 채팅은 빈 대기열로 시작합니다.'})
+    if turn['tool_calls'] and not turn['route_registered'] and turn['ended']:
+        notes.append({'level': 'info', 'text': f'도구를 {turn["tool_calls"]}번 썼지만 이 턴에서 작업 경로는 등록되지 않았습니다.'})
+    elif turn['route_registered'] and turn['tools_before_route']:
+        notes.append({'level': 'info', 'text':
+                      f'작업 경로를 등록하기 전에 도구를 {turn["tools_before_route"]}번 썼습니다(스킬과 원장을 읽는 호출 포함).'})
+    turn['notes'] = notes
+    return turn['pending_at_end']
+
+
+def assemble(session, hook_rows, ledger_events=(), cli_errors=(), tool_rows=(), user_inputs=(), until=None):
+    """Group one session's records into turns. A turn starts when the prompt hooks of a new user input fire."""
+    limit = parse_time(until) if until else None
+
+    def moment_of(value):
+        moment = parse_time(value)
+        return moment if moment is not None and (limit is None or moment <= limit) else None
+
+    hooks = []
+    for row in hook_rows:
+        end = moment_of(row.get('ts'))
+        if end is None:
+            continue
+        item = explain.explain_hook(row)
+        item.update(_t=end, _start=end - timedelta(seconds=item.get('duration_s') or 0),
+                    _event=row.get('event'), _hook=row.get('hook_id'))
+        hooks.append(item)
+    hooks.sort(key=lambda item: item['_t'])
+
+    turns, prompt_run = [], set()
+    for item in hooks:
+        if item['_event'] == 'UserPromptSubmit':
+            # Several prompt hooks fire for one input; the same hook firing again means another input.
+            if not prompt_run or item['_hook'] in prompt_run:
+                turns.append(_new_turn(sum(1 for turn in turns if turn['index']) + 1, item['_start']))
+                prompt_run = set()
+            prompt_run.add(item['_hook'])
+        else:
+            prompt_run = set()
+            if not turns:
+                turns.append(_new_turn(0, item['_start']))
+        turns[-1]['_items'].append(item)
+
+    staged, resolved = {}, {}
+    for number, event in enumerate(ledger_events):
+        moment = moment_of(event.get('ts'))
+        if moment is None:
+            continue
+        item = explain.explain_ledger(event)
+        kind = event.get('event')
+        # Ledger times are cut to whole seconds. A staged input is written by the prompt hook, so place it late in its second.
+        item['_t'] = moment + timedelta(seconds=0.999) if kind == 'native-input-staged' else moment
+        key = event.get('transport_observation_id') or f'#{number}'
+        if kind == 'native-input-staged':
+            staged[key] = item['_t']
+        elif kind == 'native-input-resolved':
+            resolved[key] = item['_t']
+        _place(turns, item['_t'])['_items'].append(item)
+    for error in cli_errors:
+        moment = moment_of(error.get('ts'))
+        if moment is None:
+            continue
+        item = explain.explain_cli(error.get('code'), error.get('message'), error.get('ts'))
+        item['_t'] = moment
+        _place(turns, moment)['_items'].append(item)
+    for row in tool_rows:
+        moment = moment_of(row.get('ts'))
+        if moment is not None and turns:
+            _place(turns, moment)['_tools'][str(row.get('tool') or '알 수 없음')] += 1
+    for entry in user_inputs:
+        moment = moment_of(entry.get('ts'))
+        if moment is None or not turns:
+            continue
+        # The transcript stamps the input slightly before its prompt hooks start.
+        turn = _place(turns, moment + timedelta(seconds=3))
+        if turn['index'] and turn['input_kind'] is None:
+            turn['input_kind'] = entry.get('kind') or 'human'
+            turn['user_text'] = str(entry.get('text') or '')[:200]
+
+    finished = [_finish(turn, turns[n + 1]['_start'] if n + 1 < len(turns) else None, staged, resolved)
+                for n, turn in enumerate(turns)]
+    pending = 0
+    for turn in finished:
+        pending = _notes(turn, pending)
+    return {'session': session, 'turns': finished,
+            'totals': {'turns': sum(1 for turn in finished if turn['index']),
+                       'blocks': sum(turn['blocks'] for turn in finished),
+                       'unresolved': sum(turn['outcome'] == 'unresolved' for turn in finished),
+                       'attention': sum(turn['outcome'] in ('warn', 'error') for turn in finished)}}
+
+
+# ---- reading the sources ------------------------------------------------------------------------
+
+def _read_jsonl(path, needle=None):
+    rows = []
+    try:
+        with Path(path).open(encoding='utf-8', errors='replace') as handle:
+            for line in handle:
+                if needle and needle not in line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(row, dict):
+                    rows.append(row)
+    except OSError:
+        pass
+    return rows
+
+
+def _ledger(ledger_root, session):
+    """Return (events, state, error) of one session from the SQLite ledger without writing to it."""
+    database = Path(ledger_root) / 'ghost-state.sqlite3'
+    if not database.exists():
+        return [], None, '원장 DB가 없습니다: ' + str(database)
+    try:
+        connection = sqlite3.connect('file:' + quote(database.as_posix(), safe='/:') + '?mode=ro', uri=True, timeout=2)
+        try:
+            events = [json.loads(body) for (body,) in connection.execute(
+                "SELECT event_json FROM intent_events WHERE platform='claude' AND session_id=? ORDER BY sequence", (session,))]
+            row = connection.execute(
+                "SELECT state_json FROM sessions WHERE platform='claude' AND session_id=?", (session,)).fetchone()
+        finally:
+            connection.close()
+    except (sqlite3.Error, ValueError) as error:
+        return [], None, f'원장 DB를 읽지 못했습니다: {error}'
+    return events, json.loads(row[0]) if row else None, None
+
+
+def _text_of(content):
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ''
+    return '\n'.join(str(part.get('text') or '') for part in content if isinstance(part, dict) and part.get('type') == 'text')
+
+
+def _boundary_block(text):
+    lines = text[text.rindex(BOUNDARY_MARKER):].splitlines()
+    kept = [lines[0]]
+    for line in lines[1:]:
+        if not line.strip() or not (line.lstrip().startswith('-') or line[:1] in (' ', '\t')):
+            break
+        kept.append(line)
+    return '\n'.join(kept)[:4000]
+
+
+def _transcript(path):
+    """Read user input previews, refused ledger commands and the last declared boundary contract from a transcript."""
+    result = {'user_inputs': [], 'cli_errors': [], 'boundary': None}
+    commands = {}
+    clock = None
+    for row in _read_jsonl(path):
+        # A queued message keeps the time it was typed; its place in the file tells when it was delivered.
+        moment = parse_time(row.get('timestamp'))
+        if moment is not None and (clock is None or moment > clock):
+            clock = moment
+        classified = classify_input(row)
+        if classified is not None and clock is not None:
+            result['user_inputs'].append({'ts': clock.isoformat(), 'kind': classified[0], 'text': classified[1]})
+        message = row.get('message')
+        if not isinstance(message, dict):
+            continue
+        content, stamp = message.get('content'), row.get('timestamp')
+        role = message.get('role') or row.get('type')
+        parts = content if isinstance(content, list) else []
+        if role == 'assistant':
+            for part in parts:
+                if isinstance(part, dict) and part.get('type') == 'tool_use':
+                    tool_input = part.get('input') if isinstance(part.get('input'), dict) else {}
+                    commands[part.get('id')] = str(tool_input.get('command') or '')
+            text = _text_of(content)
+            if BOUNDARY_MARKER in text:
+                result['boundary'] = {'ts': stamp, 'text': _boundary_block(text)}
+        elif role == 'user':
+            results = [part for part in parts if isinstance(part, dict) and part.get('type') == 'tool_result']
+            for part in results:
+                # Only commands that call a Ghost-ALICE ledger script count; other output may merely quote such an error.
+                if any(name in commands.get(part.get('tool_use_id'), '') for name in LEDGER_COMMANDS):
+                    output = part.get('content') if isinstance(part.get('content'), str) else _text_of(part.get('content'))
+                    for match in _TYPED_ERROR.finditer(output):
+                        result['cli_errors'].append({'ts': stamp, 'code': match.group(1), 'message': match.group(2)})
+    return result
+
+
+def _state_summary(state):
+    if not isinstance(state, dict):
+        return None
+    route = state.get('response_route') if isinstance(state.get('response_route'), dict) else None
+    surface = route.get('routing_surface') if route and isinstance(route.get('routing_surface'), dict) else {}
+    criteria = [{'id': c.get('id'), 'summary': c.get('summary'), 'status': c.get('status'), 'admitted': c.get('admitted'),
+                 'work_unit_id': c.get('work_unit_id')} for c in state.get('acceptance_criteria') or [] if isinstance(c, dict)]
+    return {
+        'goal': state.get('current_goal') or '', 'summary': state.get('user_intent_summary') or '',
+        'constraints': state.get('constraints') or [], 'non_goals': state.get('non_goals') or [], 'criteria': criteria,
+        'pending_inputs': len(state.get('pending_native_inputs') or []), 'revision': state.get('ledger_revision'),
+        'updated_at': state.get('updated_at'),
+        'route': None if route is None else {
+            'status': route.get('status'), 'purpose': route.get('response_purpose'),
+            'current': route.get('input_event_id') == state.get('latest_input_event_id'),
+            'primary_request': surface.get('primary_request'), 'reason': surface.get('reason'),
+            'boundary_contract': surface.get('boundary_contract'), 'boundary_ref': route.get('boundary_ref'),
+            'selected_work_unit_ids': route.get('selected_work_unit_ids') or []},
+    }
+
+
+# ---- snapshots ----------------------------------------------------------------------------------
+
+def _write_json(path, data):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + '.tmp')
+    temporary.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+    os.replace(temporary, path)
+
+
+def _load_json(path, default):
+    try:
+        return json.loads(Path(path).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return default
+
+
+def _paths(session, config):
+    return {'log': Path(config['log_root']) / session / 'strict-hook-output.jsonl',
+            'transcript': Path(config['transcripts']) / f'{session}.jsonl',
+            'snapshot': Path(config['snapshots']) / f'{session}.json',
+            'database': Path(config['ledger_root']) / 'ghost-state.sqlite3', 'trace': Path(config['trace'])}
+
+
+def signature(session, config):
+    """Change marker of a session's sources, so callers can skip rebuilding an unchanged timeline."""
+    paths = _paths(session, config)
+    parts = []
+    for path in (paths['log'], paths['transcript'], paths['database'], Path(str(paths['database']) + '-wal'), paths['trace']):
+        try:
+            stat = path.stat()
+            parts.append(f'{stat.st_size}:{stat.st_mtime_ns}')
+        except OSError:
+            parts.append('-')
+    return hashlib.sha256('|'.join(parts).encode()).hexdigest()[:16]
+
+
+def build(session, config, until=None):
+    """Return the explained timeline of one session, from its sources or, when they are gone, from its snapshot."""
+    if not SESSION_ID.match(str(session)):
+        raise ValueError('세션 ID 형식이 올바르지 않습니다')
+    paths = _paths(session, config)
+    if not paths['log'].exists():
+        saved = _load_json(paths['snapshot'], None)
+        if saved is None:
+            return {'session': session, 'turns': [], 'totals': {'turns': 0, 'blocks': 0, 'unresolved': 0, 'attention': 0},
+                    'missing': True, 'stages': explain.STAGES, 'level_labels': explain.LEVEL_LABEL}
+        return dict(saved, from_snapshot=True, until_ignored=bool(until))
+    events, state, ledger_error = _ledger(config['ledger_root'], session)
+    transcript = _transcript(paths['transcript'])
+    result = assemble(session, _read_jsonl(paths['log']), events, transcript['cli_errors'],
+                      _read_jsonl(paths['trace'], needle=session), transcript['user_inputs'], until)
+    summary = _state_summary(state)
+    route = (summary or {}).get('route') or {}
+    result.update(
+        state=summary, ledger_error=ledger_error, stages=explain.STAGES, level_labels=explain.LEVEL_LABEL,
+        boundary={'required': route.get('boundary_contract') == 'required' if route else None, 'ref': route.get('boundary_ref'),
+                  'declared': transcript['boundary'], 'note': BOUNDARY_NOTE},
+        sources={'hook_log': True, 'ledger': ledger_error is None and state is not None, 'transcript': paths['transcript'].exists()},
+        built_at=datetime.now(timezone.utc).isoformat(), from_snapshot=False, until=until)
+    if until is None:
+        _write_json(paths['snapshot'], result)
+        index_path = Path(config['snapshots']) / 'index.json'
+        index = _load_json(index_path, {})
+        first = next((turn['user_text'] for turn in result['turns'] if turn['user_text']), '')
+        index[session] = {'updated': paths['log'].stat().st_mtime, 'log_size': paths['log'].stat().st_size,
+                          'totals': result['totals'], 'first_text': first[:80]}
+        _write_json(index_path, index)
+    return result
+
+
+def list_sessions(config):
+    """List sessions that can be shown: those with a live hook log and those kept only as a snapshot."""
+    index = _load_json(Path(config['snapshots']) / 'index.json', {})
+    sessions = {}
+    log_root = Path(config['log_root'])
+    if log_root.exists():
+        for log in log_root.glob('*/strict-hook-output.jsonl'):
+            session = log.parent.name
+            if not SESSION_ID.match(session):
+                continue
+            stat = log.stat()
+            if index.get(session, {}).get('log_size') != stat.st_size:
+                try:
+                    build(session, config)
+                except (OSError, ValueError):
+                    pass
+                index = _load_json(Path(config['snapshots']) / 'index.json', {})
+            sessions[session] = {'session': session, 'updated': stat.st_mtime, 'live': True}
+    for session, meta in index.items():
+        entry = sessions.setdefault(session, {'session': session, 'updated': meta.get('updated', 0), 'live': False})
+        entry.update(totals=meta.get('totals'), first_text=meta.get('first_text', ''))
+    return sorted(sessions.values(), key=lambda entry: entry['updated'], reverse=True)

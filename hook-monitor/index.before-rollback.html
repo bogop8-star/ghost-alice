@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hook-monitor</title>
+<style>
+/* Layout: case on top; left = chat picker + turn tree (evidence), right = sticky verdict panel; saved verdicts below */
+:root{
+  --bg:#f2f4f7;--panel:#ffffff;--sunk:#f6f8fa;--ink:#1a2330;--soft:#566376;--faint:#8592a3;--line:#dbe2ea;--sel:#e7effc;
+  --user:#2766cc;--bot:#13804f;--tool:#ad620a;--hook:#6247c7;--other:#566376;
+  --bad:#bf3522;--bad-bg:#fcebe8;--good:#13804f;--good-bg:#e4f4ec;--warn:#9a6200;--warn-bg:#fff3d6;
+  --accent:#2766cc;--on-accent:#ffffff;
+  --sans:"Pretendard","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e131a;--panel:#161e29;--sunk:#111821;--ink:#e4ebf3;--soft:#9daec2;--faint:#6f8197;--line:#27354a;--sel:#1b2a40;
+  --user:#6ea8f6;--bot:#53cd99;--tool:#f0a24c;--hook:#a996f6;--other:#9daec2;
+  --bad:#ff8a75;--bad-bg:#3b1c18;--good:#53cd99;--good-bg:#132e26;--warn:#f0c062;--warn-bg:#342910;
+  --accent:#6ea8f6;--on-accent:#0e131a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--sans)}
+.wrap{max-width:1440px;margin:0 auto;padding:20px clamp(12px,2vw,24px) 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+h1{font-size:22px;line-height:1.3;margin:0}
+h2{font-size:17px;line-height:1.3;margin:0}
+h3{font-size:13px;font-weight:700;color:var(--soft);margin:0 0 4px}
+p{margin:0}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px}
+.steps{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:14px;color:var(--soft);margin-top:2px}
+.steps b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:1px 10px;font-size:13px;font-weight:600;line-height:1.6;border:1px solid var(--line);background:var(--sunk);color:var(--soft);white-space:nowrap}
+.chip.good{color:var(--good);background:var(--good-bg);border-color:transparent}
+.chip.bad{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+.chip.warn{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.chip.faint{color:var(--faint);background:transparent}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.banner{border-radius:10px;padding:10px 14px;font-weight:700;background:var(--bad-bg);color:var(--bad)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
+.grow{flex:1 1 auto}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.col{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+.side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:1050px){.main{grid-template-columns:minmax(0,1fr)}.side{position:static;max-height:none}}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:8px;padding:5px 12px;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700;padding:8px 18px}
+.btn.small{padding:1px 9px;font-size:13px}
+label.f{display:block;font-size:13px;font-weight:700;color:var(--soft);margin:10px 0 4px}
+input[type=text],textarea,select{width:100%;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:14px}
+textarea{min-height:72px;resize:vertical}
+input[type=file]{font:inherit;font-size:14px;max-width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.muted{color:var(--soft)}.small{font-size:13px}.mono{font-family:var(--mono);font-size:13px}
+.empty{color:var(--soft);padding:10px 0}
+.msg-ok{color:var(--good)}.msg-err{color:var(--bad)}
+.form-actions{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:12px}
+
+/* collapsible headers */
+.sumhead{cursor:pointer;list-style:none;margin:0}
+.sumhead::-webkit-details-marker{display:none}
+.caret{width:14px;flex:none;color:var(--soft);font-size:11px;transition:transform .15s}
+.caret::before{content:"▶"}
+details[open]>summary>.caret{transform:rotate(90deg)}
+#caseBox[open]>summary{margin-bottom:12px}
+
+/* ① case */
+.case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px 22px}
+.fh{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.fh h3{margin:0}
+.quote{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--sunk);border:1px solid var(--line);border-left:3px solid var(--user);border-radius:8px;padding:8px 12px}
+.conds{margin:0;padding-left:22px;display:grid;gap:4px}
+.ctx summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--soft)}
+.ctx p{margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* ② picker */
+.pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 14px}
+.pickinfo{margin-top:10px;font-size:14px;color:var(--soft);overflow-wrap:anywhere}
+.upload{margin-top:10px}
+.upload>summary{cursor:pointer;font-size:13px;color:var(--soft)}
+
+/* ③ turn tree */
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--soft);margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.check{display:inline-flex;gap:6px;align-items:center;font-size:14px}
+.note{font-size:13px;color:var(--soft);margin-bottom:12px}
+.sess{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:14px;color:var(--soft)}
+.flow{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:13px;margin:4px 0 12px}
+.flow .on{color:var(--good);font-weight:700}.flow .off{color:var(--faint)}.flow .arr{color:var(--faint)}
+.tree{list-style:none;margin:0;padding:0}
+.turn{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;margin:0 0 10px;background:var(--panel)}
+.turn.alert{border-left-color:var(--bad)}
+.turn>details>summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 14px;cursor:pointer;list-style:none;border-radius:8px}
+.turn>details>summary::-webkit-details-marker{display:none}
+.turn>details>summary:hover{background:var(--sunk)}
+.turn-no{font-weight:700;white-space:nowrap}
+.turn-text{flex:1 1 220px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.stages{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 8px 38px}
+.items{list-style:none;margin:0;padding:0 14px 12px 38px}
+.it{position:relative;padding:6px 0 6px 20px;min-width:0}
+.it::before{content:"";position:absolute;left:0;top:0;bottom:0;border-left:2px solid var(--line)}
+.it:last-child::before{bottom:auto;height:19px}
+.it::after{content:"";position:absolute;left:0;top:18px;width:13px;border-top:2px solid var(--line)}
+.ih{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.kind{font-weight:700;font-size:14px;color:var(--c)}
+.kind::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;background:currentColor;margin-right:6px;vertical-align:1px}
+.time{font-family:var(--mono);font-size:12px;color:var(--faint)}
+.text{margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px}
+.text>.clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden}
+.more{border:0;background:none;color:var(--accent);padding:2px 0;font-size:13px}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tchip{font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:0 7px;background:var(--sunk);color:var(--ink)}
+.annot{display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px 8px;padding:3px 7px;border-radius:7px;background:var(--sunk)}
+.meaning{font-size:12.5px;color:var(--soft);white-space:normal;overflow-wrap:anywhere}
+.sub{margin-top:6px}
+.sub>summary{cursor:pointer;font-size:13px;color:var(--soft)}
+.scroll{overflow-x:auto}
+.htable{border-collapse:collapse;font-size:13px;margin-top:4px;min-width:100%}
+.htable th,.htable td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top;white-space:nowrap}
+.htable th{color:var(--soft);font-weight:700}
+.htable td.err{white-space:pre-wrap;font-family:var(--mono);font-size:12px;color:var(--bad);min-width:260px}
+.c-user{--c:var(--user)}.c-bot{--c:var(--bot)}.c-tool{--c:var(--tool)}.c-hook{--c:var(--hook)}.c-bad{--c:var(--bad)}.c-other{--c:var(--other)}
+
+/* ④ verdict */
+.target{font-size:14px;color:var(--soft);margin-bottom:10px;overflow-wrap:anywhere}
+.rubric{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:c}
+.cond{border:1px solid var(--line);border-radius:10px;padding:10px 12px;counter-increment:c}
+.cond p{font-size:14px;margin-bottom:8px;overflow-wrap:anywhere}
+.cond p::before{content:"조건 " counter(c) " · ";font-weight:700;color:var(--soft)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.opt{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13.5px;font-weight:700;color:var(--soft);cursor:pointer;background:var(--sunk)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt.fail:has(input:checked){border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.opt.pass:has(input:checked){border-color:var(--good);color:var(--good);background:var(--good-bg)}
+.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:12.5px;color:var(--soft);margin-top:8px}
+.preview{margin:12px 0 2px;padding:8px 12px;border-radius:8px;font-weight:700;font-size:14px}
+.preview.warn{background:var(--warn-bg);color:var(--warn)}.preview.bad{background:var(--bad-bg);color:var(--bad)}.preview.good{background:var(--good-bg);color:var(--good)}
+.saverow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.summary{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
+.sumbox{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;text-align:center}
+.sumbox b{font-size:24px;font-variant-numeric:tabular-nums;line-height:1.25}
+.sumbox span{font-size:12.5px;color:var(--soft)}
+
+/* ⑤ saved verdicts */
+.saved{border-collapse:collapse;width:100%;font-size:14px}
+.saved th,.saved td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;white-space:nowrap}
+.saved th{font-size:13px;color:var(--soft);font-weight:700}
+.saved tbody tr[data-i]{cursor:pointer}
+.saved tbody tr[data-i]:hover{background:var(--sunk)}
+.saved tbody tr.sel{background:var(--sel)}
+.vlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.vlist li{display:flex;gap:10px;align-items:flex-start;overflow-wrap:anywhere}
+.detail{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+footer{font-size:12.5px;color:var(--faint);overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){.caret{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>hook-monitor</h1>
+      <p class="steps"><span><b>①</b> 사례 확인</span><span>→</span><span><b>②</b> 볼 채팅 고르기</span><span>→</span><span><b>③</b> 타임라인에서 근거 찾기</span><span>→</span><span><b>④</b> 조건별 판정 저장</span><span>→</span><span><b>⑤</b> 다시 보기</span></p>
+    </div>
+    <div class="chips" id="status" aria-live="polite"><span class="chip">연결 확인 중</span></div>
+  </header>
+  <div class="banner" id="hookWarn" hidden>훅이 꺼져 있어요. 이 상태로 실행한 회차에는 훅 기록이 남지 않아요.</div>
+
+  <section class="panel">
+    <details id="caseBox" open>
+      <summary class="head sumhead"><span class="caret" aria-hidden="true"></span><h2>① 사례</h2><span class="chip" id="caseIdChip">사례 ID 없음</span><span class="chip" id="caseCondChip" hidden></span></summary>
+      <div id="caseView"></div>
+      <div class="form-actions" id="caseActions"><button class="btn" id="editCase" type="button">사례 편집</button><span id="caseMsg" class="small"></span></div>
+      <form id="caseForm" hidden>
+        <label class="f" for="cid">사례 ID</label><input type="text" id="cid" autocomplete="off">
+        <label class="f" for="context">사전 문맥</label><textarea id="context"></textarea>
+        <label class="f" for="prompt">사용자 입력</label><textarea id="prompt"></textarea>
+        <label class="f" for="expected">기대 행동</label><textarea id="expected"></textarea>
+        <label class="f" for="conditions">실패 조건: 한 줄에 하나</label><textarea id="conditions" rows="5"></textarea>
+        <div class="form-actions"><button class="btn primary" type="submit">사례 저장</button><button class="btn" id="cancelCase" type="button">취소</button><span class="small muted">저장하면 지금 사례를 덮어써요. 이미 저장한 판정은 그때 사례를 따로 갖고 있어요.</span></div>
+      </form>
+    </details>
+  </section>
+
+  <div class="main">
+    <div class="col">
+      <section class="panel">
+        <div class="head"><h2>② 볼 채팅</h2></div>
+        <div class="pick">
+          <div><label class="f" for="live">실시간 세션</label><select id="live"><option value="">자동: 가장 최근 채팅</option></select></div>
+          <div><label class="f" for="phase">구간</label><select id="phase"><option value="before">수정 전</option><option value="after">수정 후 / 재현</option></select></div>
+          <div><label class="f" for="runs">표시할 실행</label><select id="runs"><option value="">실시간 세션 보기</option></select></div>
+        </div>
+        <p class="pickinfo" id="pickInfo"></p>
+        <details class="upload">
+          <summary>다른 폴더에서 연 채팅은 기록 파일로 불러오기</summary>
+          <div class="pick">
+            <div><label class="f" for="file">세션 JSONL 파일</label><input id="file" type="file" accept=".jsonl,.json,.txt"></div>
+            <div><label class="f" for="sid">세션 ID (파일에 없는 경우)</label><input type="text" id="sid" autocomplete="off"></div>
+          </div>
+          <div class="form-actions"><button class="btn" id="upload" type="button">기록 불러오기</button><span id="uploadMsg" class="small"></span></div>
+        </details>
+      </section>
+
+      <section class="panel">
+        <div class="head">
+          <h2>③ 대화·훅 타임라인</h2><span class="grow"></span>
+          <label class="check"><input type="checkbox" id="allHooks"> 도구 직전·직후 훅도 모두 보기</label>
+          <button class="btn small" id="openAll" type="button">모두 펼치기</button>
+          <button class="btn small" id="closeAll" type="button">모두 접기</button>
+          <button class="btn small" id="toLatest" type="button">최신 턴으로</button>
+        </div>
+        <div class="legend"><span class="c-user">사람 입력</span><span class="c-bot">에이전트 답</span><span class="c-tool">도구 사용</span><span class="c-hook">훅</span><span class="c-bad">막힘·오류</span><span class="c-other">기타 기록</span></div>
+        <p class="note">한 턴은 사람 입력 하나와 그 뒤에 일어난 일 전부예요. 문제없이 끝난 도구 직전·직후 훅은 줄로 펼치지 않고, 턴 위쪽 단계 칩에 개수로만 보여요.</p>
+        <div id="timeline"></div>
+      </section>
+    </div>
+
+    <aside class="panel side">
+      <div class="head"><h2>④ 판정</h2></div>
+      <p class="target" id="judgeTarget"></p>
+      <ol class="rubric" id="rubric"></ol>
+      <p class="hint">‘실패 조건 충족’은 나쁜 일이 실제로 일어났다는 뜻이에요. 하나라도 충족이면 그 회차는 실패예요.</p>
+      <div class="preview" id="preview" hidden></div>
+      <label class="f" for="note">판정 근거 / 재현 메모</label>
+      <textarea id="note" placeholder="③에서 찾은 답변 문장이나 도구 호출을 그대로 옮겨 적어요"></textarea>
+      <div class="saverow"><span class="chip" id="phaseNote"></span><button class="btn primary" id="saveVerdict" type="button">판정 저장</button></div>
+      <p id="verdictMsg" class="small"></p>
+      <div class="summary" id="summary"></div>
+    </aside>
+  </div>
+
+  <section class="panel">
+    <div class="head"><h2>⑤ 저장된 판정 다시 보기</h2><span class="grow"></span><label class="check"><input type="checkbox" id="onlyCase" checked> 지금 사례만</label><button class="btn small" id="langfuseSync" type="button" title="저장된 판정, 사례, Ghost-ALICE 훅 판단을 Langfuse로 보냅니다">Langfuse로 보내기</button></div>
+    <p id="langfuseMsg" class="small"></p>
+    <div class="scroll"><table class="saved"><thead><tr><th>저장 시각</th><th>사례</th><th>구간</th><th>채팅</th><th>결과</th></tr></thead><tbody id="savedRows"></tbody></table></div>
+    <div id="savedView"></div>
+  </section>
+
+  <footer id="paths"></footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STAGES=['SessionStart','UserPromptSubmit','PreToolUse','PostToolUse','Stop'];
+const STAGE={SessionStart:'채팅 시작',UserPromptSubmit:'입력 받음',PreToolUse:'도구 직전',PostToolUse:'도구 직후',Stop:'답 끝냄'};
+const PHASE={before:'수정 전',after:'수정 후 / 재현'};
+const VIS={hide:'숨김',show:'표시',force_show:'강제 표시'};
+let state={},connected=null,run=null,caseEditing=false,showAllHooks=false,onlyCase=true,savedSel=null,firstLoad=true;
+let caseSig=null,liveSig=null,runsSig=null,timelineSig=null,rubricKey=null,savedSig=null,savedViewKey=null,pathsSig=null;
+const openState=new Map(),expanded=new Set();
+
+const toMs=t=>(t===null||t===undefined||t==='')?NaN:Date.parse(String(t).replace(/(\.\d{3})\d+/,'$1'));
+const pad=n=>String(n).padStart(2,'0');
+const clock=v=>{if(!Number.isFinite(v))return '';const d=new Date(v);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())};
+const stamp=t=>{const v=toMs(t);if(!Number.isFinite(v))return String(t||'');const d=new Date(v);return pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+clock(v)};
+const shortId=s=>s?String(s).slice(0,8):'세션 없음';
+const ago=sec=>{if(!sec)return '';const s=Math.max(0,Math.round(Date.now()/1000-sec));return s<60?s+'초 전':s<3600?Math.floor(s/60)+'분 전':s<86400?Math.floor(s/3600)+'시간 전':Math.floor(s/86400)+'일 전'};
+const firstLine=s=>(String(s||'').split('\n').find(x=>x.trim())||'').trim();
+const conditionsOf=c=>String((c||{}).conditions||'').split('\n').map(x=>x.trim()).filter(Boolean);
+const failed=v=>Object.values(v||{}).includes('fail');
+const shortTool=n=>{n=String(n||'unknown');if(n.startsWith('mcp__')){const p=n.split('__');return p.slice(2).join('__')||n}return n};
+function toolMeaning(name){
+  const n=String(name||'').toLowerCase();
+  if(/^(read|glob|grep)$/.test(n))return {read:'파일 내용을 읽도록 요청함',glob:'파일 목록을 찾도록 요청함',grep:'파일에서 글자를 찾도록 요청함'}[n]+' · 호출 기록만으로 읽기 성공은 알 수 없음';
+  if(/^(edit|write|multiedit|notebookedit)$/.test(n))return '파일 변경을 요청함 · 실제 반영 여부는 도구 결과나 파일에서 확인';
+  if(/^(bash|powershell)$/.test(n))return '셸 명령 실행을 요청함 · 명령 내용과 종료 결과는 이 표시만으로 알 수 없음';
+  if(n.includes('websearch')||n.includes('webfetch'))return '웹 조회를 요청함 · 조회 결과는 이 표시만으로 알 수 없음';
+  if(n.includes('askuser'))return '사용자에게 입력을 요청함';
+  if(n.includes('task'))return '별도 작업 또는 작업 상태 처리를 요청함 · 완료 여부는 별도 확인';
+  return '이 도구의 호출 요청이 기록됨 · 실행 결과나 성공 여부는 별도 확인';
+}
+const HOOK_MEANING={
+  'session-start':'채팅 시작 때 환경과 보류 작업을 점검하는 훅',
+  'pending-merge-prompt':'새 입력 전에 보류 중인 변경 사항을 확인하는 훅',
+  'session-intent':'사용자 입력의 기록과 라우팅 안내를 준비하는 훅 · 입력이 원장에 남았는지는 별도 확인',
+  'tool-checkpoint':'도구 사용 직전에 점검하는 훅 · 도구 실행 성공이나 권한 승인을 뜻하지 않음',
+  'adapter-autopilot-mode-prepare-origin':'Autopilot이 도구 사용 출처를 준비하는 훅 · 작업 완료를 뜻하지 않음',
+  'io-trace':'도구 사용 흔적을 감사 기록에 남기는 훅',
+  'completion':'답변 종료 때 Core의 응답 조건을 확인하는 훅 · 종료 코드 0만으로 답변 승인 여부는 알 수 없음',
+  'adapter-autopilot-mode-continue':'답변 종료 때 Autopilot의 기록·후속 처리를 시도하는 훅 · 종료 코드 0만으로 완료 적용 여부는 알 수 없음'
+};
+function hookMeaning(e){const base=HOOK_MEANING[e.hook]||`${STAGE[e.stage]||e.stage||'해당 단계'}에 실행된 훅`;return base+(e.exit_code!=null&&e.exit_code!==0?' · 훅 명령이 오류로 끝남':e.exit_code===0?' · 훅 명령은 종료 코드 0으로 끝남':'')}
+const LEDGER_MEANING={
+  'user-input-observed':'사용자 입력이 원장에 정식으로 기록됨',
+  'intent-updated':'현재 작업 의도에 대한 원장 상태가 갱신됨',
+  'response-route-recorded':'응답 경로가 원장에 기록됨 · ready 여부는 경로 상태를 별도 확인',
+  'acceptance-criterion-met':'완료 조건을 충족했다는 근거가 기록됨',
+  'acceptance-criterion-evidence-invalidated':'이전에 기록한 완료 근거가 무효화됨'
+};
+const ledgerMeaning=e=>LEDGER_MEANING[e.stage]||'원장에 이 이름의 이벤트가 기록됨 · 의미는 이벤트 상세 상태를 확인';
+function setMsg(id,text,ok){const el=$(id);el.textContent=text;el.className='small '+(ok?'msg-ok':'msg-err')}
+async function post(path,value){
+  try{const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});return await r.json()}
+  catch(e){return {error:'서버에 연결하지 못했어요. 모니터 서버가 켜져 있는지 확인하세요.'}}
+}
+
+/* ---------- message kinds ---------- */
+function classify(m){
+  if(m.role==='assistant')return 'bot';
+  if(m.role==='tool')return 'tool';
+  const t=String(m.text||'').trimStart();
+  if(/^\w+ hook feedback:/.test(t))return 'hookfb';
+  if(t.startsWith('Base directory for this skill:'))return 'skill';
+  if(t.startsWith('<task-notification>'))return 'notify';
+  if(/^<local-command-|^\[Request interrupted|^Caveat:/.test(t))return 'system';
+  return 'human';
+}
+function humanText(s){
+  s=String(s||'');
+  const n=s.match(/<command-name>([\s\S]*?)<\/command-name>/);
+  if(!n)return s;
+  const a=s.match(/<command-args>([\s\S]*?)<\/command-args>/);
+  return (n[1].trim()+' '+(a?a[1].trim():'')).trim();
+}
+
+/* ---------- turn tree ---------- */
+function buildTurns(messages,events){
+  const rows=[],ups=[];let seq=0,last=-Infinity;
+  for(const m of messages||[]){let t=toMs(m.ts);if(Number.isFinite(t))last=t;else t=last;rows.push({t,seq:seq++,kind:classify(m),m})}
+  for(const e of events||[]){
+    if(e.source!=='hook'&&e.source!=='ledger')continue;
+    const t=toMs(e.ts),r={t:Number.isFinite(t)?t:Infinity,seq:seq++,kind:e.source==='hook'?'hook':'ledger',e};
+    (r.kind==='hook'&&e.stage==='UserPromptSubmit'?ups:rows).push(r);
+  }
+  rows.sort((a,b)=>a.t-b.t||a.seq-b.seq);
+  const turns=[{pre:true,no:0,items:[],ups:[],start:rows.length?rows[0].t:NaN,title:''}];
+  let cur=turns[0];
+  for(const r of rows){
+    if(r.kind==='human'){
+      const title=humanText(r.m.text);
+      if(!cur.pre&&title===cur.title&&(r.m.ts==null||Math.abs(r.t-cur.start)<5000))continue;
+      cur={pre:false,no:0,items:[{type:'human',r}],ups:[],start:r.t,title};turns.push(cur);continue;
+    }
+    cur.items.push({type:r.kind,r});
+  }
+  /* "입력 받음" hooks fire just before the transcript records the input, so attach each to the nearest input */
+  const humans=turns.filter(x=>!x.pre);
+  for(const r of ups){
+    let best=null,gap=Infinity;
+    for(const x of humans){const d=Math.abs(x.start-r.t);if(d<gap){gap=d;best=x}}
+    if(!best||!(gap<=60000))best=[...turns].reverse().find(x=>!(x.start>r.t))||turns[0];
+    best.ups.push(r);
+  }
+  for(const x of turns){
+    if(!x.ups.length)continue;
+    x.ups.sort((a,b)=>a.t-b.t||a.seq-b.seq);
+    x.items.splice(x.pre?0:1,0,...x.ups.map(r=>({type:'hook',r})));
+  }
+  if(!turns[0].items.length)turns.shift();
+  let n=0;for(const x of turns)if(!x.pre)x.no=++n;
+  return turns;
+}
+function stageStats(items){
+  const s={};
+  for(const it of items){
+    if(it.type!=='hook')continue;
+    const e=it.r.e,k=e.stage||'기타',o=s[k]||(s[k]={n:0,err:0,force:0});
+    o.n++;if(e.exit_code)o.err++;if(e.visibility==='force_show')o.force++;
+  }
+  return s;
+}
+function stageChip(k,o){
+  const name=STAGE[k]||k;
+  if(!o)return `<span class="chip faint" title="${esc(k)}">○ ${esc(name)}</span>`;
+  let txt=`● ${name} ${o.n}`;
+  if(o.err)txt+=` · 오류 ${o.err}`;
+  if(o.force)txt+=` · 강제 표시 ${o.force}`;
+  return `<span class="chip ${o.err?'bad':o.force?'warn':'good'}" title="${esc(k)}">${esc(txt)}</span>`;
+}
+function groupItems(items){
+  const out=[];
+  for(const it of items){
+    const last=out[out.length-1];
+    if(it.type==='hook'){
+      const e=it.r.e;
+      const routine=(e.stage==='PreToolUse'||e.stage==='PostToolUse')&&!e.exit_code&&e.visibility!=='force_show';
+      if(routine&&!showAllHooks)continue;
+      if(last&&last.type==='hooks'&&last.stage===e.stage){last.list.push(it.r);continue}
+      out.push({type:'hooks',stage:e.stage,list:[it.r]});continue;
+    }
+    if(it.type==='tool'){if(last&&last.type==='tools'){last.list.push(it.r);continue}out.push({type:'tools',list:[it.r]});continue}
+    if(it.type==='ledger'){if(last&&last.type==='ledgers'){last.list.push(it.r);continue}out.push({type:'ledgers',list:[it.r]});continue}
+    out.push({type:it.type,r:it.r});
+  }
+  return out;
+}
+function textBlock(text,key){
+  text=String(text||'');
+  const long=text.length>480||text.split('\n').length>6;
+  if(!long)return `<div class="text">${esc(text)}</div>`;
+  const open=expanded.has(key);
+  return `<div class="text"><div class="${open?'':'clamp'}">${esc(text)}</div></div><button type="button" class="more" data-exp="${esc(key)}">${open?'접기':'전체 보기'}</button>`;
+}
+function itemHTML(g,scope){
+  const row=(c,kind,t,extra,body)=>`<li class="it"><div class="ih"><span class="kind ${c}">${kind}</span>${Number.isFinite(t)?`<span class="time">${clock(t)}</span>`:''}${extra||''}</div>${body||''}</li>`;
+  const key=g.r?`${scope}|m|${g.r.seq}|${g.r.t}`:'';
+  switch(g.type){
+    case 'human':return row('c-user','사람 입력',g.r.t,'',textBlock(humanText(g.r.m.text),key));
+    case 'bot':return row('c-bot','에이전트 답',g.r.t,'',textBlock(g.r.m.text,key));
+    case 'hookfb':{
+      const t=String(g.r.m.text).trimStart(),st=(t.match(/^(\w+) hook feedback:/)||[])[1]||'';
+      return row('c-bad',st==='Stop'?'Stop 훅이 답을 막고 돌려보냄':esc(st)+' 훅 피드백',g.r.t,'',textBlock(t.replace(/^\w+ hook feedback:\s*/,''),key));
+    }
+    case 'skill':{
+      const name=(String(g.r.m.text).match(/skills[\\/]([^\\/\s]+)/)||[])[1]||'';
+      const dk=`${scope}|skill|${g.r.seq}|${g.r.t}`;
+      return row('c-other','스킬 본문 자동 삽입',g.r.t,name?`<span class="chip">${esc(name)}</span>`:'',`<details class="sub" data-key="${esc(dk)}"${openState.get(dk)?' open':''}><summary>본문 보기</summary>${textBlock(g.r.m.text,key)}</details>`);
+    }
+    case 'notify':return row('c-other','알림 (사람 입력 아님)',g.r.t,'',textBlock(g.r.m.text,key));
+    case 'system':return row('c-other','시스템 메시지',g.r.t,'',textBlock(g.r.m.text,key));
+    case 'tools':{
+      const parts=[];
+      for(const r of g.list){const n=String(r.m.text||'');const p=parts[parts.length-1];if(p&&p.n===n)p.c++;else parts.push({n,c:1,t:r.t})}
+      return row('c-tool',`도구 ${g.list.length}개`,g.list[0].t,'',`<div class="tchips">${parts.map(p=>`<span class="annot"><span class="tchip" title="${esc(p.n)} · ${clock(p.t)}">${esc(shortTool(p.n))}${p.c>1?' ×'+p.c:''}</span><span class="meaning">${esc(toolMeaning(p.n))}</span></span>`).join('')}</div>`);
+    }
+    case 'hooks':{
+      const L=g.list.map(r=>r.e);
+      const err=L.filter(e=>e.exit_code).length,force=L.filter(e=>e.visibility==='force_show').length;
+      const unk=L.filter(e=>e.exit_code===undefined||e.exit_code===null).length;
+      const res=err?`<span class="chip bad">명령 오류 ${err}</span>`:unk===L.length?'<span class="chip">기록</span>':'<span class="chip good">명령 종료 0</span>';
+      const fx=force?`<span class="chip warn">강제 표시 ${force}</span>`:'';
+      const dk=`${scope}|h|${g.stage}|${g.list[0].t}`;
+      const open=openState.has(dk)?openState.get(dk):err>0;
+      const rows=L.map(e=>`<tr><td class="mono">${clock(toMs(e.ts))}</td><td class="mono">${esc(e.hook||e.tool||'')}</td><td>${e.exit_code===undefined||e.exit_code===null?'기록':e.exit_code===0?'종료 0':'오류 '+esc(e.exit_code)}</td><td>${esc(VIS[e.visibility]||e.visibility||'')}${e.visibility?` <span class="muted">(${esc(e.visibility)})</span>`:''}</td><td>${e.duration_s!=null?esc(e.duration_s)+'초':''}</td><td class="meaning">${esc(hookMeaning(e))}</td></tr>${e.error?`<tr><td></td><td class="err" colspan="5">${esc(e.error)}</td></tr>`:''}`).join('');
+      return row('c-hook',`훅 · ${esc(STAGE[g.stage]||g.stage||'')}${L.length>1?' ×'+L.length:''}`,g.list[0].t,res+fx,`<details class="sub" data-key="${esc(dk)}"${open?' open':''}><summary>훅 ${L.length}개 자세히</summary><div class="scroll"><table class="htable"><thead><tr><th>시각</th><th>훅</th><th>결과</th><th>표시 결정</th><th>걸린 시간</th><th>해석</th></tr></thead><tbody>${rows}</tbody></table></div></details>`);
+    }
+    case 'ledgers':{
+      const L=g.list.map(r=>r.e);
+      return row('c-other',`원장 기록 ${L.length}개`,g.list[0].t,'',`<div class="tchips">${L.map(e=>`<span class="annot"><span class="tchip" title="${esc(e.event_id||'')}">${esc(e.stage||'event')}</span><span class="meaning">${esc(ledgerMeaning(e))}</span></span>`).join('')}</div>`);
+    }
+  }
+  return '';
+}
+function turnHTML(turn,scope,defOpen){
+  const key=`${scope}|turn|${turn.pre?'pre':turn.no}|${turn.start}`;
+  const open=openState.has(key)?openState.get(key):defOpen;
+  const st=stageStats(turn.items);
+  const tools=turn.items.filter(i=>i.type==='tool').length;
+  const stops=turn.items.filter(i=>i.type==='hookfb'&&/^Stop hook feedback:/.test(String(i.r.m.text).trimStart())).length;
+  const fbs=turn.items.filter(i=>i.type==='hookfb').length-stops;
+  const errs=Object.values(st).reduce((a,o)=>a+o.err,0);
+  const title=firstLine(turn.title);
+  const head=turn.pre?'<span class="turn-no">시작</span><span class="turn-text muted">첫 사람 입력 전 기록</span>'
+    :`<span class="turn-no">턴 ${turn.no}</span><span class="time">${clock(turn.start)}</span><span class="turn-text" title="${esc(title)}">${esc(title)}</span>`;
+  const badges=(tools?`<span class="chip">도구 ${tools}</span>`:'')+(stops?`<span class="chip bad">Stop 막음 ${stops}</span>`:'')+(fbs?`<span class="chip bad">훅 피드백 ${fbs}</span>`:'')+(errs?`<span class="chip bad">훅 오류 ${errs}</span>`:'');
+  const keys=turn.pre?STAGES.filter(k=>st[k]):STAGES.filter(k=>k!=='SessionStart'||st[k]);
+  const stages=[...keys,...Object.keys(st).filter(k=>!STAGES.includes(k))].map(k=>stageChip(k,st[k])).join('');
+  const items=groupItems(turn.items).map(g=>itemHTML(g,scope)).join('');
+  return `<li class="turn${stops||fbs||errs?' alert':''}"><details data-key="${esc(key)}"${open?' open':''}><summary><span class="caret" aria-hidden="true"></span>${head}<span class="badges">${badges}</span></summary>${stages?`<div class="stages">${stages}</div>`:''}<ul class="items">${items||'<li class="it muted">숨긴 훅 기록만 있어요. ‘도구 직전·직후 훅도 모두 보기’를 켜면 보여요.</li>'}</ul></details></li>`;
+}
+function timelineHTML(messages,events,scope){
+  const ev=(events||[]).filter(e=>e.source==='hook'||e.source==='ledger');
+  const turns=buildTurns(messages,ev);
+  if(!turns.length)return '<p class="empty">아직 이 채팅의 대화나 훅 기록이 없어요.</p>';
+  const hooks=ev.filter(e=>e.source==='hook'),ledger=ev.length-hooks.length;
+  const flow=STAGES.map(k=>{const has=hooks.some(e=>e.stage===k);return `<span class="${has?'on':'off'}" title="${k}">${has?'●':'○'} ${STAGE[k]}</span>`}).join('<span class="arr">→</span>');
+  const n=turns.length;
+  return `<div class="sess"><span>사람 입력 ${turns.filter(t=>!t.pre).length}턴</span><span>메시지 ${(messages||[]).length}개</span><span>훅 기록 ${hooks.length}개</span>${ledger?`<span>원장 기록 ${ledger}개</span>`:''}</div>`+
+    `<div class="flow" title="이 채팅에서 훅이 한 번이라도 돈 단계는 ●, 기록이 없는 단계는 ○">${flow}</div>`+
+    `<ul class="tree">${turns.map((t,i)=>turnHTML(t,scope,n<=3||i>=n-2)).join('')}</ul>`;
+}
+function wire(el){
+  el.addEventListener('toggle',e=>{const d=e.target;if(d instanceof HTMLDetailsElement&&d.dataset.key)openState.set(d.dataset.key,d.open)},true);
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('[data-exp]');if(!b||!el.contains(b))return;
+    const k=b.dataset.exp,t=b.previousElementSibling.firstElementChild;
+    if(expanded.has(k)){expanded.delete(k);t.classList.add('clamp');b.textContent='전체 보기'}
+    else{expanded.add(k);t.classList.remove('clamp');b.textContent='접기'}
+  });
+}
+
+/* ---------- panels ---------- */
+function renderStatus(){
+  const s=state.settings||{};
+  const reg=Object.values(s.registered||{}).reduce((a,b)=>a+(+b||0),0);
+  const conn=connected===false?'<span class="chip bad"><span class="dot"></span>서버 연결 오류</span>':connected?'<span class="chip good"><span class="dot"></span>서버 연결됨</span>':'<span class="chip">연결 확인 중</span>';
+  const hook=s.disabled===true?'<span class="chip bad"><span class="dot"></span>훅 꺼짐</span>':s.disabled===false?'<span class="chip good"><span class="dot"></span>훅 켜짐</span>':'<span class="chip">훅 상태 모름</span>';
+  $('status').innerHTML=conn+hook+`<span class="chip" title="~/.claude/settings.json에 등록된 훅 명령 수">등록된 훅 ${reg}개</span><span class="chip" title="모니터 서버를 켠 뒤 새로 들어온 훅·원장·도구 기록 수">새 이벤트 ${(state.events||[]).length}개</span>`;
+  $('hookWarn').hidden=s.disabled!==true;
+}
+function renderCase(){
+  const c=state.case||{},conds=conditionsOf(c);
+  $('caseIdChip').textContent=c.id?'사례 ID · '+c.id:'사례 ID 없음';
+  $('caseCondChip').hidden=!conds.length;$('caseCondChip').textContent=`실패 조건 ${conds.length}개`;
+  const sig=JSON.stringify(c);
+  if(sig===caseSig)return;caseSig=sig;
+  if(!c.id&&!c.prompt&&!conds.length){$('caseView').innerHTML='<p class="empty">아직 저장된 사례가 없어요. ‘사례 편집’을 눌러 사례를 만드세요.</p>';return}
+  $('caseView').innerHTML=`<div class="case-grid">
+    <div><div class="fh"><h3>사용자 입력 · 새 채팅에 그대로 보낼 문장</h3><button type="button" class="btn small" id="copyPrompt">복사</button><span id="copyMsg" class="small muted"></span></div><div class="quote" id="promptText">${esc(c.prompt||'(비어 있음)')}</div></div>
+    <div><h3>기대 행동</h3><p>${esc(c.expected||'(비어 있음)')}</p></div>
+    <div><h3>실패 조건 · 하나라도 충족하면 그 회차는 실패</h3>${conds.length?`<ol class="conds">${conds.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:'<p class="muted">(없음)</p>'}</div>
+    ${c.context?`<details class="ctx"><summary>사전 문맥 보기</summary><p>${esc(c.context)}</p></details>`:''}
+  </div>`;
+}
+function openCaseForm(){
+  const c=state.case||{};
+  $('cid').value=c.id||'';$('context').value=c.context||'';$('prompt').value=c.prompt||'';$('expected').value=c.expected||'';$('conditions').value=c.conditions||'';
+  caseEditing=true;$('caseBox').open=true;$('caseForm').hidden=false;$('caseView').hidden=true;$('caseActions').hidden=true;$('cid').focus();
+}
+function closeCaseForm(){caseEditing=false;$('caseForm').hidden=true;$('caseView').hidden=false;$('caseActions').hidden=false}
+function sessionLabel(id,s){
+  const m=(s.messages||[]).find(x=>x.role==='user'&&classify(x)==='human');
+  const p=m?firstLine(humanText(m.text)).slice(0,40):'';
+  return shortId(id)+(p?' · '+p:'');
+}
+function renderPickers(){
+  const live=state.live_sessions||{};
+  const ids=Object.keys(live).sort((a,b)=>(live[b].updated||0)-(live[a].updated||0));
+  const sig=[...ids].sort().map(id=>id+':'+sessionLabel(id,live[id])).join('|');
+  if(sig!==liveSig){
+    const old=$('live').value;
+    $('live').innerHTML='<option value="">자동: 가장 최근 채팅</option>'+ids.map(id=>`<option value="${esc(id)}">${esc(sessionLabel(id,live[id]))}</option>`).join('');
+    $('live').value=old&&live[old]?old:'';liveSig=sig;
+  }
+  const all=state.runs||[];
+  const up=all.map((x,i)=>({x,i})).filter(o=>Array.isArray(o.x.messages)&&o.x.messages.length&&o.x.kind!=='assessment');
+  const rsig=up.map(o=>o.i+':'+o.x.saved_at).join('|');
+  if(rsig!==runsSig){
+    const old=$('runs').value;
+    $('runs').innerHTML='<option value="">실시간 세션 보기</option>'+up.map(o=>`<option value="${o.i}">불러온 기록 · ${esc(PHASE[o.x.phase]||o.x.phase)} · ${esc(shortId(o.x.session))} · ${esc(stamp(o.x.saved_at))} · 메시지 ${o.x.messages.length}개</option>`).join('');
+    $('runs').value=up.some(o=>String(o.i)===old)?old:'';runsSig=rsig;
+  }
+}
+function resolveRun(){
+  const live=state.live_sessions||{},all=state.runs||[],ri=$('runs').value;
+  const ids=Object.keys(live).sort((a,b)=>(live[b].updated||0)-(live[a].updated||0));
+  if(ri!==''&&Array.isArray((all[+ri]||{}).messages)){
+    const x=all[+ri];run={source:'file',session:x.session,phase:x.phase,messages:x.messages,saved_at:x.saved_at};
+  }else{
+    const id=$('live').value&&live[$('live').value]?$('live').value:ids[0];
+    run=id?{source:'live',session:id,messages:live[id].messages||[],saved_at:'live',updated:live[id].updated}:null;
+  }
+  $('pickInfo').innerHTML=!run?'아직 지켜보는 채팅이 없어요. 모니터 서버를 켠 뒤 이 작업 폴더에서 Claude Code 채팅을 시작하면 여기에 나타나요.'
+    :run.source==='live'?`${$('live').value?'고른':'자동으로 고른'} 채팅 <span class="mono">${esc(run.session)}</span> · 마지막 활동 ${esc(ago(run.updated))}`
+    :`불러온 기록 <span class="mono">${esc(run.session||'세션 없음')}</span> · 구간 ${esc(PHASE[run.phase]||run.phase)}`;
+}
+function renderTimeline(){
+  if(!run){if(timelineSig!=='none'){$('timeline').innerHTML='<p class="empty">볼 채팅이 없어요.</p>';timelineSig='none'}return}
+  const ev=(state.events||[]).filter(e=>e.session===run.session),m=run.messages||[];
+  const lm=m[m.length-1]||{},le=ev[ev.length-1]||{};
+  const sig=[run.source,run.session,run.saved_at,m.length,lm.ts,String(lm.text||'').length,ev.length,le.ts,showAllHooks].join('|');
+  if(sig===timelineSig)return;timelineSig=sig;
+  $('timeline').innerHTML=timelineHTML(m,ev,'tl:'+run.session+':'+run.saved_at);
+}
+function effectivePhase(){return run&&run.source==='file'?run.phase:$('phase').value}
+function readVerdict(){
+  const v={};
+  conditionsOf(state.case).forEach((x,i)=>{const c=document.querySelector(`#rubric input[name="v${i}"]:checked`);v[x]=c?c.value:'unknown'});
+  return v;
+}
+function updatePreview(){
+  const vals=Object.values(readVerdict()),el=$('preview');
+  if(!vals.length){el.hidden=true;return}
+  el.hidden=false;
+  const unk=vals.filter(x=>x==='unknown').length,fail=vals.filter(x=>x==='fail').length;
+  if(unk){el.className='preview warn';el.textContent=`아직 판정하지 않은 조건 ${unk}개`}
+  else if(fail){el.className='preview bad';el.textContent=`이 회차는 실패예요 (충족한 실패 조건 ${fail}개)`}
+  else{el.className='preview good';el.textContent='이 회차는 통과예요 (충족한 실패 조건 없음)'}
+}
+function renderRubric(){
+  const conds=conditionsOf(state.case);
+  const key=(run?run.source+'|'+run.session+'|'+run.saved_at:'')+'|'+conds.join('\n');
+  if(key!==rubricKey){
+    rubricKey=key;
+    $('rubric').innerHTML=conds.length?conds.map((x,i)=>`<li class="cond"><p>${esc(x)}</p><div class="seg" role="radiogroup" aria-label="조건 ${i+1} 판정"><label class="opt fail"><input type="radio" name="v${i}" value="fail">실패 조건 충족</label><label class="opt pass"><input type="radio" name="v${i}" value="pass">실패 조건 없음</label></div></li>`).join('')
+      :'<li class="empty">① 사례에 실패 조건이 없어요. ‘사례 편집’에서 한 줄에 하나씩 적어 주세요.</li>';
+    updatePreview();
+  }
+  $('judgeTarget').innerHTML=run?`판정할 채팅 <span class="mono">${esc(shortId(run.session))}</span> ${run.source==='live'?'(실시간)':'(불러온 기록)'}`:'판정할 채팅이 아직 없어요.';
+  const ph=effectivePhase();
+  $('phaseNote').innerHTML=`저장 구간 <b>${esc(PHASE[ph]||ph||'')}</b>`;
+  $('phaseNote').title=run&&run.source==='file'?'불러온 기록의 구간으로 저장돼요':'② ‘구간’에서 바꿀 수 있어요';
+}
+function renderSummary(){
+  const res=state.saved_results||[],cid=(state.case||{}).id||'';
+  const mine=res.filter(x=>((x.case||{}).id||'')===cid);
+  const count=ph=>{const L=mine.filter(x=>x.phase===ph);return [L.filter(x=>failed(x.verdict)).length,L.length]};
+  const b=count('before'),a=count('after');
+  $('summary').innerHTML=`<h3>저장된 판정 · 지금 사례</h3><div class="sumgrid"><div class="sumbox"><span>수정 전</span><b>${b[0]}/${b[1]}</b><span>실패</span></div><div class="sumbox"><span>수정 후</span><b>${a[0]}/${a[1]}</b><span>실패</span></div></div><p class="small muted">숫자는 ‘실패한 회차 / 저장한 회차’예요.${res.length>mine.length?` 다른 사례 판정 ${res.length-mine.length}개는 ⑤에서 볼 수 있어요.`:''}</p>`;
+}
+function verdictChip(v){return v==='fail'?'<span class="chip bad">실패 조건 충족</span>':v==='pass'?'<span class="chip good">실패 조건 없음</span>':'<span class="chip">미판정</span>'}
+function renderSaved(){
+  const res=state.saved_results||[],cid=(state.case||{}).id||'';
+  const list=res.map((x,i)=>({x,i})).filter(o=>!onlyCase||((o.x.case||{}).id||'')===cid).reverse();
+  const sig=res.map(x=>x.saved_at+'|'+x.session).join(',')+'|'+onlyCase+'|'+cid+'|'+savedSel;
+  if(sig!==savedSig){
+    savedSig=sig;
+    $('savedRows').innerHTML=list.length?list.map(({x,i})=>`<tr data-i="${i}" tabindex="0" class="${i===savedSel?'sel':''}"><td>${esc(stamp(x.saved_at))}</td><td>${esc((x.case||{}).id||'')}</td><td>${esc(PHASE[x.phase]||x.phase)}</td><td class="mono">${esc(shortId(x.session))}</td><td>${failed(x.verdict)?'<span class="chip bad">실패</span>':'<span class="chip good">통과</span>'}</td></tr>`).join('')
+      :`<tr><td colspan="5" class="empty">${onlyCase&&res.length?'지금 사례로 저장한 판정이 없어요. ‘지금 사례만’을 끄면 전체를 볼 수 있어요.':'저장한 판정이 아직 없어요.'}</td></tr>`;
+  }
+  const x=savedSel===null?null:res[savedSel];
+  const key=x?savedSel+'|'+x.saved_at+'|'+showAllHooks:'';
+  if(key===savedViewKey)return;savedViewKey=key;
+  if(!x){$('savedView').innerHTML='<p class="empty">표에서 판정을 누르면 그때의 사례·판정·근거·대화·훅 기록이 여기에 나와요.</p>';return}
+  const c=x.case||{};
+  $('savedView').innerHTML=`<div class="detail">
+    <div class="head"><h2>${esc(c.id||'사례')} · ${esc(PHASE[x.phase]||x.phase)} · ${esc(stamp(x.saved_at))}</h2>${failed(x.verdict)?'<span class="chip bad">실패</span>':'<span class="chip good">통과</span>'}</div>
+    <div><h3>조건별 판정</h3><ul class="vlist">${Object.entries(x.verdict||{}).map(([k,v])=>`<li>${verdictChip(v)}<span>${esc(k)}</span></li>`).join('')}</ul></div>
+    <div><h3>판정 근거 / 재현 메모</h3><div class="quote">${esc(x.note||'(비어 있음)')}</div></div>
+    <details class="ctx"><summary>그때의 사례 보기</summary><div class="case-grid" style="margin-top:8px">
+      <div><h3>사용자 입력</h3><div class="quote">${esc(c.prompt||'')}</div></div>
+      <div><h3>기대 행동</h3><p>${esc(c.expected||'')}</p></div>
+      ${c.context?`<div><h3>사전 문맥</h3><p>${esc(c.context)}</p></div>`:''}
+    </div></details>
+    <div><h3>그때의 대화·훅 타임라인 · 채팅 <span class="mono">${esc(x.session||'')}</span></h3>${timelineHTML(x.messages||[],x.events||[],'sv:'+x.saved_at)}</div>
+  </div>`;
+}
+function renderPaths(){
+  const ev=state.events||[],orphan=ev.filter(e=>!e.session).length;
+  const sig=[state.capture,state.live_path,state.runs_path,orphan].join('|');
+  if(sig===pathsSig)return;pathsSig=sig;
+  $('paths').innerHTML=`훅 기록 사본: <span class="mono">${esc(state.capture||'')}</span><br>실시간 대화 사본: <span class="mono">${esc(state.live_path||'')}</span><br>대화·판정 저장: <span class="mono">${esc(state.runs_path||'')}</span>${orphan?`<br>세션 표시가 없는 기록 ${orphan}개(주로 도구 사용 기록)는 어느 채팅 것인지 알 수 없어 타임라인에 넣지 않았어요.`:''}`;
+}
+function render(){renderStatus();renderCase();renderPickers();resolveRun();renderTimeline();renderRubric();renderSummary();renderSaved();renderPaths()}
+
+/* ---------- actions ---------- */
+wire($('timeline'));wire($('savedView'));
+$('editCase').onclick=openCaseForm;
+$('cancelCase').onclick=()=>{closeCaseForm();$('caseMsg').textContent=''};
+$('caseForm').onsubmit=async e=>{
+  e.preventDefault();
+  const r=await post('/api/case',{id:$('cid').value,context:$('context').value,prompt:$('prompt').value,expected:$('expected').value,conditions:$('conditions').value});
+  if(r.ok){closeCaseForm();setMsg('caseMsg','사례를 저장했어요: '+r.path,true)}else setMsg('caseMsg',r.error||'저장하지 못했어요',false);
+  await refresh();
+};
+$('caseView').addEventListener('click',async e=>{
+  if(!e.target.closest('#copyPrompt'))return;
+  try{await navigator.clipboard.writeText((state.case||{}).prompt||'');$('copyMsg').textContent='복사했어요'}
+  catch(err){const r=document.createRange();r.selectNodeContents($('promptText'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('copyMsg').textContent='선택했어요. Ctrl+C로 복사하세요'}
+});
+$('live').onchange=()=>{$('runs').value='';render()};
+$('runs').onchange=render;
+$('phase').onchange=render;
+$('upload').onclick=async()=>{
+  const f=$('file').files[0];
+  if(!f){setMsg('uploadMsg','파일을 먼저 고르세요',false);return}
+  const r=await post('/api/transcript',{raw:await f.text(),session:$('sid').value,phase:$('phase').value});
+  if(!r.ok){setMsg('uploadMsg',r.error||'불러오지 못했어요',false);return}
+  setMsg('uploadMsg',`메시지 ${r.run.messages.length}개를 불러왔어요`,true);
+  await refresh();
+  const opts=[...$('runs').options].filter(o=>o.value!=='');
+  if(opts.length){$('runs').value=opts[opts.length-1].value;render()}
+};
+$('allHooks').onchange=()=>{showAllHooks=$('allHooks').checked;timelineSig=null;savedViewKey=null;render()};
+function setAllTurns(open){document.querySelectorAll('#timeline .turn>details').forEach(d=>{d.open=open;openState.set(d.dataset.key,open)})}
+$('openAll').onclick=()=>setAllTurns(true);
+$('closeAll').onclick=()=>setAllTurns(false);
+$('toLatest').onclick=()=>{
+  const all=document.querySelectorAll('#timeline .turn>details'),d=all[all.length-1];if(!d)return;
+  d.open=true;openState.set(d.dataset.key,true);
+  d.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+};
+$('rubric').addEventListener('change',updatePreview);
+$('saveVerdict').onclick=async()=>{
+  if(!run){setMsg('verdictMsg','판정할 채팅을 먼저 고르세요',false);return}
+  const verdict=readVerdict(),vals=Object.values(verdict);
+  if(!vals.length||vals.includes('unknown')){setMsg('verdictMsg','모든 조건을 판정하세요',false);return}
+  const r=await post('/api/verdict',{session:run.session,phase:effectivePhase(),verdict,note:$('note').value,messages:run.messages});
+  if(r.ok)setMsg('verdictMsg','판정을 저장했어요: '+r.path,true);else setMsg('verdictMsg',r.error||'저장하지 못했어요',false);
+  await refresh();
+};
+$('langfuseSync').onclick=async()=>{
+  if(state.langfuse===false){setMsg('langfuseMsg','Langfuse 키가 없어요. 작업 폴더의 .env에 LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY를 넣고 모니터를 다시 실행하세요',false);return}
+  const btn=$('langfuseSync');btn.disabled=true;setMsg('langfuseMsg','Langfuse로 보내는 중…',true);
+  try{
+    const r=await post('/api/langfuse-sync',{});
+    if(r.ok)setMsg('langfuseMsg',`보냈어요: 사례 ${r.cases}개, 점수 ${r.scores}개, 세션 ${r.sessions}개의 훅 판단 ${r.hook_runs}건 (${r.host})`+(r.missing_hook_logs.length?` · 훅 기록 없는 세션 ${r.missing_hook_logs.length}개`:''),true);
+    else setMsg('langfuseMsg',r.error||'보내지 못했어요',false);
+  }finally{btn.disabled=false}
+};
+$('savedRows').addEventListener('click',e=>{const tr=e.target.closest('tr[data-i]');if(!tr)return;savedSel=+tr.dataset.i;renderSaved()});
+$('savedRows').addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const tr=e.target.closest('tr[data-i]');if(!tr)return;
+  e.preventDefault();savedSel=+tr.dataset.i;renderSaved();
+  const n=$('savedRows').querySelector(`tr[data-i="${savedSel}"]`);if(n)n.focus();
+});
+$('onlyCase').onchange=()=>{onlyCase=$('onlyCase').checked;renderSaved()};
+
+async function refresh(){
+  try{const r=await fetch('/api',{cache:'no-store'});state=await r.json();connected=true}
+  catch(e){connected=false}
+  render();
+  if(firstLoad&&connected){firstLoad=false;const c=state.case||{};if(!c.id&&!c.prompt&&!c.conditions)openCaseForm()}
+}
+async function loop(){await refresh();setTimeout(loop,1000)}
+loop();
+</script>
+</body>
+</html>

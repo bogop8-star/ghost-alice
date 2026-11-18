@@ -1,0 +1,408 @@
+"""Tests for the plain-Korean explanations and the per-turn hook flow.
+
+Fixtures copy the shapes found in real records on this machine:
+~/.ghost-alice/session-logs/claude/<session>/strict-hook-output.jsonl (hook rows) and the
+intent_events table of ghost-state.sqlite3 (ledger events). Expected levels follow the Ghost-ALICE
+source: claude_stop_verification_hook.py blocks once per turn and then only notifies,
+and the Autopilot adapters always answer {"continue": true}.
+
+Run: python -X utf8 -m unittest discover -s hook-monitor -p "test_*.py"
+"""
+import json
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import explain  # noqa: E402
+import langfuse_sync  # noqa: E402
+import timeline  # noqa: E402
+
+ROUTE_ISSUE = ('route-unavailable: This input contains native tool calls but has no current Core response-route. '
+               "The current-session assistant follows task-router to register this input's work and response purpose. "
+               'Retain the tool results; route registration does not require repeating the work.')
+BLOCK = json.dumps({'decision': 'block', 'reason': '[completion-gate] ' + ROUTE_ISSUE
+                    + ' repair-target: response_route\ndelivery-route: preserve_answer_and_patch_metadata\n'
+                    'The prior answer is visible.'})
+NOTICE = json.dumps({'continue': True,
+                     'systemMessage': '[completion-gate] Current work routing remains unresolved: ' + ROUTE_ISSUE})
+PASS = json.dumps({'continue': True})
+AWAITING = json.dumps({'continue': True, 'completion_recording': {'status': 'skipped', 'reason': 'awaiting-current-route'}})
+PREPARED = json.dumps({'continue': True, 'completion_recording': {'status': 'prepared', 'work_unit_id': 'case-draft'}})
+INCOMPATIBLE = json.dumps({'continue': True, 'completion_recording': {
+    'status': 'recording-unavailable', 'reason': 'core-assessment-incompatible'}})
+
+
+def hook(ts, event, hook_id, stdout='{}', exit_code=0, stderr='', duration='0.4'):
+    return {'ts': ts, 'event': event, 'hook_id': hook_id, 'stdout': stdout, 'exit_code': exit_code,
+            'stderr': stderr, 'observed_duration_s': duration, 'visible_decision': 'show',
+            'session_id': 's1', 'payload_digest': 'sha256:' + ts}
+
+
+class ExplainHookTest(unittest.TestCase):
+    def test_block_is_a_block_even_though_the_hook_exits_zero(self):
+        item = explain.explain_hook(hook('2026-11-13T03:21:10.226285Z', 'Stop', 'completion', BLOCK))
+        self.assertEqual(item['level'], 'block')
+        self.assertEqual(item['code'], 'route-unavailable')
+        self.assertEqual(item['stage'], 'stop')
+        self.assertTrue(item['known'])
+        for field in ('title', 'why', 'resume', 'improve'):
+            self.assertTrue(item[field], field)
+        self.assertIn('route-unavailable', item['raw'])
+
+    def test_second_stop_in_a_turn_only_notifies_and_is_a_warning(self):
+        item = explain.explain_hook(hook('2026-11-13T03:22:10Z', 'Stop', 'completion', NOTICE))
+        self.assertEqual(item['level'], 'warn')
+        self.assertEqual(item['code'], 'route-unavailable')
+        self.assertTrue(item['resume'])
+
+    def test_plain_continue_is_ok(self):
+        item = explain.explain_hook(hook('2026-11-13T03:23:10Z', 'Stop', 'completion', PASS))
+        self.assertEqual((item['level'], item['stage'], item['code']), ('ok', 'stop', None))
+
+    def test_autopilot_waiting_for_the_route_is_information_not_a_block(self):
+        item = explain.explain_hook(hook('2026-11-13T03:10:00Z', 'PreToolUse', 'adapter-autopilot-mode-prepare-origin', AWAITING))
+        self.assertEqual((item['level'], item['stage'], item['code']), ('info', 'tool', 'awaiting-current-route'))
+
+    def test_autopilot_prepared_is_ok(self):
+        item = explain.explain_hook(hook('2026-11-13T03:10:00Z', 'PreToolUse', 'adapter-autopilot-mode-prepare-origin', PREPARED))
+        self.assertEqual(item['level'], 'ok')
+        self.assertIn('case-draft', item['title'])
+
+    def test_autopilot_unconfirmed_input_is_a_warning(self):
+        item = explain.explain_hook(hook('2026-11-13T03:10:00Z', 'PreToolUse', 'adapter-autopilot-mode-prepare-origin', INCOMPATIBLE))
+        self.assertEqual((item['level'], item['code']), ('warn', 'core-assessment-incompatible'))
+        self.assertTrue(item['resume'])
+
+    def test_autopilot_invalid_body_names_the_underlying_cause(self):
+        stdout = json.dumps({'continue': True, 'completion_recording': {
+            'status': 'recording-unavailable', 'reason': 'completion-body-invalid', 'detail': ROUTE_ISSUE}})
+        item = explain.explain_hook(hook('2026-11-13T03:30:00Z', 'Stop', 'adapter-autopilot-mode-continue', stdout))
+        self.assertEqual((item['level'], item['stage'], item['code']), ('warn', 'record', 'completion-body-invalid'))
+        self.assertEqual(item['cause_code'], 'route-unavailable')
+
+    def test_unknown_gate_code_is_still_a_block_and_keeps_the_original_text(self):
+        stdout = json.dumps({'decision': 'block', 'reason': '[completion-gate] brand-new-code: Something new happened.'})
+        item = explain.explain_hook(hook('2026-11-13T03:21:10Z', 'Stop', 'completion', stdout))
+        self.assertEqual((item['level'], item['code']), ('block', 'brand-new-code'))
+        self.assertFalse(item['known'])
+        self.assertIn('Something new happened', item['raw'])
+
+    def test_guidance_fields_are_not_mistaken_for_the_issue_code(self):
+        stdout = json.dumps({'decision': 'block', 'reason': '[completion-gate] The completion block is malformed. '
+                             'repair-target: completion_metadata\ndelivery-route: corrected_complete_answer'})
+        item = explain.explain_hook(hook('2026-11-13T03:21:10Z', 'Stop', 'completion', stdout))
+        self.assertEqual((item['level'], item['code']), ('block', None))
+
+    def test_tool_denial_is_a_block_in_the_tool_stage(self):
+        stdout = json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
+                                                    'permissionDecisionReason': 'outside the declared surface'}})
+        item = explain.explain_hook(hook('2026-11-13T03:10:00Z', 'PreToolUse', 'tool-checkpoint', stdout))
+        self.assertEqual((item['level'], item['stage']), ('block', 'tool'))
+        self.assertIn('outside the declared surface', item['raw'])
+
+    def test_hook_that_fails_to_run_is_an_error(self):
+        item = explain.explain_hook(hook('2026-11-13T03:10:00Z', 'PreToolUse', 'tool-checkpoint', '', exit_code=1,
+                                         stderr='Traceback (most recent call last): boom'))
+        self.assertEqual(item['level'], 'error')
+        self.assertIn('boom', item['raw'])
+
+    def test_routine_hooks_are_ok_and_land_in_their_stage(self):
+        cases = [('SessionStart', 'session-start', 'intake'), ('UserPromptSubmit', 'session-intent', 'intake'),
+                 ('PreToolUse', 'tool-checkpoint', 'tool'), ('PostToolUse', 'io-trace', 'tool')]
+        for event, hook_id, stage in cases:
+            item = explain.explain_hook(hook('2026-11-13T03:10:00Z', event, hook_id))
+            self.assertEqual((item['level'], item['stage']), ('ok', stage), hook_id)
+
+
+class ExplainLedgerTest(unittest.TestCase):
+    def test_staged_input_belongs_to_intake(self):
+        item = explain.explain_ledger({'event': 'native-input-staged', 'ts': '2026-11-13T03:07:34Z', 'input_char_count': 331})
+        self.assertEqual((item['source'], item['stage'], item['level']), ('ledger', 'intake', 'ok'))
+
+    def test_route_registration_names_the_selected_work(self):
+        item = explain.explain_ledger({'event': 'response-route-recorded', 'ts': '2026-11-13T05:37:48Z',
+                                       'selected_work_unit_ids': ['monitor-explain'],
+                                       'selected_criteria': [{'criterion_id': 'AC1'}, {'criterion_id': 'AC2'}]})
+        self.assertEqual((item['stage'], item['level']), ('route', 'info'))
+        self.assertIn('monitor-explain', item['title'])
+
+    def test_intent_update_lists_what_changed_in_korean(self):
+        item = explain.explain_ledger({'event': 'intent-updated', 'ts': '2026-11-13T05:37:47Z',
+                                       'delta_keys': ['acceptance_criteria', 'current_goal']})
+        self.assertEqual((item['stage'], item['level']), ('route', 'info'))
+        self.assertIn('목표', item['title'])
+        self.assertIn('완료 기준', item['title'])
+
+    def test_route_refusal_from_the_cli_is_a_block_in_the_route_stage(self):
+        item = explain.explain_cli('route-binding', 'ready route requires canonical SQLite intake provenance',
+                                   '2026-11-13T02:30:00.000Z')
+        self.assertEqual((item['source'], item['stage'], item['level'], item['code']),
+                         ('cli', 'route', 'block', 'route-binding'))
+        self.assertTrue(item['resume'])
+
+
+def one_input(start, *, stops, tools=2, pre=AWAITING):
+    """Hook rows of one user input, in the order the hooks really fire."""
+    rows = [hook(f'{start}:00.500000Z', 'UserPromptSubmit', 'pending-merge-prompt'),
+            hook(f'{start}:00.510000Z', 'UserPromptSubmit', 'session-intent')]
+    for n in range(tools):
+        rows += [hook(f'{start}:{10 + n:02d}.000000Z', 'PreToolUse', 'tool-checkpoint'),
+                 hook(f'{start}:{10 + n:02d}.100000Z', 'PreToolUse', 'adapter-autopilot-mode-prepare-origin', pre),
+                 hook(f'{start}:{10 + n:02d}.900000Z', 'PostToolUse', 'io-trace', '')]
+    for n, stdout in enumerate(stops):
+        rows += [hook(f'{start}:{40 + n * 5:02d}.000000Z', 'Stop', 'completion', stdout),
+                 hook(f'{start}:{40 + n * 5:02d}.200000Z', 'Stop', 'adapter-autopilot-mode-continue', PASS)]
+    return rows
+
+
+class TimelineTest(unittest.TestCase):
+    def test_two_prompt_hooks_of_one_input_open_one_turn(self):
+        rows = one_input('2026-11-13T03:10', stops=[PASS]) + one_input('2026-11-13T03:20', stops=[PASS])
+        turns = timeline.assemble('s1', rows)['turns']
+        self.assertEqual([t['index'] for t in turns], [1, 2])
+
+    def test_rows_before_the_first_input_form_the_session_start_group(self):
+        rows = [hook('2026-11-13T03:00:00.000000Z', 'SessionStart', 'session-start')] + one_input('2026-11-13T03:10', stops=[PASS])
+        turns = timeline.assemble('s1', rows)['turns']
+        self.assertEqual([t['index'] for t in turns], [0, 1])
+        self.assertEqual(turns[0]['stages']['intake']['level'], 'ok')
+
+    def test_block_followed_by_a_passing_stop_is_resumed(self):
+        turn = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[BLOCK, PASS]))['turns'][0]
+        self.assertEqual((turn['outcome'], turn['blocks']), ('resumed', 1))
+        self.assertEqual(turn['stages']['stop']['level'], 'block')
+        self.assertEqual(turn['findings'][0]['code'], 'route-unavailable')
+
+    def test_block_followed_only_by_a_notice_stays_unresolved(self):
+        turn = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[BLOCK, NOTICE]))['turns'][0]
+        self.assertEqual(turn['outcome'], 'unresolved')
+
+    def test_turn_without_findings_is_ok(self):
+        turn = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[PASS], pre=PREPARED))['turns'][0]
+        self.assertEqual((turn['outcome'], turn['blocks'], turn['findings']), ('ok', 0, []))
+
+    def test_repeated_routine_rows_collapse_into_counted_steps(self):
+        turn = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[PASS], tools=5))['turns'][0]
+        checkpoints = [s for s in turn['steps'] if s['name'] == 'PreToolUse · tool-checkpoint']
+        waiting = [s for s in turn['steps'] if s['code'] == 'awaiting-current-route']
+        self.assertEqual([s['count'] for s in checkpoints], [5])
+        self.assertEqual([s['count'] for s in waiting], [5])
+
+    def test_repeated_warning_is_one_finding_with_a_count(self):
+        turn = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[PASS], tools=4, pre=INCOMPATIBLE))['turns'][0]
+        self.assertEqual([(f['code'], f['count']) for f in turn['findings']], [('core-assessment-incompatible', 4)])
+        self.assertEqual(turn['outcome'], 'warn')
+
+    def test_ledger_event_stamped_in_the_same_second_joins_the_new_turn(self):
+        rows = one_input('2026-11-13T03:10', stops=[PASS]) + one_input('2026-11-13T03:11', stops=[PASS])
+        ledger = [{'event': 'native-input-staged', 'ts': '2026-11-13T03:11:00Z', 'transport_observation_id': 'b'}]
+        turns = timeline.assemble('s1', rows, ledger_events=ledger)['turns']
+        self.assertEqual([sum(s['source'] == 'ledger' for s in t['steps']) for t in turns], [0, 1])
+
+    def test_unresolved_staged_input_is_counted_as_pending(self):
+        rows = one_input('2026-11-13T03:10', stops=[PASS]) + one_input('2026-11-13T03:20', stops=[PASS])
+        ledger = [{'event': 'native-input-staged', 'ts': '2026-11-13T03:10:00Z', 'transport_observation_id': 'a'},
+                  {'event': 'native-input-resolved', 'ts': '2026-11-13T03:10:11Z', 'transport_observation_id': 'a', 'actor': 'human'},
+                  {'event': 'native-input-staged', 'ts': '2026-11-13T03:20:00Z', 'transport_observation_id': 'b'}]
+        turns = timeline.assemble('s1', rows, ledger_events=ledger)['turns']
+        self.assertEqual([t['pending_at_end'] for t in turns], [0, 1])
+
+    def test_tool_use_without_route_registration_is_called_out(self):
+        turn = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[BLOCK, NOTICE]))['turns'][0]
+        self.assertFalse(turn['route_registered'])
+        registered = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[PASS]), ledger_events=[
+            {'event': 'response-route-recorded', 'ts': '2026-11-13T03:10:15Z', 'selected_work_unit_ids': ['u']}])['turns'][0]
+        self.assertTrue(registered['route_registered'])
+
+    def test_until_cuts_later_records(self):
+        rows = one_input('2026-11-13T03:10', stops=[PASS]) + one_input('2026-11-13T03:20', stops=[PASS])
+        turns = timeline.assemble('s1', rows, until='2026-11-13T03:15:00Z')['turns']
+        self.assertEqual([t['index'] for t in turns], [1])
+
+    def test_turn_shows_what_kind_of_input_started_it(self):
+        rows = one_input('2026-11-13T03:10', stops=[PASS]) + one_input('2026-11-13T03:20', stops=[PASS])
+        inputs = [{'ts': '2026-11-13T03:09:59.800Z', 'kind': 'human', 'text': '사례를 작성해 줘'},
+                  {'ts': '2026-11-13T03:19:58.000Z', 'kind': 'peer', 'text': '[Subagent hand-back]'}]
+        turns = timeline.assemble('s1', rows, user_inputs=inputs)['turns']
+        self.assertEqual([(t['input_kind'], t['user_text']) for t in turns],
+                         [('human', '사례를 작성해 줘'), ('peer', '[Subagent hand-back]')])
+
+    def test_first_turn_that_leaves_an_input_unconfirmed_is_marked(self):
+        rows = (one_input('2026-11-13T03:10', stops=[PASS]) + one_input('2026-11-13T03:20', stops=[PASS])
+                + one_input('2026-11-13T03:30', stops=[PASS]))
+        ledger = [{'event': 'native-input-staged', 'ts': '2026-11-13T03:10:00Z', 'transport_observation_id': 'a'},
+                  {'event': 'native-input-resolved', 'ts': '2026-11-13T03:10:11Z', 'transport_observation_id': 'a', 'actor': 'human'},
+                  {'event': 'native-input-staged', 'ts': '2026-11-13T03:20:00Z', 'transport_observation_id': 'b'},
+                  {'event': 'native-input-staged', 'ts': '2026-11-13T03:30:00Z', 'transport_observation_id': 'c'}]
+        turns = timeline.assemble('s1', rows, ledger_events=ledger)['turns']
+        self.assertEqual([t['pending_started'] for t in turns], [False, True, False])
+        self.assertEqual([t['pending_at_end'] for t in turns], [0, 1, 2])
+        self.assertTrue(any('대기' in note['text'] for note in turns[1]['notes']))
+        self.assertTrue(any('대기' in note['text'] for note in turns[2]['notes']))
+        self.assertFalse(any('대기' in note['text'] for note in turns[0]['notes']))
+
+
+class LangfusePayloadTest(unittest.TestCase):
+    """What leaves this computer when a session's hook flow is sent to Langfuse."""
+
+    def blocked_timeline(self):
+        ledger = [{'event': 'intent-updated', 'ts': '2026-11-13T03:10:12Z', 'delta_keys': ['current_goal'],
+                   'semantic_changes': {'current_goal': {'after': 'PRIVATE-GOAL-SUMMARY'}}}]
+        inputs = [{'ts': '2026-11-13T03:09:59.800Z', 'kind': 'human', 'text': 'PRIVATE-USER-SENTENCE'}]
+        data = timeline.assemble('11111111-2222-3333-4444-555555555555', one_input('2026-11-13T03:10', stops=[BLOCK, PASS]),
+                                 ledger_events=ledger, user_inputs=inputs)
+        data.update(stages=explain.STAGES, level_labels=explain.LEVEL_LABEL)
+        return data
+
+    def test_conversation_text_and_intent_summaries_are_not_sent(self):
+        data = self.blocked_timeline()
+        self.assertIn('PRIVATE-USER-SENTENCE', json.dumps(data, ensure_ascii=False))
+        self.assertIn('PRIVATE-GOAL-SUMMARY', json.dumps(data, ensure_ascii=False))
+        sent = json.dumps(langfuse_sync.timeline_spans(data), ensure_ascii=False)
+        self.assertNotIn('PRIVATE-USER-SENTENCE', sent)
+        self.assertNotIn('PRIVATE-GOAL-SUMMARY', sent)
+
+    def test_blocked_turn_carries_the_explanation_a_warning_and_tags(self):
+        spans = langfuse_sync.timeline_spans(self.blocked_timeline())
+        root = next(span for span in spans if 'parentSpanId' not in span)
+        attributes = {a['key']: a['value'] for a in root['attributes']}
+        tags = [v['stringValue'] for v in attributes['langfuse.trace.tags']['arrayValue']['values']]
+        self.assertEqual(root['name'], 'Ghost-ALICE · turn 1')
+        for tag in ('ghost-alice', 'ghost-alice:block', 'ghost-alice:resumed', 'ghost-alice:route-unavailable'):
+            self.assertIn(tag, tags)
+        blocked = [span for span in spans if '막힘' in span['name']]
+        self.assertEqual(len(blocked), 1)
+        attributes = {a['key']: a['value'].get('stringValue') for a in blocked[0]['attributes']}
+        self.assertEqual(attributes['langfuse.observation.level'], 'WARNING')
+        output = json.loads(attributes['langfuse.observation.output'])
+        for field in ('왜', '다시 진행하려면', '개선 힌트', '원문'):
+            self.assertTrue(output[field], field)
+        self.assertIn('작업 경로가 등록되지 않았습니다', output['요약'])
+
+    def test_every_span_carries_the_trace_level_attributes(self):
+        # Langfuse v4 filters and groups by these only when each span of the trace repeats them
+        # (https://langfuse.com/integrations/native/opentelemetry, "Property mapping").
+        for span in langfuse_sync.timeline_spans(self.blocked_timeline()):
+            keys = {a['key'] for a in span['attributes']}
+            for key in ('langfuse.session.id', 'langfuse.trace.name', 'langfuse.trace.tags'):
+                self.assertIn(key, keys, span['name'])
+            self.assertNotIn('langfuse.trace.input', keys)
+            self.assertNotIn('langfuse.trace.output', keys)
+
+    def test_ids_are_well_formed_and_repeatable(self):
+        first, second = (langfuse_sync.timeline_spans(self.blocked_timeline()) for _ in range(2))
+        self.assertEqual([s['spanId'] for s in first], [s['spanId'] for s in second])
+        self.assertEqual(len({s['spanId'] for s in first}), len(first))
+        for span in first:
+            self.assertRegex(span['traceId'], r'^[0-9a-f]{32}$')
+            self.assertRegex(span['spanId'], r'^[0-9a-f]{16}$')
+            self.assertLessEqual(int(span['startTimeUnixNano']), int(span['endTimeUnixNano']))
+
+
+class ReplayTest(unittest.TestCase):
+    """A session that was opened once can be reopened after its hook log is gone."""
+
+    def test_session_reopens_from_its_snapshot(self):
+        import tempfile
+        session = 'aaaaaaaa-1111-2222-3333-444444444444'
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            config = {'log_root': root / 'logs', 'ledger_root': root / 'ledger', 'trace': root / 'io-trace.jsonl',
+                      'transcripts': root / 'transcripts', 'snapshots': root / 'timelines'}
+            log = config['log_root'] / session / 'strict-hook-output.jsonl'
+            log.parent.mkdir(parents=True)
+            log.write_text('\n'.join(json.dumps(row) for row in one_input('2026-11-13T03:10', stops=[BLOCK, PASS])), encoding='utf-8')
+            live = timeline.build(session, config)
+            self.assertFalse(live['from_snapshot'])
+            self.assertEqual([entry['live'] for entry in timeline.list_sessions(config)], [True])
+            log.unlink()
+            saved = timeline.build(session, config)
+            self.assertTrue(saved['from_snapshot'])
+            self.assertEqual(saved['turns'], live['turns'])
+            self.assertEqual(saved['turns'][0]['findings'][0]['code'], 'route-unavailable')
+            listed = timeline.list_sessions(config)
+            self.assertEqual([(entry['session'], entry['live'], entry['totals']['blocks']) for entry in listed], [(session, False, 1)])
+            self.assertTrue(timeline.build('bbbbbbbb-1111-2222-3333-444444444444', config)['missing'])
+
+    def test_session_id_cannot_point_outside_the_log_folder(self):
+        with self.assertRaises(ValueError):
+            timeline.build('..\\..\\secrets', {'log_root': '.', 'ledger_root': '.', 'trace': 'x', 'transcripts': '.', 'snapshots': '.'})
+
+
+class StuckQueueTest(unittest.TestCase):
+    def stuck_turn(self):
+        ledger = [{'event': 'native-input-staged', 'ts': '2026-11-13T03:10:00Z', 'transport_observation_id': 'a'}]
+        return timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[BLOCK, NOTICE]), ledger_events=ledger)['turns'][0]
+
+    def test_unconfirmed_input_marks_the_intake_stage(self):
+        self.assertEqual(self.stuck_turn()['stages']['intake']['level'], 'warn')
+        confirmed = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[PASS]), ledger_events=[
+            {'event': 'native-input-staged', 'ts': '2026-11-13T03:10:00Z', 'transport_observation_id': 'a'},
+            {'event': 'native-input-resolved', 'ts': '2026-11-13T03:10:11Z', 'transport_observation_id': 'a', 'actor': 'human'}])['turns'][0]
+        self.assertEqual(confirmed['stages']['intake']['level'], 'ok')
+
+    def test_missing_route_advice_says_registration_is_refused_while_the_queue_is_stuck(self):
+        blocked = next(f for f in self.stuck_turn()['findings'] if f['level'] == 'block')
+        self.assertIn('거부', blocked['resume'])
+        normal = timeline.assemble('s1', one_input('2026-11-13T03:10', stops=[BLOCK, PASS]))['turns'][0]['findings'][0]
+        self.assertNotIn('거부', normal['resume'])
+
+
+def user_row(content, *, origin='human', meta=None, ts='2026-11-13T03:10:00.000Z'):
+    row = {'type': 'user', 'timestamp': ts, 'message': {'role': 'user', 'content': content}}
+    if origin:
+        row['origin'] = {'kind': origin}
+    if meta is not None:
+        row['isMeta'] = meta
+    return row
+
+
+def queued_row(prompt, mode, origin, ts='2026-11-13T03:10:00.000Z'):
+    return {'type': 'attachment', 'timestamp': ts,
+            'attachment': {'type': 'queued_command', 'prompt': prompt, 'commandMode': mode, 'origin': {'kind': origin}}}
+
+
+class TranscriptInputTest(unittest.TestCase):
+    """Row shapes copied from Claude Code transcripts under ~/.claude/projects/."""
+
+    def test_plain_message_is_human_input(self):
+        self.assertEqual(timeline.classify_input(user_row('사례를 작성해 줘')), ('human', '사례를 작성해 줘'))
+
+    def test_slash_command_shows_its_name_and_arguments(self):
+        row = user_row('<command-message>eli5</command-message>\n<command-name>/eli5</command-name>\n'
+                       '<command-args>쉽게 설명해줘</command-args>')
+        self.assertEqual(timeline.classify_input(row), ('slash-command', '/eli5 쉽게 설명해줘'))
+
+    def test_message_from_another_agent_is_peer(self):
+        row = user_row('Another Claude session sent a message: <agent-message from="a1">[Subagent hand-back] report</agent-message>',
+                       origin='peer', meta=True)
+        kind, text = timeline.classify_input(row)
+        self.assertEqual(kind, 'peer')
+        self.assertNotIn('<agent-message', text)
+
+    def test_queued_rows_are_told_apart_by_sender(self):
+        self.assertEqual(timeline.classify_input(queued_row('이것도 볼 수 있나?', 'prompt', 'human')),
+                         ('queued-human', '이것도 볼 수 있나?'))
+        self.assertEqual(timeline.classify_input(queued_row('<agent-message from="a1">report</agent-message>', 'prompt', 'peer'))[0], 'peer')
+        self.assertEqual(timeline.classify_input(queued_row('<task-notification>done</task-notification>',
+                                                            'task-notification', 'task-notification'))[0], 'task-notification')
+
+    def test_skill_bodies_reminders_and_tool_results_are_not_inputs(self):
+        self.assertIsNone(timeline.classify_input(user_row('Base directory for this skill: C:\\skills\\x', origin=None, meta=True)))
+        self.assertIsNone(timeline.classify_input(user_row('<system-reminder>note</system-reminder>', origin=None, meta=True)))
+        self.assertIsNone(timeline.classify_input(user_row([{'type': 'tool_result', 'tool_use_id': 't1', 'content': 'ok'}], origin=None)))
+
+    def test_secrets_are_masked_in_input_previews(self):
+        text = timeline.redact('LANGFUSE_SECRET_KEY="sk-lf-00000000-aaaa-bbbb" LANGFUSE_PUBLIC_KEY="pk-lf-11111111-cccc" 이걸 써줘')
+        self.assertNotIn('sk-lf-00000000', text)
+        self.assertNotIn('pk-lf-11111111', text)
+        self.assertIn('이걸 써줘', text)
+        self.assertNotIn('hunter2', timeline.redact('DB_PASSWORD=hunter2 로 접속'))
+        kind, preview = timeline.classify_input(user_row('MY_API_KEY=abcd1234efgh 저장해줘'))
+        self.assertNotIn('abcd1234efgh', preview)
+
+
+if __name__ == '__main__':
+    unittest.main()
