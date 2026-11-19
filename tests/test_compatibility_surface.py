@@ -133,7 +133,12 @@ class CompatibilitySurfaceTest(unittest.TestCase):
             text = (REPO_ROOT / rel).read_text()
             self.assertIn("compatibility-matrix.json", text)
             self.assertIn("not-run", text)
-        self.assertTrue(any(t["status"] == "not-run" and t["full_compatibility_blocker"] for t in _compatibility_matrix()["targets"]))
+        # The rule is conditional: every not-run target blocks full compatibility.
+        # A matrix with all targets verified is valid and need not keep a not-run row.
+        for target in _compatibility_matrix()["targets"]:
+            if target["status"] == "not-run":
+                with self.subTest(target=target["id"]):
+                    self.assertIs(target["full_compatibility_blocker"], True)
 
     def test_docs_state_evidence_scope_for_compatibility(self) -> None:
         expected = {"README.md": "source checks establish neither installation nor native host adoption", "README_ko.md": "source 검사만으로 설치나 native host 적용을 입증할 수 없습니다", "addons/autopilot-mode/skill/SKILL.md": "source tests establish neither installed adoption nor live host behavior"}

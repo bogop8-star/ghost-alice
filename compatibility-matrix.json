@@ -24,15 +24,16 @@
       "id": "os-linux",
       "kind": "os",
       "name": "Linux",
-      "status": "not-run",
-      "full_compatibility_blocker": true,
+      "status": "verified-local",
+      "full_compatibility_blocker": false,
       "evidence": [
-        "target listed but no Linux runner evidence is attached in this checkout"
+        "GitHub Actions ubuntu-latest runs the full addon suite (scripts/run_project_tests.py tests) against the pinned Core test baseline with zero failures; two tests skip because they require macOS sandbox-exec",
+        "Core _shared/install_hooks.py run from bash on Ubuntu (WSL2) with --platform claude, --destination-file naming an isolated destination and --addon-source this repository: install, --status and --uninstall each exit 0; install registers the [adapter:autopilot-mode] prepare-origin PreToolUse and continue Stop hooks, status reports installed, and uninstall removes all eight hook entries"
       ],
       "next_evidence_required": [
-        "run addon unit and adapter subprocess tests on a Linux runner",
-        "attach command, exit code, and test summary"
-      ]
+        "observe the installed hooks in a running native host on Linux and retain the exact installed hashes and hook audit for that observation"
+      ],
+      "verification_scope": "GitHub Actions Linux runner tests and an isolated WSL2 Ubuntu install/status/uninstall against the pinned Core test baseline; live native host behavior on Linux remains unverified."
     },
     {
       "id": "shell-windows-command-prompt",
