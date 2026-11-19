@@ -6,9 +6,11 @@ from __future__ import annotations
 
 import copy
 from contextlib import closing
+import csv
 from datetime import datetime, timedelta, timezone
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -53,6 +55,16 @@ def deny_read(testcase, path):
     POSIX uses ``chmod(0)``. Windows ``chmod`` only toggles the read-only flag,
     so an explicit deny read-data ACE for the current user produces the same
     PermissionError. Only read-data is denied so icacls can still restore it.
+    The ACE names the user's SID (``whoami /user``) rather than ``USERNAME``,
+    which is ambiguous for domain, Microsoft, or renamed accounts.
+
+    ``icacls /remove:d`` removes every deny ACE for that SID on ``path``. That
+    is safe here because ``path`` is a file the test created in its own
+    temporary directory, so no other deny ACE exists to lose.
+
+    Some accounts can still read a denied file (POSIX root, Windows backup
+    privilege). The helper therefore checks that reading actually fails and
+    skips the test otherwise, instead of reporting a misleading failure.
 
     Returns an idempotent ``restore`` callable for tests that make the file
     readable again before cleanup.
@@ -62,9 +74,9 @@ def deny_read(testcase, path):
         path.chmod(0)
         restore_command = lambda: path.chmod(0o600)
     else:
-        user = os.environ.get("USERNAME") or os.getlogin()
-        subprocess.run(["icacls", str(path), "/deny", f"{user}:(RD)"], check=True, capture_output=True)
-        restore_command = lambda: subprocess.run(["icacls", str(path), "/remove:d", user], check=True, capture_output=True)
+        sid = "*" + current_user_sid()
+        subprocess.run(["icacls", str(path), "/deny", f"{sid}:(RD)"], check=True, capture_output=True)
+        restore_command = lambda: subprocess.run(["icacls", str(path), "/remove:d", sid], check=True, capture_output=True)
     restored = []
 
     def restore():
@@ -73,7 +85,21 @@ def deny_read(testcase, path):
             restore_command()
 
     testcase.addCleanup(restore)
-    return restore
+    try:
+        path.open("rb").close()
+    except PermissionError:
+        return restore
+    restore()
+    testcase.skipTest(f"read denial is not enforced for this account: {path}")
+
+
+def current_user_sid():
+    """Return the current Windows user's SID string, e.g. ``S-1-5-21-...``."""
+    completed = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], check=True, capture_output=True, text=True)
+    sid = next(csv.reader(io.StringIO(completed.stdout)))[-1].strip()
+    if not sid.startswith("S-1-"):
+        raise RuntimeError(f"unexpected whoami /user output: {completed.stdout!r}")
+    return sid
 
 
 def is_publish_command(line):
