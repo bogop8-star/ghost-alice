@@ -39,10 +39,10 @@ class RetainedOriginPublicationTest(_CompletionV2Fixture):
 
     def test_cli_retained_capture_option(self):
         original,current=self.retained()
-        result=subprocess.run([sys.executable,'-B',str(fixture.SCRIPT),'publish',
+        result=fixture.run_exact_stdin([sys.executable,'-B',str(fixture.SCRIPT),'publish',
             '--schema-version','autopilot-completion-receipt.v2','--receipt-token',current['receipt_token'],
             '--origin-receipt-token',original['receipt_token'],'--verified-at',self.verified_at,
-            '--original-dependencies-json','[]','--evidence-source',self.evidence_source,'--completion-file','-'],input=self.completion,text=True,capture_output=True,
+            '--original-dependencies-json','[]','--evidence-source',self.evidence_source,'--completion-file','-'],input=self.completion,capture_output=True,
             env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1'},cwd=self.root)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertEqual(json.loads(result.stdout)['original_evidence'][0]['captured_at'],original['prepared_at'])

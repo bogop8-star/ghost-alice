@@ -174,7 +174,7 @@ class CompletionTimestampTest(unittest.TestCase):
         self.prepare(); original = self.untimed()
         message = self.stop()['systemMessage']
         self.assertIn('once', message)
-        command = next(line for line in message.splitlines() if 'autopilot_completion.py publish' in line)
+        command = next(line for line in message.splitlines() if base.is_publish_command(line))
         argv = [self.verified_at if value == 'ORIGINAL_ISO_TIME' else value for value in shlex.split(command)]
         self.assert_original_committed(original, self.cli(argv, original))
 

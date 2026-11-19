@@ -877,7 +877,7 @@ class CompletionV2BoundaryTest(_CompletionV2Fixture):
         args=base+['publish','--schema-version','autopilot-completion-receipt.v2','--receipt-token',receipt['receipt_token'],
             '--verified-at',self.verified_at,'--evidence-source',self.evidence_source,'--completion-file','-',
             '--criterion-dependencies-json',json.dumps(mapping)]
-        result=subprocess.run(args,input=self.completion,cwd=self.root,env=source,capture_output=True,text=True)
+        result=publication_fixture.run_exact_stdin(args,input=self.completion,cwd=self.root,env=source,capture_output=True)
         self.assertEqual(result.returncode,0,result.stderr)
         published=json.loads(result.stdout)
         self.assertEqual(published['original_evidence'][0]['criterion_dependencies'],sorted(mapping,key=lambda c:c['criterion_id']))
@@ -1345,6 +1345,7 @@ class DescriptorCommandFilesystemV2Test(_CompletionV2Fixture):
         import shlex,subprocess,os
         return subprocess.run(shlex.split(command),env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1'},text=True,capture_output=True)
 
+    @unittest.skipIf(sys.platform == 'win32', 'chmod(0o555) cannot make a directory unwritable on Windows')
     def test_generated_derived_command_readonly_reacquisition_differs_from_explicit(self):
         import autopilot_messages as messages
         receipt=self.prepare()
@@ -1391,7 +1392,8 @@ class ThinStopFallbackRecoveryV2Test(_CompletionV2Fixture):
             return json.loads(result.stdout)
         first=invoke();second=invoke()
         self.assertNotIn('decision',first)
-        self.assertIn('File exists',first['systemMessage'])
+        # Windows reports EEXIST as WinError 183 with a localized message.
+        self.assertIn('WinError 183' if sys.platform == 'win32' else 'File exists',first['systemMessage'])
         self.assertEqual(first['recovery']['status'],'diagnostic')
         self.assertEqual(second['recovery']['status'],'parked')
         self.assertNotIn('decision',second)
@@ -1448,6 +1450,7 @@ class RetainedProofRecoveryDeliveryV2Test(_CompletionV2Fixture):
 
 
 class PublicationAcquisitionRoundtripV2Test(_CompletionV2Fixture):
+    @unittest.skipIf(sys.platform == 'win32', 'chmod(0o555) cannot make a directory unwritable on Windows')
     def test_generated_derived_publish_command_preserves_acquisition_failure(self):
         import os,shlex,subprocess
         receipt=self.prepare();self.proof()
@@ -1547,7 +1550,7 @@ class NativeGeneratedPublicationV2Test(_CompletionV2Fixture):
         self.review(original)
         env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1'}
         command=shlex.split(receipt['publish_command'].replace('ORIGINAL_ISO_TIME',self.verified_at))
-        published=subprocess.run(command,input=original,env=env,text=True,capture_output=True)
+        published=publication_fixture.run_exact_stdin(command,input=original,env=env,capture_output=True)
         self.assertEqual(published.returncode,0,published.stderr)
         proof=json.loads(published.stdout)
         self.assertEqual(proof['verified_at'],self.verified_at)
@@ -1681,8 +1684,7 @@ class ParkedRetainedMetDependencyV2Test(_CompletionV2Fixture):
         with self.helper.storage.transaction(self.run_dir,self.source,migrate_legacy=False) as store:
             original=store.completion_read('evidence',first['evidence_references'][0])
             original_unit=store.completion_unit('report-unit')
-        self.protected.chmod(0)
-        self.addCleanup(self.protected.chmod,0o600)
+        publication_fixture.deny_read(self,self.protected)
         env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1','PYTHONDONTWRITEBYTECODE':'1'}
         command=[sys.executable,'-B',str(publication_fixture.SKILL/'adapters/autopilot_mode.py')]
         host=dict(hook_event_name='Stop',session_id='session-1',cwd=str(self.root))
@@ -1750,14 +1752,13 @@ class RetainedSiblingReadErrorV2Test(_CompletionV2Fixture):
             original_proof=store.completion_read('evidence',published['evidence_references'][0])
         host=dict(hook_event_name='Stop',session_id='session-1',cwd=str(self.root),
             host_context=dict(delivery_surface='visible_transcript'),prior_answer_ref='answer:retained')
-        self.protected.chmod(0)
-        self.addCleanup(self.protected.chmod,0o600)
+        restore_read=publication_fixture.deny_read(self,self.protected)
         failure=publication_fixture.adapter.adapter_payload_from_env(self.source,hook_input=host)
         parked=publication_fixture.adapter.adapter_payload_from_env(self.source,hook_input=host)
         self.assertEqual(failure['recovery']['delivery_route'],'preserve_answer_and_patch_metadata')
         self.assertEqual(parked['recovery']['status'],'parked')
         self.assertEqual(self.read_state()['acceptance_criteria'],before)
-        self.protected.chmod(0o600)
+        restore_read()
         recovered=publication_fixture.adapter.adapter_payload_from_env(self.source,hook_input=host)
         self.assertEqual(recovered['systemMessage'],'')
         self.assertEqual(recovered['completion_recording']['units'][0]['unit_status'],'complete')
@@ -1791,8 +1792,7 @@ class RetainedSiblingReadErrorV2Test(_CompletionV2Fixture):
         with self.helper.storage.transaction(self.run_dir,self.source,migrate_legacy=False) as store:
             records={ref:store.completion_read('evidence',ref) for publication in originals for ref in publication['evidence_references']}
             original_unit=store.completion_unit('report-unit')
-        self.protected.chmod(0)
-        self.addCleanup(self.protected.chmod,0o600)
+        publication_fixture.deny_read(self,self.protected)
         env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1','PYTHONDONTWRITEBYTECODE':'1'}
         command=[sys.executable,'-B',str(publication_fixture.SKILL/'adapters/autopilot_mode.py')]
         host=dict(hook_event_name='Stop',session_id='session-1',cwd=str(self.root))
@@ -1853,7 +1853,7 @@ class RetainedSiblingReadErrorV2Test(_CompletionV2Fixture):
         second=self.publish(receipt,dependencies=[str(self.report)]);self.stop()
         before=self.read_state()
         self.assertEqual({c['status'] for c in before['acceptance_criteria']},{'met'})
-        self.protected.chmod(0);self.addCleanup(self.protected.chmod,0o600)
+        publication_fixture.deny_read(self,self.protected)
         command=[sys.executable,'-B',str(publication_fixture.SKILL/'adapters/autopilot_mode.py')]
         env={**os.environ,**self.source,'CODEX_THREAD_ID':'session-1','PYTHONDONTWRITEBYTECODE':'1'}
         def invoke():

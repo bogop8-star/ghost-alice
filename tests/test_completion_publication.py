@@ -6,12 +6,15 @@ from __future__ import annotations
 
 import copy
 from contextlib import closing
+import csv
 from datetime import datetime, timedelta, timezone
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
+import shlex
 import sqlite3
 import subprocess
 import sys
@@ -27,6 +30,89 @@ sys.path.insert(0, str(ROOT / "tests"))
 import autopilot_state as adapter
 import autopilot_work_items as work_items
 from response_route_fixture import native_ledger, register_route
+
+
+def run_exact_stdin(args, *, input, **kwargs):
+    """Run a text-mode command but send ``input`` as its exact UTF-8 bytes.
+
+    Text-mode stdin translates LF to CRLF on Windows, while publish compares
+    the completion block byte-for-byte with its recorded review. POSIX
+    behavior is identical to ``subprocess.run(..., text=True)``.
+    """
+    kwargs.pop("text", None)
+    kwargs.pop("universal_newlines", None)
+    result = subprocess.run(args, input=input.encode("utf-8"), **kwargs)
+    for name in ("stdout", "stderr"):
+        value = getattr(result, name)
+        if isinstance(value, bytes):
+            setattr(result, name, value.decode("utf-8").replace("\r\n", "\n"))
+    return result
+
+
+def deny_read(testcase, path):
+    """Make ``path`` unreadable for the rest of ``testcase`` and restore it afterwards.
+
+    POSIX uses ``chmod(0)``. Windows ``chmod`` only toggles the read-only flag,
+    so an explicit deny read-data ACE for the current user produces the same
+    PermissionError. Only read-data is denied so icacls can still restore it.
+    The ACE names the user's SID (``whoami /user``) rather than ``USERNAME``,
+    which is ambiguous for domain, Microsoft, or renamed accounts.
+
+    ``icacls /remove:d`` removes every deny ACE for that SID on ``path``. That
+    is safe here because ``path`` is a file the test created in its own
+    temporary directory, so no other deny ACE exists to lose.
+
+    Some accounts can still read a denied file (POSIX root, Windows backup
+    privilege). The helper therefore checks that reading actually fails and
+    skips the test otherwise, instead of reporting a misleading failure.
+
+    Returns an idempotent ``restore`` callable for tests that make the file
+    readable again before cleanup.
+    """
+    path = Path(path)
+    if sys.platform != "win32":
+        path.chmod(0)
+        restore_command = lambda: path.chmod(0o600)
+    else:
+        sid = "*" + current_user_sid()
+        subprocess.run(["icacls", str(path), "/deny", f"{sid}:(RD)"], check=True, capture_output=True)
+        restore_command = lambda: subprocess.run(["icacls", str(path), "/remove:d", sid], check=True, capture_output=True)
+    restored = []
+
+    def restore():
+        if not restored:
+            restored.append(True)
+            restore_command()
+
+    testcase.addCleanup(restore)
+    try:
+        path.open("rb").close()
+    except PermissionError:
+        return restore
+    restore()
+    testcase.skipTest(f"read denial is not enforced for this account: {path}")
+
+
+def current_user_sid():
+    """Return the current Windows user's SID string, e.g. ``S-1-5-21-...``."""
+    completed = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], check=True, capture_output=True, text=True)
+    sid = next(csv.reader(io.StringIO(completed.stdout)))[-1].strip()
+    if not sid.startswith("S-1-"):
+        raise RuntimeError(f"unexpected whoami /user output: {completed.stdout!r}")
+    return sid
+
+
+def is_publish_command(line):
+    """True when ``line`` is a generated ``autopilot_completion.py publish`` command.
+
+    ``shlex.join`` quotes Windows paths, so the script name and ``publish`` may
+    be separated by a closing quote.
+    """
+    try:
+        argv = shlex.split(line)
+    except ValueError:
+        return False
+    return any(Path(arg).name == "autopilot_completion.py" and nxt == "publish" for arg, nxt in zip(argv, argv[1:]))
 
 
 class CompletionPublicationTest(unittest.TestCase):
@@ -243,7 +329,7 @@ class CompletionPublicationTest(unittest.TestCase):
         text = self.stop()["systemMessage"]
         self.assertIn("completion-publication: missing", text)
         self.assertIn(receipt["receipt_token"], text)
-        self.assertIn("autopilot_completion.py publish", text)
+        self.assertTrue(any(is_publish_command(line) for line in text.splitlines()), text)
         self.assertNotIn("observation_verdict:reopen_focus", text)
         self.assertNotIn("fresh resolved decision only after verification", text)
 

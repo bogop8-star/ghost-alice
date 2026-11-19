@@ -1,0 +1,3 @@
+# Fixture digests compare exact bytes with POSIX CI, so keep fixtures as committed (LF).
+# Other files keep the checkout default: installed adapter hashes were taken from it.
+tests/fixtures/** -text

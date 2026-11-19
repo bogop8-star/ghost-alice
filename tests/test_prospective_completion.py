@@ -287,7 +287,8 @@ class ProspectiveCompletionTest(unittest.TestCase):
         shutil.copyfile(core_root / "install.sh", runtime / "install.sh")
         shutil.copyfile(core_root / "VERSION", runtime / "VERSION")
         installed = home / ".agents/skills/autopilot-mode"; shutil.copytree(SKILL, installed)
-        env = {"HOME": str(home), "CODEX_HOME": str(home / ".codex"),
+        # USERPROFILE is the Windows home lookup; POSIX ignores it.
+        env = {"HOME": str(home), "USERPROFILE": str(home), "CODEX_HOME": str(home / ".codex"),
             "PATH": os.environ.get("PATH", ""), "PYTHONDONTWRITEBYTECODE": "1"}
         installation = subprocess.run([sys.executable, "-B", str(runtime / "_shared/install_hooks.py"),
             "--platform", "codex", "--addon-source", str(ROOT), "--skills-dir", str(installed.parent)],
