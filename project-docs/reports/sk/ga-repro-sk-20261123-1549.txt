@@ -1,0 +1,130 @@
+﻿
+======================================================================
+0. 환경 (sk, 2026-11-23 15:49)
+======================================================================
+OS: Microsoft Windows 11 Pro 24H2 (10.0.26100, build 26100)
+언어/지역: UI en-US, 형식 ko-KR, 시스템 로캘 ko-KR
+코드 페이지: ANSI 949, OEM 949
+이 스크립트를 실행한 셸: PowerShell 5.1.26100.9711 (Desktop)
+Windows PowerShell: 5.1.26100.9711
+PowerShell 7: 7.7.0
+Git: git version 2.56.0.windows.4
+Claude Code: PATH 에 없음
+훅용 Python: 3.14.7 C:\Users\yesan\AppData\Local\Programs\Python\Python314\python.exe encoding=cp949 utf8_mode=0
+PYTHONUTF8 환경 변수: (없음)
+설치된 Core: DETACHED @ c6019ac49eb482f386ef11693949f2a20623d650 (설치 2026-11-23T06:48:50.9372706+00:00)
+Core 폴더 현재 커밋: c6019ac49eb482f386ef11693949f2a20623d650 (설치와 같음)
+설치된 Autopilot: C:\Users\yesan\ga-baseline-home\ghost-alice-autopilot @ 2075768e268179d2951d1fa4d6c943269603eac2 (v0.5.1)
+기준 버전 판정: Core 일치, Autopilot 일치
+
+======================================================================
+4-1. 실행 폴더 자리에 일반 파일이 있을 때
+======================================================================
+open(file/'x') -> FileNotFoundError errno 2 winerror None
+os.listdir(file) -> NotADirectoryError errno 20 winerror 267
+어댑터 출력 (종료 코드 0): {"continue": true, "systemMessage": "", "completion_recording": {"status": "recording-unavailable", "reason": "authority-unavailable"}}
+판정: recovery 안내 없음 (문제 재현)
+
+======================================================================
+4-2. 텍스트 모드로 넘긴 완료 문구의 줄바꿈
+======================================================================
+보낸 문자열: 'line1\nline2\n'
+자식이 받은 바이트: b'line1\r\nline2\r\n'
+판정: CRLF로 바뀜 (문제 재현 조건)
+
+======================================================================
+4-3. Core 응답 검토 도구에 한국어 파일 넘기기
+======================================================================
+기본 설정 (종료 코드 1): {"status": "unavailable", "reason": "illegal multibyte sequence", "detail": "'cp949' codec can't decode byte 0xec in position 0: illegal multibyte sequence"} 
+PYTHONUTF8=1 (종료 코드 1): {"status": "unavailable", "reason": "authority-unavailable", "detail": "Exact ledger root is required"} 
+판정: 인코딩 오류 재현
+
+======================================================================
+4-7. 병렬 상태 갱신 테스트 반복 실행 (20 회)
+======================================================================
+테스트 폴더: C:\Users\yesan\ghost-alice-autopilot-win @ ad51900 (autopilot/main)
+[1] 통과
+[2] 통과
+[3] 통과
+[4] 통과
+[5] 통과
+[6] 통과
+[7] 통과
+[8] 통과
+[9] 통과
+[10] 통과
+[11] 통과
+[12] 통과
+[13] 통과
+[14] 통과
+[15] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 1.10s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\yesan\ghost-alice-autopilot-win\.tmp\ru
+ntime\pytest-176h927g
+At C:\Users\yesan\Downloads\ga-repro-kit\ga-repro-kit\ga_repro_kit.ps1:183 char:20
++ ...      $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $ru ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-176h927g:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[16] 통과
+[17] 통과
+[18] 통과
+[19] 통과
+[20] 통과
+판정: 20 회 중 실패 1 회
