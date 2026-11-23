@@ -47,6 +47,8 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
 .pill.done { background: #e2f3e2; color: #135e13; }
 .pill.todo { background: #e6f0fc; color: #184f95; }
 .pill.part { background: #fdf0e8; color: #7a3d18; }
+table.compact td .r, table[style] td.r { white-space: normal; }
+table[style] code { font-size: 13px; overflow-wrap: anywhere; }
 .mono li { font-family: Consolas, monospace; font-size: 14px; }
 </style></head><body><section class="slide cover">
   <div class="kicker">팀 보고 · 2026-11-23</div>
@@ -57,7 +59,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <div><b>금액</b> Anthropic API 정가로 계산한 추정치 (실제 청구액 아님)</div>
     <div><b>검증</b> 독립 검증자 4명이 숫자·논리·외부 사실·현재 상태를 따로 확인</div>
   </div>
-  <div class="foot"><span></span><span>1 / 15</span></div>
+  <div class="foot"><span></span><span>1 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">한눈에 보기</div>
@@ -79,7 +81,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>훅 대기 6.1시간 → <b>약 2.2시간</b></li>
     <li>가장 단단한 두 가지: 벤치마크 축소 약 $100, 대화 나누기 약 $77</li></ul></div>
 </div></div>
-  <div class="foot"><span>금액은 모두 API 정가 기준 추정치입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 2 / 15</span></div>
+  <div class="foot"><span>금액은 모두 API 정가 기준 추정치입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 2 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">무엇을 쟀나</div>
@@ -96,7 +98,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
   <div class="card"><h3>시간</h3><p>기록 사이 간격이 5분 이하인 구간만 더했습니다. 자리를 비운 시간은 빠집니다.</p></div>
   <div class="card"><h3>한계</h3><p>PC 1대, 사용자 1명. 하위 에이전트 토큰 제외. 구독 요금제에서는 청구액이 아니라 사용량 한도로 나타납니다.</p></div>
 </div></div>
-  <div class="foot"><span>집계 시각 11-23 11:12 KST. 원본: project-docs/metrics/full-execution-2026-11-23.json</span><span>Ghost-ALICE 비용·시간 절감 방안 · 3 / 15</span></div>
+  <div class="foot"><span>집계 시각 11-23 11:12 KST. 원본: project-docs/metrics/full-execution-2026-11-23.json</span><span>Ghost-ALICE 비용·시간 절감 방안 · 3 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">돈은 어디로 갔나</div>
@@ -113,7 +115,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>모델별: opus-5-5 $281(73%), fable-5-2 $102(27%)</li>
     <li>답변당: opus-5-5 $0.066, fable-5-2 $0.387</li></ul></div>
 </div></div>
-  <div class="foot"><span>단가: platform.claude.com/docs/en/about-claude/pricing (11-23 확인)</span><span>Ghost-ALICE 비용·시간 절감 방안 · 4 / 15</span></div>
+  <div class="foot"><span>단가: platform.claude.com/docs/en/about-claude/pricing (11-23 확인)</span><span>Ghost-ALICE 비용·시간 절감 방안 · 4 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">원인 1 · 긴 대화</div>
@@ -129,7 +131,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>가장 비싼 질문 $14.91: 6.7일 쉰 뒤 긴 대화를 이어 간 첫 질문. 그중 $14.11이 캐시 다시 쓰기</li></ul>
     <p class="warn">주의: 상관관계입니다. 세션 하나가 직접 작업 비용의 41%라 평균을 크게 좌우합니다. 이 대화가 더 길어진 지금은 약 3.7배입니다.</p></div>
 </div></div>
-  <div class="foot"><span>원본: 보고서 11.1, 검증 요약</span><span>Ghost-ALICE 비용·시간 절감 방안 · 5 / 15</span></div>
+  <div class="foot"><span>원본: 보고서 11.1, 검증 요약</span><span>Ghost-ALICE 비용·시간 절감 방안 · 5 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">원인 2 · 반복 실행</div>
@@ -150,7 +152,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>395회 → 100회면 <b>약 $100, 약 5시간</b> 절감</li>
     <li>수정 뒤 확인은 문제가 났던 문항만 돌리면 됩니다</li></ul></div>
 </div></div>
-  <div class="foot"><span>필요한 표본 수는 확인하려는 차이의 크기로 정해야 합니다. 100회는 예시입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 6 / 15</span></div>
+  <div class="foot"><span>필요한 표본 수는 확인하려는 차이의 크기로 정해야 합니다. 100회는 예시입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 6 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">원인 3 · 훅 대기</div>
@@ -166,7 +168,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>io-trace 훅은 이제 비동기(async)로 등록되어 답을 기다리게 하지 않습니다</li></ul>
     <p class="warn">처음 보고한 1.52초는 거부된 훅 281번의 시간이 빠진 과소 추정이었습니다. 정상 기준은 약 1.8초입니다.</p></div>
 </div></div>
-  <div class="foot"><span>질문 하나의 처리 시간 중간값: 직접 작업 234초, 자동 실행 50초</span><span>Ghost-ALICE 비용·시간 절감 방안 · 7 / 15</span></div>
+  <div class="foot"><span>질문 하나의 처리 시간 중간값: 직접 작업 234초, 자동 실행 50초</span><span>Ghost-ALICE 비용·시간 절감 방안 · 7 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">원인 4 · 거버넌스 부담</div>
@@ -182,7 +184,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>차단 한 번마다 답변이 한 번 더 이어졌습니다</li>
     <li>441번 모두 예전 설치 기간에 났고, main 계열은 일반 답변에 응답 경로를 요구하지 않습니다</li></ul></div>
 </div></div>
-  <div class="foot"><span>거버넌스 호출 = 거버넌스 skill 호출 + 원장·경로·검토 스크립트 실행</span><span>Ghost-ALICE 비용·시간 절감 방안 · 8 / 15</span></div>
+  <div class="foot"><span>거버넌스 호출 = 거버넌스 skill 호출 + 원장·경로·검토 스크립트 실행</span><span>Ghost-ALICE 비용·시간 절감 방안 · 8 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">발견과 조치</div>
@@ -205,7 +207,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <p class="warn">6문항이라 방향만 보여 줍니다. 켬은 끔보다 비용 약 3.6배, 시간 약 2배. 날씨 질문에서 거버넌스 상태 문장이 답에 섞임(O14).</p>
   </div>
 </div></div>
-  <div class="foot"><span>원본: project-docs/metrics/rerun-2026-11-23-after-o13.md, observations.md O13·O14</span><span>Ghost-ALICE 비용·시간 절감 방안 · 9 / 15</span></div>
+  <div class="foot"><span>원본: project-docs/metrics/rerun-2026-11-23-after-o13.md, observations.md O13·O14</span><span>Ghost-ALICE 비용·시간 절감 방안 · 9 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">절감 방안 비교</div>
@@ -222,7 +224,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
 <tr><td>7</td><td>Stop 차단 없애기</td><td class="r">추가 답변 441번</td><td>차단마다 답변 한 번 더</td><td>코드(완료)</td><td>재확인 필요</td></tr>
 </table>
 <p class="warn">방안끼리 겹치므로 절감액을 그대로 더하면 안 됩니다. 예: 대화를 나누면 거버넌스 답변 하나의 비용도 함께 줄어듭니다.</p></div>
-  <div class="foot"><span>모델 교체 절감이 32%에 그치는 이유: 두 모델의 캐시 읽기 단가가 같습니다($0.20/백만 토큰).</span><span>Ghost-ALICE 비용·시간 절감 방안 · 10 / 15</span></div>
+  <div class="foot"><span>모델 교체 절감이 32%에 그치는 이유: 두 모델의 캐시 읽기 단가가 같습니다($0.20/백만 토큰).</span><span>Ghost-ALICE 비용·시간 절감 방안 · 10 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">모두 적용한다는 것</div>
@@ -239,7 +241,40 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
 <tr><td>사</td><td>io-trace 비동기</td><td>도구 호출 뒤 기록 훅을 기다리지 않게 등록</td><td>개발</td><td><span class="pill done">반영됨</span></td></tr>
 <tr><td>아</td><td>다시 재기</td><td>일상 질문 켬/끔은 완료. 대화형 질문 목록 정해 새 대화에서 측정</td><td>개발·팀</td><td><span class="pill part">일부</span></td></tr>
 </table></div>
-  <div class="foot"><span>상태는 11-23 12:40 기준입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 11 / 15</span></div>
+  <div class="foot"><span>상태는 11-23 12:40 기준입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 11 / 17</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">절감 방법 1 · 사용자 습관</div>
+  <h1>사용자가 하는 절감: 언제, 어떻게, 무엇으로</h1>
+  <div class="body">
+<table class="compact" style="table-layout:fixed">
+<colgroup><col style="width:17%"><col style="width:10%"><col style="width:17%"><col style="width:34%"><col style="width:22%"></colgroup>
+<tr><th>방안</th><th class="r">절감</th><th>언제</th><th>방법</th><th>도구</th></tr>
+<tr><td>대화 나누기<br><small>방안 1 · 가</small></td><td class="r">약 $77</td><td>질문이 20개 안팎이거나 한 단계가 끝났을 때</td><td>목표·결정·다음 할 일을 요약하게 한 뒤, 새 대화 첫 질문에 그 요약을 붙입니다</td><td>compact-handoff skill, 앱의 새 세션, <code>/clear</code></td></tr>
+<tr><td>꼭 이어야 할 때<br><small>방안 1 보완</small></td><td class="r">—</td><td>같은 대화에서 계속 일해야 할 때</td><td>이전 내용을 요약으로 줄여 다시 읽는 양을 줄입니다</td><td><code>/compact</code></td></tr>
+<tr><td>쉬었다 이어 가지 않기<br><small>방안 5 · 나</small></td><td class="r">최대 $32</td><td>1시간 넘게 쉬었을 때</td><td>저장된 캐시가 사라져 대화 전체를 다시 저장하므로, 긴 대화 대신 요약을 들고 새 대화를 엽니다</td><td>compact-handoff skill, 앱의 새 세션</td></tr>
+<tr><td>모델 고르기<br><small>방안 4 · 다</small></td><td class="r">약 $35</td><td>대화를 시작할 때</td><td>정리·조회·문서는 opus-5-5, 어려운 설계 판단만 fable-5-2. 도중에 바꾸면 캐시를 새 모델로 다시 씁니다</td><td><code>/model</code>, 앱의 모델 선택</td></tr>
+<tr><td>벤치마크 줄이기<br><small>방안 2 · 라</small></td><td class="r">약 $100 · 5시간</td><td>벤치마크를 돌리기 전</td><td>확인할 차이 크기로 횟수를 먼저 정합니다(395 → 100회 이하). 수정 확인은 문제 문항만 돌립니다</td><td>벤치마크 실행기의 반복 횟수 설정, <code>run_daily_test.py --ids D03</code></td></tr>
+</table>
+<p class="warn">절감액은 11-11~11-23 기록에 적용한 추정치이고, 방안끼리 겹치므로 더하지 않습니다. 대화를 나눌 때 요약에 빠진 맥락은 새 대화에서 다시 읽어야 할 수 있습니다.</p></div>
+  <div class="foot"><span>방안 번호는 10장, 가~아는 11장의 항목입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 12 / 17</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">절감 방법 2 · 코드와 운영</div>
+  <h1>개발로 하는 절감과, 효과를 재는 도구</h1>
+  <div class="body">
+<table class="compact" style="table-layout:fixed">
+<colgroup><col style="width:17%"><col style="width:11%"><col style="width:34%"><col style="width:29%"><col style="width:9%"></colgroup>
+<tr><th>방안</th><th class="r">절감</th><th>방법</th><th>도구·위치</th><th>상태</th></tr>
+<tr><td>훅 시간 줄이기<br><small>방안 6 · 바</small></td><td class="r">약 3.9시간</td><td>Autopilot 준비 훅을 빼고 tool-checkpoint를 가볍게 한 main 계열 Core로 설치</td><td>설치 원본 <code>ghost-alice-main</code> → 설치기</td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>io-trace 비동기<br><small>방안 6 · 사</small></td><td class="r">방안 6에 포함</td><td>도구 호출 뒤 기록 훅을 기다리지 않게 <code>async: true</code>로 등록</td><td><code>~/.claude/settings.json</code>의 PostToolUse·PostToolUseFailure</td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>Stop 차단 없애기<br><small>방안 7 · 바</small></td><td class="r">추가 답변 441번</td><td>일반 답변에는 응답 경로를 요구하지 않는 Stop 규칙</td><td>main 계열 Core</td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>O13 수정<br><small>마</small></td><td class="r">입력 기록 복구</td><td>경로 비교에서 슬래시·역슬래시 표기를 같은 폴더로 인정</td><td><code>_shared/hook_profile_gate.py</code></td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>거버넌스 전용 답변 줄이기<br><small>방안 3</small></td><td class="r">최대 $57</td><td>기록 명령이 거부될 때 상태 문장을 답에 넣지 않기(O14). 일상 질문의 기록 호출 줄이기</td><td>이슈 후보</td><td><span class="pill todo">할 일</span></td></tr>
+<tr><td>효과 재기<br><small>아</small></td><td class="r">—</td><td>켬/끔 비교, 세션별 비용·시간 집계, 설치 진단과 훅 종료 코드 확인</td><td><code>run_daily_test.py</code><br><code>full_execution_report.py</code><br><code>install.cmd --doctor</code></td><td><span class="pill part">일부</span></td></tr>
+</table>
+<p class="warn">doctor는 O13 기간에도 "ok"였습니다. 설치 뒤에는 doctor와 함께 훅 기록(strict-hook-output.jsonl)의 종료 코드도 확인합니다.</p></div>
+  <div class="foot"><span>측정 도구 위치: project-docs/daily-test, project-docs/metrics</span><span>Ghost-ALICE 비용·시간 절감 방안 · 13 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">모두 적용하면</div>
@@ -258,7 +293,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <p>자동 실행 $144 → 벤치마크 축소 −$100 → 거버넌스 −$5 → 약 $38~43</p>
     <p class="warn">4단계는 1단계와 겹칠 수 있어 직접 작업은 $107~127 범위로 봅니다.</p></div>
 </div></div>
-  <div class="foot"><span>어림값입니다. 가정 세 가지(80%, 70%, $20)는 측정하지 않은 값입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 12 / 15</span></div>
+  <div class="foot"><span>어림값입니다. 가정 세 가지(80%, 70%, $20)는 측정하지 않은 값입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 14 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">이 숫자를 믿어도 되나</div>
@@ -279,7 +314,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>절감 어림값 61~62% → 약 55~62% (겹침·가정 반영)</li></ul></div>
 </div>
 <p class="note-line">검증자: 원본 재계산(Claude Sonnet), 논리·산술 / 외부 사실 / 예외·현재 상태(Claude Opus 각 1). Codex·Gemini는 로그인 문제로 실행하지 못해, 검증자가 모두 Claude 모델이라는 한계가 있습니다.</p></div>
-  <div class="foot"><span>상세: project-docs/reports/2026-11-23-verification-summary.md, 보고서 12장</span><span>Ghost-ALICE 비용·시간 절감 방안 · 13 / 15</span></div>
+  <div class="foot"><span>상세: project-docs/reports/2026-11-23-verification-summary.md, 보고서 12장</span><span>Ghost-ALICE 비용·시간 절감 방안 · 15 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">제안</div>
@@ -299,7 +334,7 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>대화형 측정 질문 목록</li>
     <li>O14(거버넌스 문장 노출)와 doctor 경고 보강을 이슈로 올릴지</li></ol></div>
 </div></div>
-  <div class="foot"><span></span><span>Ghost-ALICE 비용·시간 절감 방안 · 14 / 15</span></div>
+  <div class="foot"><span></span><span>Ghost-ALICE 비용·시간 절감 방안 · 16 / 17</span></div>
 </section>
 <section class="slide">
   <div class="kicker">부록</div>
@@ -320,5 +355,5 @@ tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
     <li>project-docs/metrics/full_execution_report.py</li>
     <li>project-docs/observations.md (O1 ~ O14)</li></ul></div>
 </div></div>
-  <div class="foot"><span></span><span>Ghost-ALICE 비용·시간 절감 방안 · 15 / 15</span></div>
+  <div class="foot"><span></span><span>Ghost-ALICE 비용·시간 절감 방안 · 17 / 17</span></div>
 </section></body></html>
