@@ -170,6 +170,33 @@ class TestHookRunnerExecutionGate(unittest.TestCase):
                     self.assertEqual(row['user_surface_output'], '')
                     self.assertEqual(row['payload_digest'], 'sha256:' + hashlib.sha256(raw.encode()).hexdigest())
 
+    def test_inner_ledger_root_accepts_the_installers_slash_spelling_and_rejects_another_root(self):
+        """On Windows the installer writes --root with forward slashes while the binding keeps backslashes.
+
+        The same folder in either spelling must run; a different folder must still be rejected.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            destination, transcript = self._wrapper_fixture(directory, 'root-spelling')
+            hook_input = json.dumps(dict(session_id='root-spelling', transcript_path=str(transcript)))
+            env = {'HOME': directory, 'GHOST_ALICE_HOOK_EVENT': 'UserPromptSubmit'}
+
+            def run_with_root(root):
+                command = _b64(shlex.join([sys.executable, '-c', 'print(1)', '--root', root]))
+                with (mock.patch.dict(os.environ, env, clear=True),
+                      mock.patch.object(hook_profile_gate, '_read_stdin', return_value=hook_input),
+                      mock.patch.object(hook_profile_gate.subprocess, 'run',
+                                        return_value=subprocess.CompletedProcess([], 0, '{}\n', '')),
+                      mock.patch.object(sys, 'stdout', io.StringIO())):
+                    return hook_profile_gate._run('session-intent', command, platform='claude',
+                                                  binding=destination.binding())
+
+            bound = str(destination.ledger_root)
+            for spelling in (bound, bound.replace('\\', '/'), bound.replace('/', '\\') if os.name == 'nt' else bound):
+                with self.subTest(spelling=spelling):
+                    self.assertEqual(run_with_root(spelling), 0)
+            with self.assertRaisesRegex(hook_profile_gate.HookCommandRejected, 'inner ledger root conflicts'):
+                run_with_root(str(Path(directory) / 'another-ledger'))
+
     def test_event_aliases_reconcile_inputs_and_deliver_wait_notices(self):
         import session_intent_ledger as ledger
         for field in ('event', 'hook_event_name', 'hookEventName', None):

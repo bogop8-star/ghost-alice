@@ -682,8 +682,11 @@ def _run(hook_id: str, payload: str, *, platform: str | None = None, binding=Non
     stdin_text = _read_stdin()
     hook_payload = _payload_from_stdin(stdin_text)
     if binding is not None:
+        # The installer writes Windows paths with forward slashes while the binding keeps the native
+        # spelling, so compare the folder and not its separator. A different folder is still rejected.
+        bound_root = env["GHOST_ALICE_SESSION_INTENT_ROOT"].replace("\\", "/")
         for flag in ("--root","--session-intent-root"):
-            if flag in argv and argv[argv.index(flag)+1] != env["GHOST_ALICE_SESSION_INTENT_ROOT"]:
+            if flag in argv and argv[argv.index(flag)+1].replace("\\", "/") != bound_root:
                 raise HookCommandRejected("inner ledger root conflicts with trusted binding", hook_payload=hook_payload)
     native_intake_failure = None
     if binding is not None:
