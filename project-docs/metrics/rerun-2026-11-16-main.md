@@ -1,5 +1,7 @@
 # 재측정: main 계열 설치 후 (2026-11-16)
 
+> 2026-11-23 정정: 이 측정은 입력 기록 훅(session-intent)이 매번 거부되던 상태에서 한 것입니다(O13, [observations.md](../observations.md)). 아래 "켬" 수치는 Ghost-ALICE의 입력 기록이 꺼진 상태의 값이므로, main 계열의 개선 폭을 보여 주는 근거로 쓸 수 없습니다. O13 수정 뒤 다시 재야 합니다.
+
 - 설치: `skproject`(main 계열 + 11-16 수정) `a5aa4df`를 설치 원본으로 채택(`install.ps1 --adopt-source`, 14:57~14:58). Claude·Codex 모두 설치, 종료 코드 0.
 - 실행: `project-docs/daily-test/run_daily_test.py`, 6문항 × 켬/끔 = 12회, 오류 0, $1.69, 15:06~15:13. 결과: [results/20261116-150657.jsonl](../daily-test/results/20261116-150657.jsonl)
 - 지표: 그 12개 세션의 대화 기록만 따로 모아 `governance_metrics.py --projects <폴더>`로 계산.

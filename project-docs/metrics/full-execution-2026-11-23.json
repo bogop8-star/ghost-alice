@@ -1,0 +1,765 @@
+{
+ "generated": "2026-11-23T11:12:35+09:00",
+ "categories": {
+  "excluded": {
+   "sessions": 21,
+   "turns": 555
+  },
+  "ga-work": {
+   "sessions": 12,
+   "turns": 257,
+   "tools": 2188,
+   "gov_tools": 467,
+   "blocks": 44,
+   "cost": 239.15129500000003,
+   "active_secs": 69169.31799961599
+  },
+  "auto-test": {
+   "sessions": 449,
+   "turns": 449,
+   "tools": 2538,
+   "gov_tools": 771,
+   "blocks": 397,
+   "cost": 143.66591599999987,
+   "active_secs": 25564.688003583997
+  }
+ },
+ "subcategories": {
+  "auto-test / daily-off": {
+   "sessions": 16,
+   "turns": 16,
+   "tools": 14,
+   "gov_tools": 0,
+   "blocks": 0,
+   "cost": 1.0357720000000001,
+   "active_secs": 233.29599948799995
+  },
+  "auto-test / daily-on": {
+   "sessions": 15,
+   "turns": 15,
+   "tools": 18,
+   "gov_tools": 4,
+   "blocks": 4,
+   "cost": 3.8655079999999997,
+   "active_secs": 423.021000192
+  },
+  "auto-test / ga-o1": {
+   "sessions": 2,
+   "turns": 2,
+   "tools": 0,
+   "gov_tools": 0,
+   "blocks": 0,
+   "cost": 0.012136000000000001,
+   "active_secs": 33.667000064
+  },
+  "auto-test / ghost-chat-bench": {
+   "sessions": 395,
+   "turns": 395,
+   "tools": 2497,
+   "gov_tools": 763,
+   "blocks": 392,
+   "cost": 134.37808899999993,
+   "active_secs": 24166.853003007993
+  },
+  "auto-test / life-check": {
+   "sessions": 21,
+   "turns": 21,
+   "tools": 9,
+   "gov_tools": 4,
+   "blocks": 1,
+   "cost": 4.374411,
+   "active_secs": 707.8510008320001
+  },
+  "excluded / other": {
+   "sessions": 10
+  },
+  "excluded / scratch": {
+   "sessions": 11
+  },
+  "ga-work / ghost-alice folder": {
+   "sessions": 6,
+   "turns": 150,
+   "tools": 1405,
+   "gov_tools": 298,
+   "blocks": 19,
+   "cost": 187.55516800000007,
+   "active_secs": 49667.725999872004
+  },
+  "ga-work / other folder, Ghost-ALICE topic": {
+   "sessions": 6,
+   "turns": 107,
+   "tools": 783,
+   "gov_tools": 169,
+   "blocks": 25,
+   "cost": 51.596126999999996,
+   "active_secs": 19501.591999744
+  }
+ },
+ "duplicate_turns_skipped": 32,
+ "by_day": {
+  "11-11": {
+   "turns": 34,
+   "tools": 269,
+   "gov_tools": 52,
+   "blocks": 14,
+   "cost": 15.09,
+   "active_secs": 14330.93
+  },
+  "11-11|ga-work": {
+   "turns": 34,
+   "tools": 269,
+   "gov_tools": 52,
+   "blocks": 14,
+   "cost": 15.09
+  },
+  "11-12": {
+   "turns": 292,
+   "tools": 1841,
+   "gov_tools": 504,
+   "blocks": 185,
+   "cost": 110.53,
+   "active_secs": 21018.98
+  },
+  "11-12|auto-test": {
+   "turns": 204,
+   "tools": 1103,
+   "gov_tools": 353,
+   "blocks": 167,
+   "cost": 60.31
+  },
+  "11-12|ga-work": {
+   "turns": 88,
+   "tools": 738,
+   "gov_tools": 151,
+   "blocks": 18,
+   "cost": 50.21
+  },
+  "11-13": {
+   "turns": 179,
+   "tools": 1241,
+   "gov_tools": 307,
+   "blocks": 129,
+   "cost": 113.14,
+   "active_secs": 33410.63
+  },
+  "11-13|auto-test": {
+   "turns": 126,
+   "tools": 718,
+   "gov_tools": 197,
+   "blocks": 123,
+   "cost": 41.27
+  },
+  "11-13|ga-work": {
+   "turns": 53,
+   "tools": 523,
+   "gov_tools": 110,
+   "blocks": 6,
+   "cost": 71.86
+  },
+  "11-16": {
+   "turns": 196,
+   "tools": 1355,
+   "gov_tools": 373,
+   "blocks": 113,
+   "cost": 126.68,
+   "active_secs": 25823.08
+  },
+  "11-16|auto-test": {
+   "turns": 119,
+   "tools": 717,
+   "gov_tools": 221,
+   "blocks": 107,
+   "cost": 42.08
+  },
+  "11-16|ga-work": {
+   "turns": 77,
+   "tools": 638,
+   "gov_tools": 152,
+   "blocks": 6,
+   "cost": 84.6
+  },
+  "11-21": {
+   "turns": 1,
+   "tools": 2,
+   "gov_tools": 0,
+   "blocks": 0,
+   "cost": 0.38,
+   "active_secs": 150.39
+  },
+  "11-21|ga-work": {
+   "turns": 1,
+   "tools": 2,
+   "gov_tools": 0,
+   "blocks": 0,
+   "cost": 0.38
+  },
+  "11-23": {
+   "turns": 4,
+   "tools": 18,
+   "gov_tools": 2,
+   "blocks": 0,
+   "cost": 17.0
+  },
+  "11-23|ga-work": {
+   "turns": 4,
+   "tools": 18,
+   "gov_tools": 2,
+   "blocks": 0,
+   "cost": 17.0
+  }
+ },
+ "by_model": {
+  "claude-opus-5-5": {
+   "cost": 280.57,
+   "messages": 4274,
+   "out": 2109426,
+   "cache_read": 527970130,
+   "cache_write": 16594593
+  },
+  "claude-haiku-5-5": {
+   "cost": 0.01,
+   "messages": 2,
+   "out": 1252,
+   "cache_read": 58552,
+   "cache_write": 54620
+  },
+  "claude-fable-5-2": {
+   "cost": 102.23,
+   "messages": 264,
+   "out": 597797,
+   "cache_read": 166556915,
+   "cache_write": 2812683
+  }
+ },
+ "cost_kinds": {
+  "input": 0.04,
+  "output": 66.1,
+  "cache_read_input_tokens": 138.91,
+  "cache_write_1h_input_tokens": 177.77
+ },
+ "tools": {
+  "ga-work": [
+   [
+    "Bash",
+    999
+   ],
+   [
+    "mcp__ccd_turn__update_plan",
+    331
+   ],
+   [
+    "Edit",
+    181
+   ],
+   [
+    "Write",
+    143
+   ],
+   [
+    "mcp__ccd_turn__wrap_up",
+    134
+   ],
+   [
+    "PowerShell",
+    112
+   ],
+   [
+    "Read",
+    74
+   ],
+   [
+    "Skill",
+    30
+   ],
+   [
+    "ToolSearch",
+    20
+   ],
+   [
+    "Grep",
+    19
+   ],
+   [
+    "Artifact",
+    16
+   ],
+   [
+    "WebSearch",
+    15
+   ],
+   [
+    "mcp__Claude_Browser__javascript_tool",
+    13
+   ],
+   [
+    "mcp__Claude_Browser__browser_batch",
+    10
+   ],
+   [
+    "WebFetch",
+    9
+   ],
+   [
+    "AskUserQuestion",
+    9
+   ],
+   [
+    "SendUserFile",
+    9
+   ],
+   [
+    "mcp__ccd_directory__propose_branch",
+    9
+   ],
+   [
+    "mcp__Claude_Browser__preview_start",
+    7
+   ],
+   [
+    "mcp__Claude_Browser__computer",
+    7
+   ],
+   [
+    "mcp__Claude_Browser__navigate",
+    6
+   ],
+   [
+    "mcp__ccd_directory__change_directory",
+    5
+   ],
+   [
+    "mcp__1a59c906-04da-521d-bda7-7f71b9f9e01c__update",
+    5
+   ],
+   [
+    "mcp__Claude_Browser__resize_window",
+    3
+   ],
+   [
+    "mcp__Claude_Browser__get_page_text",
+    3
+   ]
+  ],
+  "auto-test": [
+   [
+    "Grep",
+    598
+   ],
+   [
+    "Read",
+    584
+   ],
+   [
+    "Bash",
+    570
+   ],
+   [
+    "Skill",
+    341
+   ],
+   [
+    "Glob",
+    327
+   ],
+   [
+    "PowerShell",
+    94
+   ],
+   [
+    "ToolSearch",
+    12
+   ],
+   [
+    "WebSearch",
+    11
+   ],
+   [
+    "WebFetch",
+    1
+   ]
+  ]
+ },
+ "skills": [
+  [
+   "task-router",
+   353
+  ],
+  [
+   "eli5:eli5",
+   4
+  ],
+  [
+   "using-coding-convention",
+   3
+  ],
+  [
+   "boundary-contract",
+   3
+  ],
+  [
+   "verification-before-completion",
+   3
+  ],
+  [
+   "merge-companion",
+   1
+  ],
+  [
+   "claude-api",
+   1
+  ],
+  [
+   "test-driven-development",
+   1
+  ],
+  [
+   "session-intent-analyzer",
+   1
+  ],
+  [
+   "update-config",
+   1
+  ]
+ ],
+ "blocks": {
+  "ga-work": {
+   "route-unavailable": 33,
+   "criterion-unbound": 8,
+   "other": 2,
+   "response-assessment-required": 1
+  },
+  "auto-test": {
+   "route-unavailable": 397
+  }
+ },
+ "blocks_by_era": {
+  "old": {
+   "route-unavailable": 430,
+   "criterion-unbound": 8,
+   "other": 2,
+   "response-assessment-required": 1
+  }
+ },
+ "turn_seconds": {
+  "ga-work": {
+   "n": 246,
+   "median": 233.86,
+   "p90": 900.07,
+   "max": 3342.84,
+   "mean": 387.06
+  },
+  "auto-test": {
+   "n": 449,
+   "median": 50.41,
+   "p90": 77.06,
+   "max": 217.99,
+   "mean": 53.05
+  }
+ },
+ "turn_cost": {
+  "ga-work": {
+   "n": 257,
+   "median": 0.42,
+   "p90": 1.99,
+   "max": 14.91,
+   "mean": 0.93
+  },
+  "auto-test": {
+   "n": 449,
+   "median": 0.34,
+   "p90": 0.4,
+   "max": 0.5,
+   "mean": 0.32
+  }
+ },
+ "turn_tools": {
+  "ga-work": {
+   "n": 257,
+   "median": 5,
+   "p90": 22,
+   "max": 57,
+   "mean": 8.51
+  },
+  "auto-test": {
+   "n": 449,
+   "median": 6,
+   "p90": 9,
+   "max": 17,
+   "mean": 5.65
+  }
+ },
+ "top_sessions": [
+  {
+   "session": "4f1f262d",
+   "cat": "ga-work",
+   "sub": "ghost-alice folder",
+   "turns": 64,
+   "tools": 598,
+   "gov": 143,
+   "blocks": 5,
+   "cost": 97.02,
+   "active_min": 281.1
+  },
+  {
+   "session": "c8707ed4",
+   "cat": "ga-work",
+   "sub": "ghost-alice folder",
+   "turns": 32,
+   "tools": 372,
+   "gov": 78,
+   "blocks": 3,
+   "cost": 49.91,
+   "active_min": 181.5
+  },
+  {
+   "session": "c9f3299e",
+   "cat": "ga-work",
+   "sub": "ghost-alice folder",
+   "turns": 15,
+   "tools": 127,
+   "gov": 24,
+   "blocks": 0,
+   "cost": 20.53,
+   "active_min": 254.0
+  },
+  {
+   "session": "030fc8ad",
+   "cat": "ga-work",
+   "sub": "ghost-alice folder",
+   "turns": 27,
+   "tools": 275,
+   "gov": 46,
+   "blocks": 10,
+   "cost": 17.63,
+   "active_min": 101.4
+  },
+  {
+   "session": "0ba16081",
+   "cat": "ga-work",
+   "sub": "other folder, Ghost-ALICE topic",
+   "turns": 33,
+   "tools": 260,
+   "gov": 57,
+   "blocks": 10,
+   "cost": 16.05,
+   "active_min": 101.1
+  },
+  {
+   "session": "69e2d64d",
+   "cat": "ga-work",
+   "sub": "other folder, Ghost-ALICE topic",
+   "turns": 28,
+   "tools": 171,
+   "gov": 51,
+   "blocks": 6,
+   "cost": 14.02,
+   "active_min": 73.7
+  },
+  {
+   "session": "fd265eee",
+   "cat": "ga-work",
+   "sub": "other folder, Ghost-ALICE topic",
+   "turns": 17,
+   "tools": 176,
+   "gov": 41,
+   "blocks": 2,
+   "cost": 11.94,
+   "active_min": 75.3
+  },
+  {
+   "session": "d0dac4d2",
+   "cat": "ga-work",
+   "sub": "other folder, Ghost-ALICE topic",
+   "turns": 22,
+   "tools": 145,
+   "gov": 14,
+   "blocks": 6,
+   "cost": 6.64,
+   "active_min": 63.8
+  },
+  {
+   "session": "3d3dcf04",
+   "cat": "ga-work",
+   "sub": "other folder, Ghost-ALICE topic",
+   "turns": 5,
+   "tools": 25,
+   "gov": 6,
+   "blocks": 1,
+   "cost": 2.12,
+   "active_min": 8.6
+  },
+  {
+   "session": "b7c20936",
+   "cat": "ga-work",
+   "sub": "ghost-alice folder",
+   "turns": 11,
+   "tools": 29,
+   "gov": 5,
+   "blocks": 0,
+   "cost": 2.02,
+   "active_min": 8.9
+  },
+  {
+   "session": "9c1e614f",
+   "cat": "ga-work",
+   "sub": "other folder, Ghost-ALICE topic",
+   "turns": 2,
+   "tools": 6,
+   "gov": 0,
+   "blocks": 0,
+   "cost": 0.83,
+   "active_min": 2.5
+  },
+  {
+   "session": "84a659d4",
+   "cat": "auto-test",
+   "sub": "ghost-chat-bench",
+   "turns": 1,
+   "tools": 14,
+   "gov": 2,
+   "blocks": 1,
+   "cost": 0.5,
+   "active_min": 1.2
+  }
+ ],
+ "hooks": {
+  "old": {
+   "total": {
+    "runs": 16729,
+    "nonzero_exit": 189,
+    "secs": 21898.210000000014,
+    "tool_calls": 4439
+   },
+   "per_hook": {
+    "PreToolUse:tool-checkpoint": {
+     "n": 4368,
+     "median": 1.44,
+     "p90": 2.86,
+     "max": 29.18,
+     "mean": 1.79,
+     "total_s": 7807
+    },
+    "PreToolUse:adapter-autopilot-mode-prepare-origin": {
+     "n": 4255,
+     "median": 1.12,
+     "p90": 2.12,
+     "max": 22.67,
+     "mean": 1.34,
+     "total_s": 5689
+    },
+    "PostToolUse:io-trace": {
+     "n": 3755,
+     "median": 1.04,
+     "p90": 1.96,
+     "max": 22.14,
+     "mean": 1.22,
+     "total_s": 4567
+    },
+    "Stop:adapter-autopilot-mode-continue": {
+     "n": 1025,
+     "median": 0.93,
+     "p90": 2.35,
+     "max": 28.11,
+     "mean": 1.31,
+     "total_s": 1344
+    },
+    "Stop:completion": {
+     "n": 1048,
+     "median": 0.79,
+     "p90": 1.76,
+     "max": 27.42,
+     "mean": 1.02,
+     "total_s": 1068
+    },
+    "UserPromptSubmit:session-intent": {
+     "n": 635,
+     "median": 0.57,
+     "p90": 0.99,
+     "max": 6.79,
+     "mean": 0.66,
+     "total_s": 421
+    },
+    "UserPromptSubmit:pending-merge-prompt": {
+     "n": 634,
+     "median": 0.57,
+     "p90": 0.99,
+     "max": 6.35,
+     "mean": 0.66,
+     "total_s": 419
+    },
+    "SessionStart:session-start": {
+     "n": 443,
+     "median": 0.53,
+     "p90": 1.0,
+     "max": 4.41,
+     "mean": 0.7,
+     "total_s": 309
+    },
+    "SessionStart:session-receipt": {
+     "n": 353,
+     "median": 0.51,
+     "p90": 1.04,
+     "max": 4.5,
+     "mean": 0.7,
+     "total_s": 247
+    },
+    "PostToolUseFailure:io-trace": {
+     "n": 24,
+     "median": 1.08,
+     "p90": 1.64,
+     "max": 2.62,
+     "mean": 1.18,
+     "total_s": 28
+    }
+   }
+  },
+  "new": {
+   "total": {
+    "runs": 551,
+    "nonzero_exit": 73,
+    "tool_calls": 220,
+    "secs": 335.29999999999995
+   },
+   "per_hook": {
+    "PostToolUse:io-trace": {
+     "n": 210,
+     "median": 0.79,
+     "p90": 1.39,
+     "max": 2.95,
+     "mean": 0.92,
+     "total_s": 194
+    },
+    "Stop:completion": {
+     "n": 45,
+     "median": 1.63,
+     "p90": 2.55,
+     "max": 5.77,
+     "mean": 1.77,
+     "total_s": 80
+    },
+    "PreToolUse:tool-checkpoint": {
+     "n": 220,
+     "median": 0.22,
+     "p90": 0.47,
+     "max": 1.26,
+     "mean": 0.27,
+     "total_s": 60
+    },
+    "PostToolUseFailure:io-trace": {
+     "n": 3,
+     "median": 0.65,
+     "p90": 0.81,
+     "max": 0.81,
+     "mean": 0.7,
+     "total_s": 2
+    }
+   }
+  }
+ },
+ "gate_blocks_in_hook_log": {
+  "old Stop route-unavailable": 430,
+  "old Stop criterion-unbound": 8,
+  "old Stop other": 2,
+  "old Stop response-assessment-required": 1
+ }
+}
