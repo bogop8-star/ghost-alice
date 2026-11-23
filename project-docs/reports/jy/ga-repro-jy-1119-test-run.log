@@ -1,0 +1,70 @@
+.............................................................................................................................................F...................................................... [ 25%]
+............................................. [ 31%]
+.........................................x..................................... [ 41%]
+.......................................................... [ 49%]
+..........s......s............................................................................................................................ [ 68%]
+................................................................. [ 76%]
+........................................................................ [ 85%]
+.ss.............................................. [ 92%]
+..........................................................    [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+SKIPPED [1] tests\test_completion_contract_v2.py:1348: chmod(0o555) cannot make a directory unwritable on Windows
+SKIPPED [1] tests\test_completion_contract_v2.py:1453: chmod(0o555) cannot make a directory unwritable on Windows
+SKIPPED [1] tests\test_managed_location_chain.py:50: independent OS write-deny is unavailable
+SKIPPED [1] tests\test_managed_location_chain.py:74: independent OS write-deny is unavailable
+XFAIL tests/test_completion_behavior_repair.py::ContinuationRecoveryTest::test_real_adapter_error_preserves_original_goal_and_answer
+1 failed, 758 passed, 4 skipped, 1 xfailed, 673 subtests passed in 1580.70s (0:26:20)
+[project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-agent\pr2-windows-test\autopilot\.tmp\runtime\pytest-gw4t44q2
+exit=1 start=11/19/2026 11:44:12 end=11/19/2026 12:10:38

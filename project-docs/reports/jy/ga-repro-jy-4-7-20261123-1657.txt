@@ -1,0 +1,419 @@
+﻿======================================================================
+4-7. 병렬 상태 갱신 테스트 반복 실행 (20 회) - 11/19 환경으로 실행 (jy, 2026-11-23 16:57)
+======================================================================
+키트와 다른 점: 키트 178행은 PYTHON 을 훅용 Python(pytest 없음)으로 고정해 4-7 이 pytest 미설치로만 실패함.
+  그래서 같은 반복 명령을 11/19 실패 때와 같은 venv/Core 로 실행함. 그 밖의 명령·판정 방식은 키트와 같음.
+PYTHON: 3.14.4 pytest 9.2.0
+Core: c6019ac  (HEAD, tag: test-baseline-2026-11-16, origin/local/v0.5.1-windows-fix)
+테스트 폴더: 7663c9a (autopilot/windows-verify)
+[1] 통과
+[2] 통과
+[3] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 0.49s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-ag
+ent\pr2-windows-test\autopilot\.tmp\runtime\pytest-5t9adc_q
+At C:\Users\ctale\AppData\Local\Temp\claude\5cba2f5f0a69e5a3\81e987ce-bf62-4406-97b3-d8ed4e6337d9\scratchpad\run47.ps1:
+25 char:12
++     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File "$re ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-5t9adc_q:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[4] 통과
+[5] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 0.50s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-ag
+ent\pr2-windows-test\autopilot\.tmp\runtime\pytest-iyxfjje5
+At C:\Users\ctale\AppData\Local\Temp\claude\5cba2f5f0a69e5a3\81e987ce-bf62-4406-97b3-d8ed4e6337d9\scratchpad\run47.ps1:
+25 char:12
++     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File "$re ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-iyxfjje5:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[6] 통과
+[7] 통과
+[8] 통과
+[9] 통과
+[10] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 0.52s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-ag
+ent\pr2-windows-test\autopilot\.tmp\runtime\pytest-yeraq8uw
+At C:\Users\ctale\AppData\Local\Temp\claude\5cba2f5f0a69e5a3\81e987ce-bf62-4406-97b3-d8ed4e6337d9\scratchpad\run47.ps1:
+25 char:12
++     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File "$re ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-yeraq8uw:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[11] 통과
+[12] 통과
+[13] 통과
+[14] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 0.48s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-ag
+ent\pr2-windows-test\autopilot\.tmp\runtime\pytest-1q3rzqu1
+At C:\Users\ctale\AppData\Local\Temp\claude\5cba2f5f0a69e5a3\81e987ce-bf62-4406-97b3-d8ed4e6337d9\scratchpad\run47.ps1:
+25 char:12
++     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File "$re ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-1q3rzqu1:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[15] 통과
+[16] 통과
+[17] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 0.55s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-ag
+ent\pr2-windows-test\autopilot\.tmp\runtime\pytest-75pc39un
+At C:\Users\ctale\AppData\Local\Temp\claude\5cba2f5f0a69e5a3\81e987ce-bf62-4406-97b3-d8ed4e6337d9\scratchpad\run47.ps1:
+25 char:12
++     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File "$re ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-75pc39un:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[18] 실패. 전체 출력:
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ AutopilotStateTest.test_parallel_advance_claims_ready_item_once _______
+
+self = <test_autopilot_state.AutopilotStateTest testMethod=test_parallel_advance_claims_ready_item_once>
+
+    def test_parallel_advance_claims_ready_item_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            _write_run(run_dir, [_item("race")])
+            original_write_work_items = aps.write_work_items
+    
+            def slow_write_work_items(path, items):
+                if Path(path).name == "tasks.jsonl":
+                    time.sleep(0.08)
+                return original_write_work_items(path, items)
+    
+            aps.write_work_items = slow_write_work_items
+            payloads = []
+            errors = []
+    
+            def worker():
+                try:
+                    payloads.append(aps.advance_approved_run(run_dir))
+                except Exception as exc:  # pragma: no cover - surfaced by assertion below
+                    errors.append(exc)
+    
+            try:
+                threads = [threading.Thread(target=worker), threading.Thread(target=worker)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+            finally:
+                aps.write_work_items = original_write_work_items
+    
+            events = [
+                json.loads(line)
+                for line in _fixture_read_text(run_dir / "events.jsonl", encoding="utf-8").splitlines()
+            ]
+    
+>       self.assertEqual(errors, [])
+E       AssertionError: Lists differ: [PermissionError(13, '액세스가 거부되었습니다')] != []
+E       
+E       First list contains 1 additional elements.
+E       First extra element 0:
+E       PermissionError(13, '액세스가 거부되었습니다')
+E       
+E       - [PermissionError(13, '액세스가 거부되었습니다')]
+E       + []
+
+tests\test_autopilot_state.py:3224: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_autopilot_state.py::AutopilotStateTest::test_parallel_advance_claims_ready_item_once
+1 failed in 0.52s
+powershell.exe : [project-runtime] preserved temp root (returncode=1): C:\Users\ctale\Desktop\claudecode\ghost-alice-ag
+ent\pr2-windows-test\autopilot\.tmp\runtime\pytest-beqk49g_
+At C:\Users\ctale\AppData\Local\Temp\claude\5cba2f5f0a69e5a3\81e987ce-bf62-4406-97b3-d8ed4e6337d9\scratchpad\run47.ps1:
+25 char:12
++     $out = & powershell -NoProfile -ExecutionPolicy Bypass -File "$re ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([project-runtim...pytest-beqk49g_:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[19] 통과
+[20] 통과
+판정: 20 회 중 실패 6 회

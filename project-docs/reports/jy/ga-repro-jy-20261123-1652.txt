@@ -1,0 +1,46 @@
+﻿
+======================================================================
+0. 환경 (jy, 2026-11-23 16:52)
+======================================================================
+OS: Microsoft Windows 11 Pro 25H2 (10.0.26200, build 26200)
+언어/지역: UI en-US, 형식 ko-KR, 시스템 로캘 ko-KR
+코드 페이지: ANSI 949, OEM 949
+이 스크립트를 실행한 셸: PowerShell 5.1.26100.9818 (Desktop)
+Windows PowerShell: 5.1.26100.9818
+PowerShell 7: 7.6.10
+Git: git version 2.55.0.windows.5
+Claude Code: 2.1.310 (Claude Code)
+훅용 Python: 3.14.4 C:\Users\ctale\AppData\Local\Python\pythoncore-3.14-64\python.exe encoding=cp949 utf8_mode=0
+PYTHONUTF8 환경 변수: (없음)
+설치된 Core: DETACHED @ c6019ac49eb482f386ef11693949f2a20623d650 (설치 2026-11-19T03:29:35.8502191+00:00)
+Core 폴더 현재 커밋: c6019ac49eb482f386ef11693949f2a20623d650 (설치와 같음)
+설치된 Autopilot: C:\Users\ctale\Desktop\claudecode\ghost-alice-agent\ghost-alice-autopilot @ 2075768e268179d2951d1fa4d6c943269603eac2 (v0.5.1)
+기준 버전 판정: Core 일치, Autopilot 일치
+
+======================================================================
+4-1. 실행 폴더 자리에 일반 파일이 있을 때
+======================================================================
+open(file/'x') -> FileNotFoundError errno 2 winerror None
+os.listdir(file) -> NotADirectoryError errno 20 winerror 267
+어댑터 출력 (종료 코드 0): {"continue": true, "systemMessage": "", "completion_recording": {"status": "recording-unavailable", "reason": "authority-missing"}}
+판정: recovery 안내 없음 (문제 재현)
+
+======================================================================
+4-2. 텍스트 모드로 넘긴 완료 문구의 줄바꿈
+======================================================================
+보낸 문자열: 'line1\nline2\n'
+자식이 받은 바이트: b'line1\r\nline2\r\n'
+판정: CRLF로 바뀜 (문제 재현 조건)
+
+======================================================================
+4-3. Core 응답 검토 도구에 한국어 파일 넘기기
+======================================================================
+기본 설정 (종료 코드 1): {"status": "unavailable", "reason": "illegal multibyte sequence", "detail": "'cp949' codec can't decode byte 0xec in position 0: illegal multibyte sequence"} 
+PYTHONUTF8=1 (종료 코드 1): {"status": "unavailable", "reason": "authority-unavailable", "detail": "Exact ledger root is required"} 
+판정: 인코딩 오류 재현
+
+======================================================================
+4-7. 병렬 상태 갱신 테스트 반복 실행 (20 회)
+======================================================================
+Autopilot 테스트 폴더가 없어 4-7 을 건너뜀. 아래 명령으로 만든 뒤 키트를 다시 실행하세요 (설치된 Ghost-ALICE에는 영향 없음):
+  git clone -b autopilot/main https://github.com/bogop8-star/ghost-alice.git $HOME\ghost-alice-autopilot-win
