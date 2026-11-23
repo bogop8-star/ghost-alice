@@ -1,0 +1,324 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>Ghost-ALICE 비용·시간 절감 방안</title><style>
+@page { size: 1280px 720px; margin: 0; }
+:root { --ink:#0b0b0b; --ink2:#52514e; --muted:#7a7974; --line:#e4e3de; --surface:#fcfcfb; --card:#f4f3ef; --blue:#2a78d6; --orange:#eb6834; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fff; color: var(--ink); font-family: "Malgun Gothic", "맑은 고딕", sans-serif; }
+.slide { width: 1280px; height: 720px; padding: 52px 64px 0; position: relative; page-break-after: always; break-after: page; background: var(--surface); overflow: hidden; }
+.slide:last-child { page-break-after: auto; break-after: auto; }
+.kicker { color: var(--blue); font-weight: 700; font-size: 17px; letter-spacing: .02em; }
+h1 { font-size: 32px; line-height: 1.3; margin: 8px 0 26px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 18px; margin: 0 0 12px; color: var(--ink); }
+.body { font-size: 17px; line-height: 1.55; color: var(--ink2); }
+.foot { position: absolute; left: 64px; right: 64px; bottom: 22px; display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 9px; }
+.cover { background: #f2f6fc; }
+.cover .big { font-size: 58px; line-height: 1.18; margin: 120px 0 18px; }
+.cover .lead { font-size: 24px; color: var(--ink2); margin: 0 0 54px; }
+.cover-meta { display: grid; gap: 10px; font-size: 17px; color: var(--ink2); }
+.cover-meta b { display: inline-block; width: 56px; color: var(--ink); }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+.tiles.three-t { grid-template-columns: repeat(3, 1fr); }
+.tile { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+.tile .num { font-size: 40px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.tile .num small { font-size: 20px; margin-left: 4px; }
+.tile .lbl { font-size: 15px; color: var(--ink2); margin-top: 6px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.two.wide-left { grid-template-columns: 1.45fr 1fr; align-items: start; }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 20px; }
+.card { background: var(--card); border-radius: 12px; padding: 20px 22px; }
+.card.accent { background: #e6f0fc; }
+.card p { margin: 0 0 8px; }
+ul, ol { margin: 0; padding-left: 22px; }
+li { margin-bottom: 7px; }
+.warn { font-size: 14.5px; color: #7a3d18; background: #fdf0e8; border-radius: 8px; padding: 10px 12px; margin-top: 12px; line-height: 1.5; }
+.caption { font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.note-line { font-size: 14.5px; color: var(--ink2); margin-top: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: 16px; color: var(--ink); }
+th { text-align: left; font-size: 14px; color: var(--ink2); font-weight: 700; border-bottom: 2px solid var(--line); padding: 8px 10px; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.compact td { padding: 7px 9px; font-size: 14.5px; }
+table.compact th { padding: 6px 9px; }
+.r { text-align: right; white-space: nowrap; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--line); }
+.chart { display: block; max-width: 100%; height: auto; }
+.chart .axis { font-size: 15px; fill: #52514e; font-family: "Malgun Gothic", sans-serif; }
+.chart .val { font-size: 16px; fill: #0b0b0b; font-weight: 700; font-family: "Malgun Gothic", sans-serif; }
+.chart .note { font-size: 13px; fill: #7a7974; font-weight: 400; }
+.pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.pill.done { background: #e2f3e2; color: #135e13; }
+.pill.todo { background: #e6f0fc; color: #184f95; }
+.pill.part { background: #fdf0e8; color: #7a3d18; }
+.mono li { font-family: Consolas, monospace; font-size: 14px; }
+</style></head><body><section class="slide cover">
+  <div class="kicker">팀 보고 · 2026-11-23</div>
+  <h1 class="big">Ghost-ALICE<br>비용·시간 절감 방안</h1>
+  <p class="lead">11-11 ~ 11-23 실행 기록 분석과 독립 검증 결과</p>
+  <div class="cover-meta">
+    <div><b>범위</b> 이 PC의 Ghost-ALICE 관련 세션 461개</div>
+    <div><b>금액</b> Anthropic API 정가로 계산한 추정치 (실제 청구액 아님)</div>
+    <div><b>검증</b> 독립 검증자 4명이 숫자·논리·외부 사실·현재 상태를 따로 확인</div>
+  </div>
+  <div class="foot"><span></span><span>1 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">한눈에 보기</div>
+  <h1>비용의 83%는 캐시에서 나오고, 긴 대화와 반복 실행이 키웠습니다</h1>
+  <div class="body">
+<div class="tiles">
+  <div class="tile"><div class="num">$383</div><div class="lbl">추정 비용 (11-11 ~ 11-23)</div></div>
+  <div class="tile"><div class="num">26.3<small>시간</small></div><div class="lbl">실제 활동 시간</div></div>
+  <div class="tile"><div class="num">26%</div><div class="lbl">거버넌스 전용 도구 호출 비중</div></div>
+  <div class="tile"><div class="num">441</div><div class="lbl">답변 뒤 Stop 차단 (예전 설치)</div></div>
+</div>
+<div class="two">
+  <div class="card"><h3>원인</h3><ul>
+    <li>캐시 쓰기 46% + 캐시 읽기 36% = 비용의 83%</li>
+    <li>세션 하나가 전체의 25%, 벤치마크 395회가 35%</li>
+    <li>예전 설치(0.5.1)의 훅 대기만 6.1시간</li></ul></div>
+  <div class="card accent"><h3>모두 적용하면 (어림값)</h3><ul>
+    <li>비용 $383 → <b>약 $145~170</b> (약 55~62% 절감)</li>
+    <li>훅 대기 6.1시간 → <b>약 2.2시간</b></li>
+    <li>가장 단단한 두 가지: 벤치마크 축소 약 $100, 대화 나누기 약 $77</li></ul></div>
+</div></div>
+  <div class="foot"><span>금액은 모두 API 정가 기준 추정치입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 2 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">무엇을 쟀나</div>
+  <h1>대화 기록과 훅 기록을 세션 단위로 모아 셌습니다</h1>
+  <div class="body">
+<table>
+<tr><th>구분</th><th class="r">세션</th><th class="r">질문</th><th class="r">도구 호출</th><th class="r">추정 비용</th><th class="r">활동 시간</th></tr>
+<tr><td>직접 작업한 대화</td><td class="r">12</td><td class="r">257</td><td class="r">2,188</td><td class="r">$239.15</td><td class="r">19.2시간</td></tr>
+<tr><td>자동 실행 테스트</td><td class="r">449</td><td class="r">449</td><td class="r">2,538</td><td class="r">$143.67</td><td class="r">7.1시간</td></tr>
+<tr class="total"><td>합계</td><td class="r">461</td><td class="r">706</td><td class="r">4,726</td><td class="r">$382.82</td><td class="r">26.3시간</td></tr>
+</table>
+<div class="three">
+  <div class="card"><h3>비용</h3><p>대화 기록의 토큰 수 × API 정가. 단가와 캐시 배수는 공식 가격표와 같음을 확인했습니다.</p></div>
+  <div class="card"><h3>시간</h3><p>기록 사이 간격이 5분 이하인 구간만 더했습니다. 자리를 비운 시간은 빠집니다.</p></div>
+  <div class="card"><h3>한계</h3><p>PC 1대, 사용자 1명. 하위 에이전트 토큰 제외. 구독 요금제에서는 청구액이 아니라 사용량 한도로 나타납니다.</p></div>
+</div></div>
+  <div class="foot"><span>집계 시각 11-23 11:12 KST. 원본: project-docs/metrics/full-execution-2026-11-23.json</span><span>Ghost-ALICE 비용·시간 절감 방안 · 3 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">돈은 어디로 갔나</div>
+  <h1>답변을 쓰는 비용보다, 이전 대화를 저장하고 다시 읽는 비용이 큽니다</h1>
+  <div class="body">
+<div class="two wide-left">
+  <div>
+    <h3>비용 종류별</h3><svg class="chart" viewBox="0 0 660 160" width="660" height="160" role="img"><text x="178" y="19.040000000000003" text-anchor="end" class="axis">캐시 쓰기</text><path d="M190,0 h316.0 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-316.0 z" fill="#2a78d6"/><text x="520.0" y="19.040000000000003" class="val">$177.77<tspan class="note"> 46%</tspan></text><text x="178" y="59.040000000000006" text-anchor="end" class="axis">캐시 읽기</text><path d="M190,40 h246.04893964110926 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-246.04893964110926 z" fill="#2a78d6"/><text x="450.04893964110926" y="59.040000000000006" class="val">$138.91<tspan class="note"> 36%</tspan></text><text x="178" y="99.04" text-anchor="end" class="axis">출력(답변·도구 호출)</text><path d="M190,80 h114.98520560274511 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-114.98520560274511 z" fill="#2a78d6"/><text x="318.9852056027451" y="99.04" class="val">$66.10<tspan class="note"> 17%</tspan></text><text x="178" y="139.04" text-anchor="end" class="axis">새 입력</text><path d="M190,120 h-2 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h--2 z" fill="#2a78d6"/><text x="202" y="139.04" class="val">$0.04<tspan class="note"> 0%</tspan></text></svg>
+    <h3 style="margin-top:28px">어디에서 썼나</h3><svg class="chart" viewBox="0 0 660 120" width="660" height="120" role="img"><text x="178" y="19.040000000000003" text-anchor="end" class="axis">직접 작업 대화 12개</text><path d="M190,0 h316.0 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-316.0 z" fill="#2a78d6"/><text x="520.0" y="19.040000000000003" class="val">$239.15<tspan class="note"> </tspan></text><text x="178" y="59.040000000000006" text-anchor="end" class="axis">벤치마크 395회</text><path d="M190,40 h175.81016098682835 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-175.81016098682835 z" fill="#2a78d6"/><text x="379.81016098682835" y="59.040000000000006" class="val">$134.38<tspan class="note"> </tspan></text><text x="178" y="99.04" text-anchor="end" class="axis">다른 자동 테스트</text><path d="M190,80 h8.430692034288102 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-8.430692034288102 z" fill="#2a78d6"/><text x="212.4306920342881" y="99.04" class="val">$9.29<tspan class="note"> </tspan></text></svg>
+  </div>
+  <div class="card"><h3>읽는 법</h3><ul>
+    <li><b>캐시 쓰기</b>: 대화 내용을 다음 답변에서 다시 쓰려고 저장하는 비용</li>
+    <li><b>캐시 읽기</b>: 저장한 대화를 답변마다 다시 읽는 비용. 대화가 길수록 커집니다</li>
+    <li>모델별: opus-5-5 $281(73%), fable-5-2 $102(27%)</li>
+    <li>답변당: opus-5-5 $0.066, fable-5-2 $0.387</li></ul></div>
+</div></div>
+  <div class="foot"><span>단가: platform.claude.com/docs/en/about-claude/pricing (11-23 확인)</span><span>Ghost-ALICE 비용·시간 절감 방안 · 4 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">원인 1 · 긴 대화</div>
+  <h1>대화가 길어질수록 답변 하나의 비용이 커졌습니다</h1>
+  <div class="body">
+<div class="two wide-left">
+  <div><svg class="chart" viewBox="-50 -30 726 324" width="726" height="324" role="img"><line x1="0" y1="240" x2="626" y2="240" stroke="#d6d5d0" stroke-width="1"/><path d="M0,240 v-45.908256880733944 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v45.908256880733944 z" fill="#2a78d6"/><text x="52.0" y="180.09174311926606" text-anchor="middle" class="val">$0.068</text><text x="52.0" y="266" text-anchor="middle" class="axis">1~10번째</text><text x="52.0" y="288" text-anchor="middle" class="note">644개</text><path d="M174,240 v-87.74311926605505 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v87.74311926605505 z" fill="#2a78d6"/><text x="226.0" y="138.25688073394497" text-anchor="middle" class="val">$0.125</text><text x="226.0" y="266" text-anchor="middle" class="axis">11~20번째</text><text x="226.0" y="288" text-anchor="middle" class="note">597개</text><path d="M348,240 v-146.45871559633025 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v146.45871559633025 z" fill="#2a78d6"/><text x="400.0" y="79.54128440366975" text-anchor="middle" class="val">$0.205</text><text x="400.0" y="266" text-anchor="middle" class="axis">21~40번째</text><text x="400.0" y="288" text-anchor="middle" class="note">380개</text><path d="M522,240 v-236.0 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v236.0 z" fill="#2a78d6"/><text x="574.0" y="-10.0" text-anchor="middle" class="val">$0.327</text><text x="574.0" y="266" text-anchor="middle" class="axis">41번째 이후</text><text x="574.0" y="288" text-anchor="middle" class="note">153개</text></svg>
+    <p class="caption">직접 작업 대화의 답변당 비용, 대화 안에서의 위치별 (11:30 기준)</p>
+  </div>
+  <div class="card"><h3>무엇을 뜻하나</h3><ul>
+    <li>41번째 이후 답변은 처음 10개보다 약 4.8배 비쌌습니다</li>
+    <li>답변을 만들 때 읽은 대화가 50만 토큰 이상인 답변이 비용의 48%</li>
+    <li>가장 비싼 질문 $14.91: 6.7일 쉰 뒤 긴 대화를 이어 간 첫 질문. 그중 $14.11이 캐시 다시 쓰기</li></ul>
+    <p class="warn">주의: 상관관계입니다. 세션 하나가 직접 작업 비용의 41%라 평균을 크게 좌우합니다. 이 대화가 더 길어진 지금은 약 3.7배입니다.</p></div>
+</div></div>
+  <div class="foot"><span>원본: 보고서 11.1, 검증 요약</span><span>Ghost-ALICE 비용·시간 절감 방안 · 5 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">원인 2 · 반복 실행</div>
+  <h1>같은 벤치마크를 395번 돌려 자동 실행 비용의 94%를 썼습니다</h1>
+  <div class="body">
+<div class="tiles three-t">
+  <div class="tile"><div class="num">395회</div><div class="lbl">벤치마크 실행</div></div>
+  <div class="tile"><div class="num">$134</div><div class="lbl">전체 비용의 35% · 약 6.7시간</div></div>
+  <div class="tile"><div class="num">392번</div><div class="lbl">같은 사유(route-unavailable)로 Stop 차단</div></div>
+</div>
+<div class="two">
+  <div class="card"><h3>관찰</h3><ul>
+    <li>질문 하나당 비용이 $0.34 안팎으로 고릅니다 (상위 10%도 $0.40)</li>
+    <li>결과가 한쪽으로 크게 쏠려 있었습니다: 거의 모든 실행이 같은 이유로 차단</li>
+    <li>차단 뒤의 답은 기록 실패 설명이 되어 결과로 쓸 수 없었습니다</li></ul></div>
+  <div class="card accent"><h3>시사점</h3><ul>
+    <li>쏠린 결과는 적은 횟수로도 같은 결론이 나옵니다</li>
+    <li>395회 → 100회면 <b>약 $100, 약 5시간</b> 절감</li>
+    <li>수정 뒤 확인은 문제가 났던 문항만 돌리면 됩니다</li></ul></div>
+</div></div>
+  <div class="foot"><span>필요한 표본 수는 확인하려는 차이의 크기로 정해야 합니다. 100회는 예시입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 6 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">원인 3 · 훅 대기</div>
+  <h1>예전 설치에서는 도구를 쓸 때마다 훅이 약 5초씩 썼습니다</h1>
+  <div class="body">
+<div class="two wide-left">
+  <div><svg class="chart" viewBox="-50 -30 552 324" width="552" height="324" role="img"><line x1="0" y1="240" x2="452" y2="240" stroke="#d6d5d0" stroke-width="1"/><path d="M0,240 v-235.99999999999997 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v235.99999999999997 z" fill="#b9b8b3"/><text x="52.0" y="-9.999999999999972" text-anchor="middle" class="val">4.93초</text><text x="52.0" y="266" text-anchor="middle" class="axis">0.5.1 설치</text><text x="52.0" y="288" text-anchor="middle" class="note">도구 4,439번 · 6.1시간</text><path d="M174,240 v-83.6267748478702 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v83.6267748478702 z" fill="#2a78d6"/><text x="226.0" y="142.3732251521298" text-anchor="middle" class="val">1.80초</text><text x="226.0" y="266" text-anchor="middle" class="axis">main 계열(정상 동작)</text><text x="226.0" y="288" text-anchor="middle" class="note">거부 기록 보정값</text><path d="M348,240 v-72.43002028397567 a4,4 0 0 1 4,-4 h96 a4,4 0 0 1 4,4 v72.43002028397567 z" fill="#2a78d6"/><text x="400.0" y="153.56997971602433" text-anchor="middle" class="val">1.57초</text><text x="400.0" y="266" text-anchor="middle" class="axis">재설치 뒤 실측</text><text x="400.0" y="288" text-anchor="middle" class="note">도구 37번</text></svg>
+    <p class="caption">도구 호출 한 번당 훅 시간</p>
+  </div>
+  <div class="card"><h3>읽는 법</h3><ul>
+    <li>예전 설치 훅 시간의 62%는 도구 호출 전 훅 두 개(tool-checkpoint, Autopilot 준비)</li>
+    <li>main 계열은 Autopilot 훅이 빠지고 tool-checkpoint가 가벼워졌습니다</li>
+    <li>io-trace 훅은 이제 비동기(async)로 등록되어 답을 기다리게 하지 않습니다</li></ul>
+    <p class="warn">처음 보고한 1.52초는 거부된 훅 281번의 시간이 빠진 과소 추정이었습니다. 정상 기준은 약 1.8초입니다.</p></div>
+</div></div>
+  <div class="foot"><span>질문 하나의 처리 시간 중간값: 직접 작업 234초, 자동 실행 50초</span><span>Ghost-ALICE 비용·시간 절감 방안 · 7 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">원인 4 · 거버넌스 부담</div>
+  <h1>도구 호출 4번 중 1번은 기록·검증을 위한 호출이었습니다</h1>
+  <div class="body">
+<div class="two wide-left">
+  <div>
+    <h3>Stop 차단 사유 (441번)</h3><svg class="chart" viewBox="0 0 660 120" width="660" height="120" role="img"><text x="178" y="19.040000000000003" text-anchor="end" class="axis">응답 경로 미등록</text><path d="M190,0 h316.0 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-316.0 z" fill="#2a78d6"/><text x="520.0" y="19.040000000000003" class="val">430번<tspan class="note"> 97.5%</tspan></text><text x="178" y="59.040000000000006" text-anchor="end" class="axis">설명 검토 요구</text><path d="M190,40 h1.9534883720930232 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-1.9534883720930232 z" fill="#2a78d6"/><text x="205.95348837209303" y="59.040000000000006" class="val">8번<tspan class="note"> </tspan></text><text x="178" y="99.04" text-anchor="end" class="axis">기타</text><path d="M190,80 h-1.7674418604651163 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h--1.7674418604651163 z" fill="#2a78d6"/><text x="202.2325581395349" y="99.04" class="val">3번<tspan class="note"> </tspan></text></svg>
+    <h3 style="margin-top:28px">거버넌스 전용 호출 비중</h3><svg class="chart" viewBox="0 0 660 80" width="660" height="80" role="img"><text x="178" y="19.040000000000003" text-anchor="end" class="axis">직접 작업</text><path d="M190,0 h220.21052631578948 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-220.21052631578948 z" fill="#2a78d6"/><text x="424.2105263157895" y="19.040000000000003" class="val">21.3%<tspan class="note"> 467번</tspan></text><text x="178" y="59.040000000000006" text-anchor="end" class="axis">자동 실행</text><path d="M190,40 h316.0 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-316.0 z" fill="#2a78d6"/><text x="520.0" y="59.040000000000006" class="val">30.4%<tspan class="note"> 771번</tspan></text></svg>
+  </div>
+  <div class="card"><h3>비용으로 보면</h3><ul>
+    <li>도구 호출이 전부 거버넌스였던 답변: 1,042개, $57.38 (상한)</li>
+    <li>차단 한 번마다 답변이 한 번 더 이어졌습니다</li>
+    <li>441번 모두 예전 설치 기간에 났고, main 계열은 일반 답변에 응답 경로를 요구하지 않습니다</li></ul></div>
+</div></div>
+  <div class="foot"><span>거버넌스 호출 = 거버넌스 skill 호출 + 원장·경로·검토 스크립트 실행</span><span>Ghost-ALICE 비용·시간 절감 방안 · 8 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">발견과 조치</div>
+  <h1>설치 전환 뒤 꺼져 있던 입력 기록을 찾아 고쳤습니다 (O13)</h1>
+  <div class="body">
+<div class="two">
+  <div class="card"><h3>O13: 입력 기록 훅이 매번 거부됨</h3><ul>
+    <li>11-16 main 계열 설치 뒤 session-intent 66번 모두 거부(종료 코드 126)</li>
+    <li>원인: Windows 경로를 슬래시·역슬래시 문자열로 비교</li>
+    <li>11-23 수정 설치 뒤 거부 0번 (SessionStart 훅 포함)</li>
+    <li>같은 기간 doctor는 계속 "ok" → 진단이 이 상태를 잡지 못함</li></ul></div>
+  <div>
+    <h3>수정 뒤 재측정: 일상 질문 6문항</h3>
+    <table class="compact">
+    <tr><th></th><th class="r">차단/입력</th><th class="r">거버넌스/입력</th><th class="r">비용</th><th class="r">시간</th></tr>
+    <tr><td>켬, 0.5.1 기준값</td><td class="r">0.44</td><td class="r">0.44</td><td class="r">—</td><td class="r">—</td></tr>
+    <tr><td>켬, 수정 뒤</td><td class="r">0.00</td><td class="r">0.33</td><td class="r">$1.45</td><td class="r">164초</td></tr>
+    <tr><td>끔, 수정 뒤</td><td class="r">0.00</td><td class="r">0.00</td><td class="r">$0.40</td><td class="r">84초</td></tr>
+    </table>
+    <p class="warn">6문항이라 방향만 보여 줍니다. 켬은 끔보다 비용 약 3.6배, 시간 약 2배. 날씨 질문에서 거버넌스 상태 문장이 답에 섞임(O14).</p>
+  </div>
+</div></div>
+  <div class="foot"><span>원본: project-docs/metrics/rerun-2026-11-23-after-o13.md, observations.md O13·O14</span><span>Ghost-ALICE 비용·시간 절감 방안 · 9 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">절감 방안 비교</div>
+  <h1>일곱 가지 방안: 습관 셋, 운영 하나, 코드 셋</h1>
+  <div class="body">
+<table class="compact">
+<tr><th>#</th><th>방안</th><th class="r">예상 절감</th><th>근거</th><th>누가</th><th>부작용</th></tr>
+<tr><td>1</td><td>긴 대화를 20질문 안팎에서 나누기</td><td class="r">약 $77</td><td>21번째 이후 답변 533개를 앞 구간 단가로</td><td>사용자</td><td>새 대화에 맥락 전달</td></tr>
+<tr><td>2</td><td>벤치마크 395회 → 100회</td><td class="r">약 $100 · 5시간</td><td>회당 $0.34로 일정</td><td>사용자·팀</td><td>표본 감소</td></tr>
+<tr><td>3</td><td>거버넌스 전용 답변 줄이기</td><td class="r">최대 $57</td><td>도구 호출이 전부 거버넌스였던 답변 합계</td><td>코드</td><td>기록·검증 감소</td></tr>
+<tr><td>4</td><td>단순 작업은 opus-5-5</td><td class="r">약 $35</td><td>fable 답변을 opus 단가로 다시 계산</td><td>사용자</td><td>어려운 작업 품질</td></tr>
+<tr><td>5</td><td>쉬었다가 긴 대화 이어 가지 않기</td><td class="r">최대 $32</td><td>대량 캐시 재저장 4건</td><td>사용자</td><td>없음</td></tr>
+<tr><td>6</td><td>훅 시간 줄이기 (main 계열 + 비동기)</td><td class="r">약 3.9시간</td><td>도구 4,439번 × 약 1.8초</td><td>코드(완료)</td><td>없음</td></tr>
+<tr><td>7</td><td>Stop 차단 없애기</td><td class="r">추가 답변 441번</td><td>차단마다 답변 한 번 더</td><td>코드(완료)</td><td>재확인 필요</td></tr>
+</table>
+<p class="warn">방안끼리 겹치므로 절감액을 그대로 더하면 안 됩니다. 예: 대화를 나누면 거버넌스 답변 하나의 비용도 함께 줄어듭니다.</p></div>
+  <div class="foot"><span>모델 교체 절감이 32%에 그치는 이유: 두 모델의 캐시 읽기 단가가 같습니다($0.20/백만 토큰).</span><span>Ghost-ALICE 비용·시간 절감 방안 · 10 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">모두 적용한다는 것</div>
+  <h1>여덟 가지를 함께 합니다: 넷은 습관, 셋은 이미 반영됨, 하나는 측정</h1>
+  <div class="body">
+<table class="compact">
+<tr><th></th><th>적용하는 것</th><th>구체적으로</th><th>누가</th><th>상태</th></tr>
+<tr><td>가</td><td>대화 나누기</td><td>20질문 안팎에서 끝내고, 새 대화 첫 질문에 요약과 다음 할 일</td><td>사용자</td><td><span class="pill todo">할 일</span></td></tr>
+<tr><td>나</td><td>쉬었다 이어 가지 않기</td><td>1시간 넘게 쉬면 새 대화. 대화 도중 모델 바꾸지 않기</td><td>사용자</td><td><span class="pill todo">할 일</span></td></tr>
+<tr><td>다</td><td>모델 고르기</td><td>정리·조회·문서는 opus-5-5, 어려운 설계 판단만 fable-5-2</td><td>사용자</td><td><span class="pill todo">할 일</span></td></tr>
+<tr><td>라</td><td>벤치마크 줄이기</td><td>100회 이하, 수정 확인은 문제 문항만</td><td>사용자·팀</td><td><span class="pill todo">할 일</span></td></tr>
+<tr><td>마</td><td>O13 수정 반영</td><td>입력 기록 훅 경로 비교 수정</td><td>개발</td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>바</td><td>main 계열 Core</td><td>일반 답변에 응답 경로를 요구하지 않는 Stop 규칙</td><td>개발</td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>사</td><td>io-trace 비동기</td><td>도구 호출 뒤 기록 훅을 기다리지 않게 등록</td><td>개발</td><td><span class="pill done">반영됨</span></td></tr>
+<tr><td>아</td><td>다시 재기</td><td>일상 질문 켬/끔은 완료. 대화형 질문 목록 정해 새 대화에서 측정</td><td>개발·팀</td><td><span class="pill part">일부</span></td></tr>
+</table></div>
+  <div class="foot"><span>상태는 11-23 12:40 기준입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 11 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">모두 적용하면</div>
+  <h1>비용은 약 55~62%, 훅 대기는 약 64% 줄어들 것으로 어림합니다</h1>
+  <div class="body">
+<div class="two wide-left">
+  <div>
+    <h3>비용</h3><svg class="chart" viewBox="0 0 660 120" width="660" height="120" role="img"><text x="178" y="19.040000000000003" text-anchor="end" class="axis">지금</text><path d="M190,0 h316.0 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-316.0 z" fill="#b9b8b3"/><text x="520.0" y="19.040000000000003" class="val">$383<tspan class="note"> </tspan></text><text x="178" y="59.040000000000006" text-anchor="end" class="axis">적용 후 (높게 잡으면)</text><path d="M190,40 h138.10333838357454 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-138.10333838357454 z" fill="#2a78d6"/><text x="342.1033383835745" y="59.040000000000006" class="val">$170<tspan class="note"> </tspan></text><text x="178" y="99.04" text-anchor="end" class="axis">적용 후 (낮게 잡으면)</text><path d="M190,80 h117.20578862128416 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-117.20578862128416 z" fill="#2a78d6"/><text x="321.20578862128417" y="99.04" class="val">$145<tspan class="note"> </tspan></text></svg>
+    <h3 style="margin-top:24px">훅 대기 시간</h3><svg class="chart" viewBox="0 0 660 80" width="660" height="80" role="img"><text x="178" y="19.040000000000003" text-anchor="end" class="axis">지금 (0.5.1)</text><path d="M190,0 h316.0 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-316.0 z" fill="#b9b8b3"/><text x="520.0" y="19.040000000000003" class="val">6.1시간<tspan class="note"> </tspan></text><text x="178" y="59.040000000000006" text-anchor="end" class="axis">적용 후</text><path d="M190,40 h111.40983606557377 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-111.40983606557377 z" fill="#2a78d6"/><text x="315.40983606557376" y="59.040000000000006" class="val">2.2시간<tspan class="note"> </tspan></text></svg>
+  </div>
+  <div class="card"><h3>계산 순서 (직접 작업 $239)</h3><ol>
+    <li>대화 나누기: −$77 → $162</li>
+    <li>거버넌스 답변 80% 감소(가정): −$18 → $144</li>
+    <li>fable 작업 70%를 opus로(가정): −$17 → $127</li>
+    <li>캐시 재저장 피하기(가정): −$20 → $107</li></ol>
+    <p>자동 실행 $144 → 벤치마크 축소 −$100 → 거버넌스 −$5 → 약 $38~43</p>
+    <p class="warn">4단계는 1단계와 겹칠 수 있어 직접 작업은 $107~127 범위로 봅니다.</p></div>
+</div></div>
+  <div class="foot"><span>어림값입니다. 가정 세 가지(80%, 70%, $20)는 측정하지 않은 값입니다.</span><span>Ghost-ALICE 비용·시간 절감 방안 · 12 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">이 숫자를 믿어도 되나</div>
+  <h1>독립 검증자 4명이 따로 확인했고, 틀린 곳 4군데를 고쳤습니다</h1>
+  <div class="body">
+<div class="two">
+  <div class="card"><h3>맞음으로 확인</h3><ul>
+    <li>세션·질문·도구·비용·차단 등 기본 집계 전부</li>
+    <li>단가와 캐시 배수 = 공식 가격표</li>
+    <li>async 훅은 기다리지 않는 공식 기능</li>
+    <li>$14.91 질문 = 6.7일 쉰 뒤 첫 질문</li>
+    <li>O13 원인(경로 표기 비교)</li></ul></div>
+  <div class="card"><h3>고친 것</h3><ul>
+    <li>날짜별 "벤치마크 횟수" → 자동 실행 전체 횟수</li>
+    <li>훅 거부 내역 합계 73 → 79 (집계 범위 차이)</li>
+    <li>sk-port 변경 규모 → 파일 48개, +7,678 / −20</li>
+    <li>main 계열 훅 1.52초 → 약 1.8초 (과소 추정)</li>
+    <li>절감 어림값 61~62% → 약 55~62% (겹침·가정 반영)</li></ul></div>
+</div>
+<p class="note-line">검증자: 원본 재계산(Claude Sonnet), 논리·산술 / 외부 사실 / 예외·현재 상태(Claude Opus 각 1). Codex·Gemini는 로그인 문제로 실행하지 못해, 검증자가 모두 Claude 모델이라는 한계가 있습니다.</p></div>
+  <div class="foot"><span>상세: project-docs/reports/2026-11-23-verification-summary.md, 보고서 12장</span><span>Ghost-ALICE 비용·시간 절감 방안 · 13 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">제안</div>
+  <h1>오늘부터 바꿀 것과 팀이 정할 것</h1>
+  <div class="body">
+<div class="three">
+  <div class="card accent"><h3>바로 (습관)</h3><ol>
+    <li>긴 대화는 단계가 끝나면 마무리하고 새 대화로</li>
+    <li>한 시간 넘게 쉬었다면 새 대화</li>
+    <li>대화를 시작할 때 모델을 정하기</li></ol></div>
+  <div class="card"><h3>다음 (운영)</h3><ol>
+    <li>벤치마크는 문제 문항 위주, 횟수 기준 정하기</li>
+    <li>대화형 측정 질문 목록 만들고 새 대화에서 측정</li>
+    <li>절감 어림값을 실측으로 바꾸기</li></ol></div>
+  <div class="card"><h3>팀이 정할 것</h3><ol>
+    <li>벤치마크 반복 횟수 기준</li>
+    <li>대화형 측정 질문 목록</li>
+    <li>O14(거버넌스 문장 노출)와 doctor 경고 보강을 이슈로 올릴지</li></ol></div>
+</div></div>
+  <div class="foot"><span></span><span>Ghost-ALICE 비용·시간 절감 방안 · 14 / 15</span></div>
+</section>
+<section class="slide">
+  <div class="kicker">부록</div>
+  <h1>가정, 한계, 자료 위치</h1>
+  <div class="body">
+<div class="two">
+  <div class="card"><h3>가정과 한계</h3><ul>
+    <li>금액은 API 정가 추정. 구독 요금제에서는 사용량 한도로 나타나며 달러 환산은 공개되지 않음</li>
+    <li>5분·1시간 구분이 없는 캐시 쓰기 기록은 5분 단가로 계산</li>
+    <li>PC 1대, 사용자 1명, 하위 에이전트 토큰 제외</li>
+    <li>직접 작업 분류는 폴더 이름과 질문 낱말 기준 (오분류 가능)</li>
+    <li>날짜별 활동 시간은 세션 시작일에 몰려 있어 합계만 유효</li>
+    <li>절감 가정: 거버넌스 답변 80% 감소, fable 작업 70% 교체, 재저장 $20 회피</li></ul></div>
+  <div class="card"><h3>자료 위치 (ghost-alice-sk, skproject 브랜치)</h3><ul class="mono">
+    <li>project-docs/reports/2026-11-23-full-execution-report.md</li>
+    <li>project-docs/reports/2026-11-23-verification-summary.md</li>
+    <li>project-docs/metrics/rerun-2026-11-23-after-o13.md</li>
+    <li>project-docs/metrics/full_execution_report.py</li>
+    <li>project-docs/observations.md (O1 ~ O14)</li></ul></div>
+</div></div>
+  <div class="foot"><span></span><span>Ghost-ALICE 비용·시간 절감 방안 · 15 / 15</span></div>
+</section></body></html>
