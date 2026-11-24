@@ -1,4 +1,4 @@
-# Install Ghost-ALICE (Core + Autopilot) into an isolated test home.
+﻿# Install Ghost-ALICE (Core + Autopilot) into an isolated test home.
 # Usage: pwsh -NoProfile -File install_arm.ps1 -Arm base -Core <core checkout> -Addon <autopilot addon dir>
 # Every path the installer uses comes from HOME / USERPROFILE / CLAUDE_CONFIG_DIR /
 # GHOST_ALICE_GHOST_ROOT, which this script points at C:\Users\N-\ga-test\home-<arm>.
