@@ -247,18 +247,18 @@ def observation_receipt(paths: dict[str, Path], observation: dict[str, Any] | No
         + "\n[/session-intent-receipt]\n"
     )
     if observation is None:
-        # IMP items 2'-b and 3: Core registers the route itself at Stop, so the
-        # model only declares the purpose; the same rules in fewer words.
-        compact_receipt = {key: receipt[key] for key in
-                           ("schema_version", "intake_status", "ledger_root", "platform", "session_id")}
-        return (
-            "\n[session-intent-receipt]"
-            + json.dumps(compact_receipt, ensure_ascii=True, separators=(",", ":"))
-            + "[/session-intent-receipt]\n"
-            "Core confirms this input at the first tool call or Stop and registers its response-route itself; "
-            "do not call response_route.py. Start the answer with one purpose line: [purpose: execution] or "
-            "[purpose: explanation] (missing = explanation, which keeps response review). Only for a material "
-            "intent change, read --read-state with these coordinates and bind --expected-input-event-id."
+        # Core registers the route itself at Stop (auto_route.py), so the model
+        # only declares the purpose. The receipt keeps its exact format and fields.
+        return binding + (
+            "This receipt records native transport only; user authority awaits committed native actor evidence, "
+            "which Core reconciles at the first native PreToolUse or Stop. Pending transport has no input event "
+            "token and cannot authorize a route or semantic update; a confirmed native notification retains the "
+            "preceding human input and route. Core registers this input's response-route itself at Stop; do not "
+            "call response_route.py. Start the answer with one purpose line: [purpose: execution] or "
+            "[purpose: explanation] (missing = explanation, which keeps response review). For a material intent "
+            "change, read session_intent_ledger.py --read-state with this receipt's --root ledger_root --platform "
+            "platform --session-id session_id and bind --expected-input-event-id to the returned "
+            "latest_input_event_id."
         )
     return binding + (
         "For a normal route, the current-session assistant reads SQLite with session_intent_ledger.py --read-state "
