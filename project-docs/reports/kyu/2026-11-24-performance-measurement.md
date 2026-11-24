@@ -149,7 +149,7 @@ Nov 24, 2026 · kyu
 
 | 파일 | 내용 |
 | --- | --- |
-| `testbed/cases.json`, `testbed/fixture/` | 케이스 6개의 입력과 자동 판정 기준, 시험 자료 |
+| `testbed/cases.json`, `testbed/fixture/` | 케이스 6개의 입력과 자동 판정 기준, 시험 자료. `fixture/README.md.txt` 는 측정에 쓴 `README.md` 와 바이트가 같습니다. 줄 수(17)가 정답이라 내용을 바꿀 수 없어서, 저장소의 문서 형식 검사에 걸리지 않도록 이름만 바꿨습니다. 쓸 때 `README.md` 로 되돌립니다 |
 | `tools/install_arm.ps1` | 시험용 홈(`HOME`, `USERPROFILE`, `CLAUDE_CONFIG_DIR`, `GHOST_ALICE_GHOST_ROOT`)에 Core+Autopilot 설치. `-AddonSource` 는 Autopilot 저장소 최상위 폴더 |
 | `tools/run_case.py` | 케이스 1개를 `claude -p --output-format json` 으로 실행하고 정답을 판정 |
 | `tools/run_batch.py` | 조건·케이스·회차를 섞어 일괄 실행 (중단 뒤 다시 실행하면 이어서 진행) |
