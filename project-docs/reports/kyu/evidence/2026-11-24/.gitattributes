@@ -1,0 +1,5 @@
+*.patch text eol=lf
+*.diff text eol=lf
+# Fixture bytes must match what was measured (LF); never convert line endings.
+testbed/fixture/** -text
+testbed2/fixture/** -text

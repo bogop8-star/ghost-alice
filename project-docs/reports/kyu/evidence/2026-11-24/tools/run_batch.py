@@ -12,13 +12,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\N-\ga-test")
-PERF = Path(r"C:\Users\N-\hook-monitor\perf")
+# Paths: GA_TEST_ROOT (runs, test homes, test Cores; default ~/ga-test) and
+# GA_PERF_DIR (folder holding testbed/ and testbed2/). When these tools sit in
+# the team repository's evidence folder, GA_PERF_DIR defaults to that folder.
+_HERE = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("GA_TEST_ROOT") or (Path.home() / "ga-test"))
+PERF = Path(os.environ.get("GA_PERF_DIR") or (
+    _HERE.parent if (_HERE.parent / "testbed" / "cases.json").exists()
+    else Path(r"C:\Users\N-\hook-monitor\perf")))
 
 
 def main() -> int:
@@ -29,6 +36,7 @@ def main() -> int:
     ap.add_argument("--budget", type=float, default=2.0)
     ap.add_argument("--home", help="test home for every arm label (default: arm name)")
     ap.add_argument("--suite", default="testbed")
+    ap.add_argument("--model", default="opus", help="model for every run (e.g. opus, sonnet, haiku)")
     args = ap.parse_args()
     cases = args.cases or [c["id"] for c in json.loads((PERF / args.suite / "cases.json").read_text(encoding="utf-8"))["cases"]]
     homes = {a.split(':')[0]: (a.split(':')[1] if ':' in a else args.home) for a in args.arms}
@@ -45,15 +53,15 @@ def main() -> int:
     total = len(plan)
     spent = 0.0
     with log.open("a", encoding="utf-8") as out:
-        out.write(f"=== start {time.strftime('%H:%M:%S')} runs={total}\n")
+        out.write(f"=== start {time.strftime('%H:%M:%S')} runs={total} model={args.model} suite={args.suite}\n")
         for i, (arm, case, rep) in enumerate(plan, 1):
             run_dir = ROOT / "runs" / arm / case / rep
             if (run_dir / "check.json").exists():
                 out.write(f"[{i}/{total}] skip {arm} {case} {rep}\n")
                 continue
             t = time.time()
-            proc = subprocess.run([sys.executable, str(ROOT / "tools" / "run_case.py"), arm, case, rep,
-                                   "--budget", str(args.budget), "--suite", args.suite] + (["--home", homes[arm]] if homes[arm] else []), capture_output=True, text=True, encoding="utf-8")
+            proc = subprocess.run([sys.executable, str(_HERE / "run_case.py"), arm, case, rep,
+                                   "--budget", str(args.budget), "--suite", args.suite, "--model", args.model] + (["--home", homes[arm]] if homes[arm] else []), capture_output=True, text=True, encoding="utf-8")
             try:
                 res = json.loads(proc.stdout.strip().splitlines()[-1])
                 spent += res.get("cost_usd") or 0

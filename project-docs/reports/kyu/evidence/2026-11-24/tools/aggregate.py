@@ -11,19 +11,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import statistics
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\N-\ga-test")
-PERF = Path(r"C:\Users\N-\hook-monitor\perf")
-sys.path.insert(0, str(PERF))
+# Paths: GA_TEST_ROOT (runs, test homes, test Cores; default ~/ga-test) and
+# GA_PERF_DIR (folder holding testbed/ and testbed2/). When these tools sit in
+# the team repository's evidence folder, GA_PERF_DIR defaults to that folder.
+_HERE = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("GA_TEST_ROOT") or (Path.home() / "ga-test"))
+PERF = Path(os.environ.get("GA_PERF_DIR") or (
+    _HERE.parent if (_HERE.parent / "testbed" / "cases.json").exists()
+    else Path(r"C:\Users\N-\hook-monitor\perf")))
+sys.path[:0] = [str(_HERE), str(PERF)]
 import perf_baseline as pb  # noqa: E402
 
 
 def load_runs(arms):
-    sys.path.insert(0, str(ROOT / "tools"))
+    sys.path.insert(0, str(_HERE))
     import run_case
     cases = {c["id"]: c for c in json.loads(run_case.CASES.read_text(encoding="utf-8"))["cases"]}
     runs = []
@@ -78,7 +85,7 @@ def recorded_reviews(session_id):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arms", nargs="+", default=["off", "base"])
-    ap.add_argument("--out", type=Path, default=PERF / "results.md")
+    ap.add_argument("--out", type=Path, default=ROOT / "results.md")
     args = ap.parse_args()
     runs = load_runs(args.arms)
     by = defaultdict(list)
