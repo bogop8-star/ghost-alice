@@ -57,15 +57,26 @@ def is_actual_user_prompt(entry):
 
 
 # Local fix 2026-11-24. Tools that cannot change files, and shell commands made only of
-# read commands or Ghost-ALICE's own record scripts. Anything not listed counts as work.
+# read commands or Ghost-ALICE's own record scripts. The rule is an allowlist: a command, an
+# option or a shell form that is not known to be read-only counts as work.
 _READ_ONLY_TOOLS = {'Read', 'Glob', 'Grep', 'LS', 'NotebookRead', 'Skill', 'ToolSearch'}
 _RECORD_SCRIPTS = ('session_intent_ledger.py', 'response_route.py', 'completion_assessment.py')
 _READ_COMMANDS = {'cat', 'head', 'tail', 'ls', 'dir', 'grep', 'rg', 'wc', 'pwd', 'cd', 'echo', 'printf', 'type', 'sort', 'uniq',
                   'cut', 'nl', 'file', 'stat', 'test', 'true', 'od', 'tr', 'basename', 'dirname', 'get-content', 'gc', 'get-childitem', 'gci',
                   'select-string', 'sls', 'select-object', 'measure-object', 'test-path', 'get-item', 'write-output'}
-
-
 _READ_GIT = {'rev-parse', 'status', 'log', 'diff', 'show', 'ls-files'}
+# Options that make an otherwise read-only command write a file or run another program.
+_WRITING_OPTIONS = {
+    'sort': ('-o', '--output', '--compress-program'),
+    'find': ('-delete', '-exec', '-execdir', '-ok', '-okdir', '-fprint', '-fprint0', '-fprintf', '-fls'),
+    'git': ('--output', '--ext-diff', '--textconv'),
+    'rg': ('--pre', '--hostname-bin'),
+    'file': ('-C', '--compile'),
+}
+_SED_PRINT = re.compile(r'(\d+|\$)(,(\d+|\$))?p')
+_PYTHON = re.compile(r'(^|[\\/])(python3?|py)(\.exe)?$|^\$\{?py(thon)?\}?$', re.I)
+_LITERAL = re.compile(r'Q\d+|S|-?\d+(\.\d+)?')
+_ASSIGNMENT = re.compile(r'\$?[A-Za-z_][A-Za-z0-9_:]*=\S*')
 
 
 def _read_only_call(call):
@@ -74,15 +85,10 @@ def _read_only_call(call):
         return True
     if name not in {'Bash', 'PowerShell'} or not isinstance(data, dict) or not isinstance(data.get('command'), str):
         return False
-    command = data['command']
-    if any(script in command for script in _RECORD_SCRIPTS):
-        return True
-    return _read_only_command(command)
+    return _read_only_command(data['command'])
 
 
 def _read_only_command(command):
-    if re.search(r'\bawk\b', command) and re.search(r'system|getline', command):
-        return False
     # A command substitution is a command of its own: each innermost $( … ) is judged by the
     # same rules, then stands in the outer command as a plain word.
     for _ in range(20):
@@ -92,36 +98,71 @@ def _read_only_command(command):
         if not _read_only_command(inner.group(1)):
             return False
         command = command[:inner.start()] + 'S' + command[inner.end():]
-    # Output redirection to a file is a write. Discarding or merging streams is not.
-    # Quoted text is data (a grep pattern, a label); it is set aside before the commands are read.
-    plain = re.sub(r'"[^"`]*"|\'[^\']*\'', ' Q ', command)
+    # Quoted text is data (a grep pattern, a label). It is set aside while the commands are
+    # read and looked up again where a command treats it as a script (sed, awk).
+    quoted = []
+
+    def keep(match):
+        quoted.append(match.group(0)[1:-1])
+        return f' Q{len(quoted) - 1} '
+
+    plain = re.sub(r'"[^"`]*"|\'[^\']*\'', keep, command)
+    # Discarding or merging streams is not a write.
     plain = re.sub(r'\d?>\s*(/dev/null|\$null|&\d)', ' ', plain)
-    if '>' in plain or '`' in plain or '$(' in plain:
+    # Backticks, unresolved or process substitution and method calls can run anything.
+    if '`' in plain or '$(' in plain or '<(' in plain or '>(' in plain or re.search(r'\.\s*[A-Za-z_]\w*\s*\(', plain):
         return False
-    for segment in re.split(r'&&|\|\||[;|\n]', plain):
-        words = segment.replace('(', ' ').split()
+
+    def text(word):
+        match = re.fullmatch(r'Q(\d+)', word)
+        return quoted[int(match.group(1))] if match else word
+
+    for segment in re.split(r'&&|\|\||[;|&\n]', plain):
+        words = segment.replace('(', ' ').replace(')', ' ').split()
         while words and words[0] in {'do', 'then', 'else'}:
             words = words[1:]
         if not words or words[0] in {'for', 'done', 'fi'}:
             continue
-        head = words[0].lower()
-        if re.fullmatch(r'\$?[a-z_][a-z0-9_]*=\S*', head) or (head.startswith('$') and words[1:2] == ['=']):
-            continue                                  # a variable set to a literal value
+        # A leading assignment only sets a variable; the command after it is still judged.
+        if words[0].startswith('$') and words[1:2] == ['=']:
+            words = words[2:]
+        else:
+            while words and _ASSIGNMENT.fullmatch(words[0]):
+                words = words[1:]
+        if not words or (len(words) == 1 and _LITERAL.fullmatch(words[0])):
+            continue
+        head = text(words[0])
+        # Ghost-ALICE's own record scripts keep the ledger; they are not the user's work.
+        if _PYTHON.search(head) and any(text(word).replace('\\', '/').split('/')[-1] in _RECORD_SCRIPTS for word in words[1:]):
+            continue
+        # Output redirection to a file is a write.
+        if '>' in segment:
+            return False
+        head = head.lower()
+        arguments = [word for word in words[1:] if not word.startswith('-')]
         if head.startswith('[io.file]::read'):
             continue
+        if '::' in segment:
+            return False
+        if any(word.split('=')[0] == option or (len(option) == 2 and word.startswith(option) and not word.startswith('--'))
+               for option in _WRITING_OPTIONS.get(head, ()) for word in words[1:]):
+            return False
         if head == 'awk':
-            if 'system' in segment or 'getline' in segment:
+            # An awk program can write files and run commands; only a program that does neither is read-only.
+            if any(re.search(r'>|\||system|getline|close\s*\(', text(word)) for word in words[1:]):
                 return False
         elif head == 'sed':
-            if '-n' not in words or any(word.startswith('-i') for word in words):
+            # Only printing a line range is read-only: sed -n 3p, sed -n '1,5p'.
+            options = [word for word in words[1:] if word.startswith('-')]
+            if options != ['-n'] or not arguments or not _SED_PRINT.fullmatch(text(arguments[0])):
                 return False
-        elif head == 'find':
-            if any(word in {'-delete', '-exec', '-execdir', '-ok'} for word in words):
+        elif head == 'uniq':
+            if len(arguments) > 1:                    # uniq INPUT OUTPUT writes OUTPUT
                 return False
         elif head == 'git':
             if words[1:2] == [] or words[1] not in _READ_GIT:
                 return False
-        elif head not in _READ_COMMANDS:
+        elif head not in _READ_COMMANDS and head != 'find':
             return False
     return True
 

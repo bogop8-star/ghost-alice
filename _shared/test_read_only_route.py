@@ -58,6 +58,8 @@ class ReadOnlyCallTests(unittest.TestCase):
             'find . -name "*.py"',
             'git status',
             'G=C:/x; grep -n -A70 "Core" $G/a.md | head -100',
+            "sed -n '3p' f", 'git log --oneline -3', 'sort f | uniq -c', 'uniq f', 'FOO=1 ls', 'X=hostname',
+            "awk '{print $1}' f",
         ]
         for command in commands:
             with self.subTest(command=command):
@@ -68,6 +70,7 @@ class ReadOnlyCallTests(unittest.TestCase):
             'Get-Content test-fixture/README.md | Measure-Object -Line',
             '$p = "f"; (Get-Content $p | Measure-Object -Line).Lines',
             'Get-ChildItem test-fixture | Select-Object Name',
+            '$r = Get-Content x', "$env:FOO = 'x'; Get-Content x",
         ]
         for command in commands:
             with self.subTest(command=command):
@@ -81,13 +84,25 @@ class ReadOnlyCallTests(unittest.TestCase):
             'X=1; rm f', 'for f in *; do rm $f; done', 'awk \'{system("rm x")}\' f', 'find . -delete',
             'find . -exec rm {} ;', 'head f && python -c "open(1)"', 'd=$(rm -rf x); ls', 'echo "$(touch a)"',
             'ls $(mkdir z)', 'echo `touch a`',
+            # A leading assignment does not hide the command after it.
+            'FOO=1 rm -rf build', 'A=1 B=2 touch f', 'env FOO=1 rm x',
+            # Options and scripts that write a file or run a program.
+            'sort -o out.txt in.txt', 'sort --output=out.txt in.txt', 'sort --compress-program=sh f',
+            'sed -n w out.txt in.txt', "sed -n 'w out.txt' in.txt", 'sed -n 1,5p f -i', 'sed -n -e w f',
+            "awk '{print > \"out.txt\"}' in.txt", "awk 'BEGIN{print \"x\" | \"sh\"}'",
+            'uniq in.txt out.txt', 'git diff --output=out.txt', 'git log --output=f', 'git -C x commit',
+            'find . -fprint out.txt', 'rg --pre ./x.sh pat', 'file -C -m magic',
+            # Shell forms that run a second command.
+            'ls & rm x', 'cat <(rm x)', 'ls | xargs rm',
         ]
         for command in commands:
             with self.subTest(command=command):
                 self.assertFalse(self.read_only(shell(command)))
 
     def test_powershell_commands_that_can_change_files_are_work(self):
-        for command in ('Set-Content a.txt hi', 'New-Item x', 'Remove-Item x', 'Get-Content a | Out-File b'):
+        for command in ('Set-Content a.txt hi', 'New-Item x', 'Remove-Item x', 'Get-Content a | Out-File b',
+                '$r = Remove-Item x', '$x = hostname', '(Get-Item x).Delete()', '[IO.File]::WriteAllText("a","b")',
+                'Get-ChildItem | ForEach-Object { Remove-Item $_ }', '& rm x'):
             with self.subTest(command=command):
                 self.assertFalse(self.read_only(shell(command, 'PowerShell')))
 
@@ -95,6 +110,14 @@ class ReadOnlyCallTests(unittest.TestCase):
         for script in ('session_intent_ledger.py', 'response_route.py', 'completion_assessment.py'):
             with self.subTest(script=script):
                 self.assertTrue(self.read_only(shell(f'python /core/_shared/{script} --record x > out.json')))
+                self.assertTrue(self.read_only(shell(f'cd x && python3 {script} --read-state | head')))
+                self.assertTrue(self.read_only(shell(f'"C:/Python/python.exe" C:/core/_shared/{script} --read')))
+
+    def test_a_record_script_name_does_not_cover_other_commands(self):
+        for command in ('python response_route.py; rm -rf x', 'rm response_route.py', 'cat response_route.py > copy.py',
+                'python other.py response_route.py && touch a'):
+            with self.subTest(command=command):
+                self.assertFalse(self.read_only(shell(command)))
 
 
 class ReadOnlyActivityTests(unittest.TestCase):
