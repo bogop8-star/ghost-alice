@@ -30,30 +30,48 @@ def strip_purpose_line(text: str) -> str:
     return PURPOSE_LINE.sub('', text or '', count=1)
 
 
-def turn_purpose(final_text: str, transcript_path) -> str:
-    """Purpose from the first marker in this turn's assistant text blocks, then the final answer.
+FILE_CHANGING_TOOLS = {'Write', 'Edit', 'MultiEdit', 'NotebookEdit'}
 
-    Models often state the marker in their first message, before tool calls,
-    rather than at the top of the final answer.
-    """
-    if PURPOSE_LINE.match(final_text or ''):
-        return declared_purpose(final_text)
+
+def _turn_blocks(transcript_path):
+    """Assistant content blocks after the current human input (empty when unreadable)."""
     import json
     from native_transcript import is_actual_user_prompt
     try:
         rows = [json.loads(line) for line in Path(transcript_path).read_text(encoding='utf-8').splitlines()
                 if line.strip()]
     except (OSError, TypeError, ValueError):
-        return 'explanation'
+        return []
     start = max((i for i, row in enumerate(rows) if isinstance(row, dict) and is_actual_user_prompt(row)
                  and not row.get('isSidechain')), default=-1)
+    blocks = []
     for row in rows[start + 1:]:
-        if not isinstance(row, dict) or row.get('type') != 'assistant' or row.get('isSidechain'):
-            continue
-        for block in (row.get('message') or {}).get('content') or []:
-            if isinstance(block, dict) and block.get('type') == 'text' and PURPOSE_LINE.match(block.get('text') or ''):
-                return declared_purpose(block['text'])
-    return 'explanation'
+        if isinstance(row, dict) and row.get('type') == 'assistant' and not row.get('isSidechain'):
+            blocks += [b for b in (row.get('message') or {}).get('content') or [] if isinstance(b, dict)]
+    return blocks
+
+
+def turn_purpose(final_text: str, transcript_path) -> str:
+    """Purpose for this turn's automatic route.
+
+    Marker: the final answer's first line, else the first marker in this turn's
+    assistant text blocks (models often state it before tool calls).
+
+    IMP v2 review rule: `execution` is accepted only when this turn changed files
+    (a file-changing tool ran). An answer that only read and reported is an
+    explanation and keeps response review, whatever the marker says.
+    """
+    blocks = _turn_blocks(transcript_path)
+    declared = None
+    if PURPOSE_LINE.match(final_text or ''):
+        declared = declared_purpose(final_text)
+    else:
+        for block in blocks:
+            if block.get('type') == 'text' and PURPOSE_LINE.match(block.get('text') or ''):
+                declared = declared_purpose(block['text'])
+                break
+    changed_files = any(b.get('type') == 'tool_use' and b.get('name') in FILE_CHANGING_TOOLS for b in blocks)
+    return 'execution' if declared == 'execution' and changed_files else 'explanation'
 
 
 def _candidate(purpose: str) -> dict:

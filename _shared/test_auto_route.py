@@ -33,14 +33,33 @@ class PurposeMarkerTests(unittest.TestCase):
             return dict(type='user', message=dict(role='user', content=text))
         def assistant(text):
             return dict(type='assistant', message=dict(content=[dict(type='text', text=text)]))
-        rows = [user('old question'), assistant('[purpose: explanation]\nold'),
-                user('count lines'), assistant('[purpose: execution]'), assistant('It has 17 lines.')]
+        def tool(name):
+            return dict(type='assistant', message=dict(content=[dict(type='tool_use', name=name, input={})]))
+        head = [user('old question'), assistant('[purpose: explanation]\nold'), user('make hello.txt')]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 't.jsonl'
+            def write(rows):
+                path.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
+            # execution marker in the first message + a file-changing tool -> execution
+            write(head + [assistant('[purpose: execution]'), tool('Write'), assistant('Created.')])
+            self.assertEqual(auto_route.turn_purpose('Created.', str(path)), 'execution')
+            # no marker -> explanation
+            write(head + [tool('Write'), assistant('Created.')])
+            self.assertEqual(auto_route.turn_purpose('Created.', str(path)), 'explanation')
+
+    def test_v2_rule_read_only_turn_stays_explanation_despite_execution_marker(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        rows = [dict(type='user', message=dict(role='user', content='count lines')),
+                dict(type='assistant', message=dict(content=[dict(type='text', text='[purpose: execution]')])),
+                dict(type='assistant', message=dict(content=[dict(type='tool_use', name='Bash', input={})])),
+                dict(type='assistant', message=dict(content=[dict(type='tool_use', name='Read', input={})]))]
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 't.jsonl'
             path.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
-            self.assertEqual(auto_route.turn_purpose('It has 17 lines.', str(path)), 'execution')
-            path.write_text('\n'.join(json.dumps(r) for r in rows[:3] + [assistant('17 lines.')]), encoding='utf-8')
-            self.assertEqual(auto_route.turn_purpose('17 lines.', str(path)), 'explanation')
+            self.assertEqual(auto_route.turn_purpose('It has 17 lines.', str(path)), 'explanation')
+            self.assertEqual(auto_route.turn_purpose('[purpose: execution]\nIt has 17 lines.', str(path)), 'explanation')
         self.assertEqual(auto_route.turn_purpose('x', None), 'explanation')
 
 
