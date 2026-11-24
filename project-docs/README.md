@@ -61,3 +61,4 @@ cd $HOME\ghost-alice
 | [improvement-report.md](improvement-report.md) | 개선 보고서 |
 | [bug-report-guide.md](bug-report-guide.md) | AidALL 버그 리포트 작성 가이드 |
 | [reports/](reports/README.md) | 팀원별 진행 보고서와 공통 템플릿 |
+| [reports/kyu/handoff.md](reports/kyu/handoff.md) | kyu 작업 인수인계 문서(시험 환경, 진행 기록, 남은 일). 새 Claude Code 세션이 이어서 작업할 때 0절부터 읽음 |
