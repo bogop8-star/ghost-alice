@@ -25,8 +25,14 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\N-\ga-test")
-PERF = Path(r"C:\Users\N-\hook-monitor\perf")
+# Paths: GA_TEST_ROOT (runs, test homes, test Cores; default ~/ga-test) and
+# GA_PERF_DIR (folder holding testbed/ and testbed2/). When these tools sit in
+# the team repository's evidence folder, GA_PERF_DIR defaults to that folder.
+_HERE = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("GA_TEST_ROOT") or (Path.home() / "ga-test"))
+PERF = Path(os.environ.get("GA_PERF_DIR") or (
+    _HERE.parent if (_HERE.parent / "testbed" / "cases.json").exists()
+    else Path(r"C:\Users\N-\hook-monitor\perf")))
 CASES = PERF / "testbed" / "cases.json"
 FIXTURE = PERF / "testbed" / "fixture"
 
@@ -47,8 +53,20 @@ def clean_env(arm: str) -> dict:
                # Test-only Core patch (branch test/sdk-origin): treat headless prompts as human
                # input so governance follows its normal path. Set for every arm.
                GHOST_ALICE_TEST_ACCEPT_SDK_ORIGIN="1")
-    env["PATH"] = r"C:\Users\N-\AppData\Local\Programs\Python\Python314;" + env.get("PATH", "")
+    # Hooks find Python on PATH: put the interpreter running this script first.
+    env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env.get("PATH", "")
     return env
+
+
+def work_name(rel: Path) -> Path:
+    """A fixture file kept as <name>.md.txt (outside the docs checks) is used as <name>.md."""
+    return rel.with_name(rel.name[:-4]) if rel.name.endswith(".md.txt") else rel
+
+
+def copy_fixture(work: Path) -> None:
+    shutil.copytree(FIXTURE, work)
+    for p in list(work.rglob("*.md.txt")):
+        p.rename(work / work_name(p.relative_to(work)))
 
 
 def tree_digest(path: Path) -> str:
@@ -75,8 +93,8 @@ def check(case: dict, answers: list[str], work: Path, task_tools: int) -> list[d
             ok = got is not None and (got.strip() if c.get("strip") else got) == c["value"]
             out.append({"check": t, "ok": ok, "got": got})
         elif t == "unchanged_fixture":
-            ok = all((work / p.relative_to(FIXTURE)).is_file()
-                     and (work / p.relative_to(FIXTURE)).read_bytes() == p.read_bytes()
+            ok = all((work / work_name(p.relative_to(FIXTURE))).is_file()
+                     and (work / work_name(p.relative_to(FIXTURE))).read_bytes() == p.read_bytes()
                      for p in FIXTURE.rglob("*") if p.is_file())
             out.append({"check": t, "ok": ok})
         elif t == "max_tool_calls":
@@ -101,7 +119,7 @@ def main() -> int:
     if run_dir.exists():
         sys.exit(f"already exists: {run_dir}")
     work = run_dir / "work"
-    shutil.copytree(FIXTURE, work)
+    copy_fixture(work)
     (work / "output").mkdir(exist_ok=True)
     home_arm = args.home or args.arm
     env = clean_env(home_arm)
@@ -135,7 +153,7 @@ def main() -> int:
 
     task_tools = 0
     if transcript:
-        sys.path.insert(0, str(PERF))
+        sys.path[:0] = [str(_HERE), str(PERF)]
         import perf_baseline as pb
         for row in pb.load(transcript):
             if row.get("type") == "assistant":
