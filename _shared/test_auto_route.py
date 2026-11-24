@@ -63,5 +63,16 @@ class PurposeMarkerTests(unittest.TestCase):
         self.assertEqual(auto_route.turn_purpose('x', None), 'explanation')
 
 
+    def test_open_admitted_criteria_keep_the_original_route_guard(self):
+        open_ = dict(acceptance_criteria=[dict(id='AC1', work_unit_id='w', admitted=True, status='unmet')])
+        default_unmet = dict(acceptance_criteria=[dict(id='AC1', work_unit_id='w')])
+        met = dict(acceptance_criteria=[dict(id='AC1', work_unit_id='w', status='met')])
+        not_admitted = dict(acceptance_criteria=[dict(id='AC1', work_unit_id='w', admitted=False)])
+        self.assertTrue(auto_route.has_open_criteria(open_))
+        self.assertTrue(auto_route.has_open_criteria(default_unmet))
+        self.assertFalse(auto_route.has_open_criteria(met))
+        self.assertFalse(auto_route.has_open_criteria(not_admitted))
+        self.assertFalse(auto_route.has_open_criteria({}))
+
 if __name__ == '__main__':
     unittest.main()

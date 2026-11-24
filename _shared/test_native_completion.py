@@ -295,6 +295,32 @@ class UnroutedNativeWorkTests(unittest.TestCase):
         self.assertEqual(route['input_event_id'], fixture.event)
         self.assertEqual(route['response_purpose'], 'explanation')
 
+    def test_open_completion_criteria_keep_route_guard_for_autopilot(self):
+        """Admitted unmet criteria need an execution route, so Core does not register a plain one."""
+        fixture = fixtures.ResponseRouteTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.coords['platform'] = 'claude'
+        fixture.event = fixture.intake('Create the weekly memo; done when it lists every note.')
+        fixtures.ledger.record_turn(**fixture.coords, expected_input_event_id=fixture.event,
+            intent_delta={'acceptance_criteria': [fixture.criterion(summary='The memo lists every note.')]})
+        source = dict(GHOST_ALICE_CORE_ROOT=str(fixtures.ROOT),
+            GHOST_ALICE_SESSION_INTENT_ROOT=str(fixture.root),
+            GHOST_ALICE_PLATFORM='claude', GHOST_ALICE_SESSION_ID='current')
+        transcript = Path(fixture.tmp.name) / 'native.jsonl'
+        entries = [dict(type='user', sessionId='current', message=dict(role='user', content='Create the memo.')),
+            dict(type='assistant', sessionId='current', message=dict(role='assistant', content=[
+                dict(type='tool_use', name='Write', input=dict(file_path='/isolated/memo.md', content='memo'))]))]
+        transcript.write_text('\n'.join(json.dumps(row) for row in entries))
+        hook = Path(os.environ.get('GHOST_ALICE_TEST_SHARED_ROOT', Path(__file__).parent)) / 'claude_stop_verification_hook.py'
+        result = subprocess.run([sys.executable, '-B', str(hook)],
+            input=json.dumps(dict(session_id='current', transcript_path=str(transcript),
+                last_assistant_message='memo.md를 만들었습니다.')), text=True, capture_output=True, check=True,
+            env=dict(os.environ, **source, CLAUDE_CODE_ENTRYPOINT='claude-desktop', PYTHONDONTWRITEBYTECODE='1'))
+        blocked = json.loads(result.stdout)
+        self.assertEqual(blocked.get('decision'), 'block')
+        self.assertIn('route-unavailable', blocked['reason'])
+
 class NativeActivityTests(unittest.TestCase):
     def setUp(self):
         self.fixture = fixtures.ResponseRouteTests()

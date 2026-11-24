@@ -2,7 +2,9 @@
 
 Condition (the same one under which the original Stop guard reports
 `route-unavailable`): the current human input is canonically bound, native tool
-calls happened after it, and there is no ready route for that input.
+calls happened after it, and there is no ready route for that input. Sessions
+with open admitted acceptance criteria are left to the original guard, because
+their route must carry execution work units for Ghost-ALICE Autopilot.
 
 Purpose comes from the answer's first line, `[purpose: execution]` or
 `[purpose: explanation]`. A missing or unreadable marker defaults to
@@ -31,6 +33,16 @@ def strip_purpose_line(text: str) -> str:
 
 
 FILE_CHANGING_TOOLS = {'Write', 'Edit', 'MultiEdit', 'NotebookEdit'}
+# Same met statuses as Ghost-ALICE Autopilot (autopilot_intent_recovery.MET_CRITERION_STATUSES).
+MET_STATUSES = frozenset({'met', 'done', 'satisfied', 'pass', 'passed', 'complete', 'completed', 'resolved', 'closed'})
+
+
+def has_open_criteria(state) -> bool:
+    """True when the session holds an admitted acceptance criterion that is not met yet."""
+    criteria = state.get('acceptance_criteria') if isinstance(state, dict) else None
+    return any(isinstance(c, dict) and c.get('admitted', True) is not False
+               and str(c.get('status') or 'unmet').strip().lower() not in MET_STATUSES
+               for c in criteria or [])
 
 
 def _turn_blocks(transcript_path):
@@ -107,6 +119,11 @@ def auto_register_route(source: dict, text: str, native_input: dict) -> str | No
     with ledger._read_connection(Path(root), None) as connection:
         state = ledger._stored_state(connection, platform, session)
         if state is None or not ledger._canonical_input_bound(connection, Path(root), state):
+            return None
+        if has_open_criteria(state):
+            # Admitted completion conditions mean execution work units and
+            # Ghost-ALICE Autopilot recording; keep the original guard so the
+            # assistant registers that route itself.
             return None
         event = state.get('latest_input_event_id')
         observation = dict(input_digest=state.get('latest_input_digest'),

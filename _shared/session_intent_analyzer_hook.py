@@ -247,14 +247,16 @@ def observation_receipt(paths: dict[str, Path], observation: dict[str, Any] | No
         + "\n[/session-intent-receipt]\n"
     )
     if observation is None:
-        # Core registers the route itself at Stop (auto_route.py), so the model
-        # only declares the purpose. The receipt keeps its exact format and fields.
+        # Core registers a plain route itself at Stop (auto_route.py) unless the
+        # session has open completion criteria. The receipt keeps its format and fields.
         return binding + (
             "This receipt records native transport only; user authority awaits committed native actor evidence, "
             "which Core reconciles at the first native PreToolUse or Stop. Pending transport has no input event "
             "token and cannot authorize a route or semantic update; a confirmed native notification retains the "
-            "preceding human input and route. Core registers this input's response-route itself at Stop; do not "
-            "call response_route.py. Start the answer with one purpose line: [purpose: execution] or "
+            "preceding human input and route. Without admitted completion criteria, Core registers this input's "
+            "response-route itself at Stop, so response_route.py is not needed; when the user gives completion "
+            "criteria, register them and the execution route through task-router as before (Ghost-ALICE Autopilot "
+            "records only that route). Start the answer with one purpose line: [purpose: execution] or "
             "[purpose: explanation] (missing = explanation, which keeps response review). For a material intent "
             "change, read session_intent_ledger.py --read-state with this receipt's --root ledger_root --platform "
             "platform --session-id session_id and bind --expected-input-event-id to the returned "
