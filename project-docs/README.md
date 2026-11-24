@@ -40,13 +40,16 @@ cd $HOME\ghost-alice
 | --- | --- | --- |
 | `main` | AidALL 최신 Core + 팀 문서(`project-docs/`) | 문서 작업은 여기로 PR |
 | 태그 `test-baseline-2026-11-16` | 설치 기준 Core (`c6019ac`) | 바꾸지 않음 |
+| `core/main` | 기준 Core(`c6019ac`) + 팀 Core 개선. 측정으로 효과를 확인한 변경만 합침 | Core 개선은 여기로 PR |
 | `autopilot/main` | Autopilot v0.5.1 + 팀 검증 변경(Windows 테스트 수정, 호환표 근거, CI 기준 고정) | Autopilot 작업은 여기로 PR |
 | `autopilot/<작업이름>` | Autopilot 작업 브랜치. 예: `autopilot/windows-verify` | `autopilot/main` |
-| `<이름>/<작업이름>` | 문서 등 개인 작업 브랜치. 예: `kyu/report-windows-verification` | `main` |
+| `<이름>/<작업이름>` | 개인 작업 브랜치. 예: 문서 `kyu/report-windows-verification`, Core `kyu/core-review-lite` | 문서는 `main`, Core 개선은 `core/main` |
 
 - Autopilot은 팀 fork가 따로 없어서 이 저장소의 `autopilot/` 브랜치에 둡니다. Autopilot PR은 `main` 이 아니라 `autopilot/main` 으로 올립니다.
 - `autopilot/main` 의 변경은 테스트, 문서, 스크립트입니다. 어댑터 파일은 공식 `v0.5.1` 과 같으므로 설치는 위 2절처럼 공식 `v0.5.1` 로 합니다.
-- `main` 과 `autopilot/main` 에는 바로 커밋하지 않습니다. 작업 브랜치에서 PR을 올리고, CI가 통과하고 팀원이 확인한 뒤 합칩니다.
+- `core/main` 은 기준 Core에 팀 개선을 쌓는 브랜치입니다. **설치는 계속 태그로 합니다.** `core/main` 은 개선을 시험할 때만 별도 폴더에 설치합니다. AidALL 최신 Core(`main`)와는 따로 갑니다.
+- GitHub에서 PR을 만들 때 기본 대상은 `main` 입니다. Core 개선이나 Autopilot 작업이면 대상 브랜치(base)를 `core/main` 또는 `autopilot/main` 으로 직접 바꿉니다.
+- `main`, `core/main`, `autopilot/main` 에는 바로 커밋하지 않습니다. 작업 브랜치에서 PR을 올리고, CI가 통과하고 팀원이 확인한 뒤 합칩니다.
 
 ## 5. 문서 목록
 
