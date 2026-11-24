@@ -30,6 +30,32 @@ def strip_purpose_line(text: str) -> str:
     return PURPOSE_LINE.sub('', text or '', count=1)
 
 
+def turn_purpose(final_text: str, transcript_path) -> str:
+    """Purpose from the first marker in this turn's assistant text blocks, then the final answer.
+
+    Models often state the marker in their first message, before tool calls,
+    rather than at the top of the final answer.
+    """
+    if PURPOSE_LINE.match(final_text or ''):
+        return declared_purpose(final_text)
+    import json
+    from native_transcript import is_actual_user_prompt
+    try:
+        rows = [json.loads(line) for line in Path(transcript_path).read_text(encoding='utf-8').splitlines()
+                if line.strip()]
+    except (OSError, TypeError, ValueError):
+        return 'explanation'
+    start = max((i for i, row in enumerate(rows) if isinstance(row, dict) and is_actual_user_prompt(row)
+                 and not row.get('isSidechain')), default=-1)
+    for row in rows[start + 1:]:
+        if not isinstance(row, dict) or row.get('type') != 'assistant' or row.get('isSidechain'):
+            continue
+        for block in (row.get('message') or {}).get('content') or []:
+            if isinstance(block, dict) and block.get('type') == 'text' and PURPOSE_LINE.match(block.get('text') or ''):
+                return declared_purpose(block['text'])
+    return 'explanation'
+
+
 def _candidate(purpose: str) -> dict:
     order = ('causal-answer-first-after-necessary-evidence' if purpose == 'explanation'
              else 'imperative-result-first-after-necessary-work')
@@ -77,6 +103,6 @@ def auto_register_route(source: dict, text: str, native_input: dict) -> str | No
     activity = native_tool_activity(platform, session, native_input, input_observation=observation)
     if activity.get('status') != 'observed':
         return None
-    purpose = declared_purpose(text)
+    purpose = turn_purpose(text, native_input.get('transcript_path') or native_input.get('transcriptPath'))
     response_route.record_response_route(Path(root), platform, session, event, _candidate(purpose), None)
     return purpose

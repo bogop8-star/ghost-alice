@@ -25,6 +25,24 @@ class PurposeMarkerTests(unittest.TestCase):
         self.assertEqual(candidate['work_units'], [])
         self.assertEqual(candidate['selected_criteria'], [])
 
+    def test_turn_purpose_reads_marker_from_first_message_of_the_turn(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        def user(text):
+            return dict(type='user', message=dict(role='user', content=text))
+        def assistant(text):
+            return dict(type='assistant', message=dict(content=[dict(type='text', text=text)]))
+        rows = [user('old question'), assistant('[purpose: explanation]\nold'),
+                user('count lines'), assistant('[purpose: execution]'), assistant('It has 17 lines.')]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 't.jsonl'
+            path.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
+            self.assertEqual(auto_route.turn_purpose('It has 17 lines.', str(path)), 'execution')
+            path.write_text('\n'.join(json.dumps(r) for r in rows[:3] + [assistant('17 lines.')]), encoding='utf-8')
+            self.assertEqual(auto_route.turn_purpose('17 lines.', str(path)), 'explanation')
+        self.assertEqual(auto_route.turn_purpose('x', None), 'explanation')
+
 
 if __name__ == '__main__':
     unittest.main()
