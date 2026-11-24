@@ -105,6 +105,32 @@ class QuickReviewTests(unittest.TestCase):
                 claims=[dict(claim='a', evidence='b', verdict='supported', rationale='c')],
                 response=dict(verdict='supported', rationale='d')))
 
+    def test_review_command_is_never_a_source(self):
+        rows = _rows() + [
+            dict(type='assistant', message=dict(content=[dict(type='tool_use', id='q1', name='Bash',
+                 input={'command': 'python quick_review.py <<JSON {"evidence": "18 README.md"} JSON'})])),
+            dict(type='user', message=dict(role='user', content=[dict(type='tool_result', tool_use_id='q1',
+                 content='rejected')]))]
+        self.transcript.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
+        self.assertEqual([tid for tid, _ in quick_review.turn_sources(self.transcript)], ['t1'])
+        with self.assertRaisesRegex(quick_review.QuickReviewError, 'verbatim excerpt'):
+            self._run(dict(
+                claims=[dict(claim='README.md has 17 lines.', evidence='18 README.md', verdict='supported',
+                             rationale='x')],
+                response=dict(verdict='supported', rationale='x')))
+
+    def test_several_excerpts_must_all_be_verbatim(self):
+        result, calls = self._run(dict(
+            claims=[dict(claim='README.md has 17 lines.', evidence=['wc -l README.md', '17 README.md'],
+                         verdict='supported', rationale='x')],
+            response=dict(verdict='supported', rationale='x')))
+        self.assertEqual(result['status'], 'reviewed')
+        with self.assertRaisesRegex(quick_review.QuickReviewError, 'invented'):
+            self._run(dict(
+                claims=[dict(claim='README.md has 17 lines.', evidence=['17 README.md', 'invented'],
+                             verdict='supported', rationale='x')],
+                response=dict(verdict='supported', rationale='x')))
+
     def test_block_reason_is_self_contained(self):
         text = quick_review.block_reason(self.source)
         self.assertIn('quick_review.py', text)

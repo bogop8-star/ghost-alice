@@ -85,7 +85,8 @@ def turn_sources(transcript_path):
                 results[block.get('tool_use_id')] = _result_text(block.get('content'))
     sources = []
     for tool_id, call in calls.items():
-        if tool_id not in results:
+        # The review command itself is never evidence (no self-citation on a retry).
+        if tool_id not in results or 'quick_review' in json.dumps(call.get('input'), ensure_ascii=False):
             continue
         text = (f"tool: {call.get('name')}\ninput: {json.dumps(call.get('input'), ensure_ascii=False)}\n"
                 f"result:\n{results[tool_id]}\n")
@@ -127,7 +128,9 @@ def review_once(source, review):
 
     statements, evidence_files, problems = [], [], []
     for index, item in enumerate(review['claims'], 1):
-        claim, evidence = item.get('claim'), item.get('evidence') or ''
+        claim, evidence = item.get('claim'), item.get('evidence') or []
+        excerpts = [evidence] if isinstance(evidence, str) else evidence
+        excerpts = [e for e in excerpts if isinstance(e, str) and _squash(e)]
         if item.get('verdict') not in VERDICTS or not str(item.get('rationale') or '').strip():
             problems.append(f'claim {index}: verdict must be one of {sorted(VERDICTS)} with a rationale')
             continue
@@ -135,9 +138,15 @@ def review_once(source, review):
         if span is None:
             problems.append(f'claim {index}: not found in the answer: {claim!r}')
             continue
-        hits = [path for path, text in files if evidence and _squash(evidence) in _squash(text)]
-        if item['verdict'] != 'unavailable' and not hits:
-            problems.append(f'claim {index}: evidence is not a verbatim excerpt of this turn\'s tool calls or results')
+        hits, missing = [], []
+        for excerpt in excerpts:
+            found = [path for path, text in files if _squash(excerpt) in _squash(text)]
+            hits += [path for path in found if path not in hits]
+            if not found:
+                missing.append(excerpt)
+        if item['verdict'] != 'unavailable' and (missing or not hits):
+            problems.append(f'claim {index}: evidence is not a verbatim excerpt of this turn\'s tool calls or '
+                            f'results: {missing or excerpts!r}')
             continue
         statements.append(span)
         evidence_files.append(hits)
@@ -179,11 +188,13 @@ def block_reason(source):
         'response-review-required: before this explanation is delivered, review it against this turn\'s '
         'own tool results in ONE Bash call (no skill or reference needed; Core already holds the answer and the sources):\n'
         f"{command(root, session)} <<'JSON'\n"
-        '{"claims": [{"claim": "<exact sentence from your answer>", "evidence": "<verbatim excerpt of a tool '
-        'call or result that supports it>", "verdict": "supported|unsupported|unavailable", "rationale": "<why>"}],\n'
+        '{"claims": [{"claim": "<exact sentence from your answer>", "evidence": ["<verbatim excerpt of a tool '
+        'call or result>", ...], "verdict": "supported|unsupported|unavailable", "rationale": "<why>"}],\n'
         ' "response": {"verdict": "supported|unsupported", "rationale": "<does the whole answer fulfil the request '
         'without overstating?>"}}\nJSON\n'
-        'List every factual claim. If the command reports a problem, fix the JSON and run it again. '
+        'List every factual claim. Each evidence excerpt is copied character for character from one command or '
+        'its output (short, no paraphrase, no "->" or added words); give several excerpts for a claim that '
+        'combines outputs. If the command reports a problem, fix the JSON and run it again. '
         'Then repeat the answer unchanged (correct it first if a claim is unsupported).'
     )
 
