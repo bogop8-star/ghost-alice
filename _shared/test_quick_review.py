@@ -131,6 +131,12 @@ class QuickReviewTests(unittest.TestCase):
                              verdict='supported', rationale='x')],
                 response=dict(verdict='supported', rationale='x')))
 
+    def test_report_prints_reviewed_answer_verbatim_without_purpose_line(self):
+        out = quick_review.report(dict(status='reviewed', response_text='[purpose: explanation]\nIt has 17 lines.'))
+        self.assertIn('<<<ANSWER\nIt has 17 lines.\nANSWER>>>', out)
+        self.assertNotIn('purpose', out.split('<<<ANSWER')[1])
+        self.assertEqual(quick_review.report(dict(status='unsupported')), '{"status": "unsupported"}')
+
     def test_block_reason_is_self_contained(self):
         text = quick_review.block_reason(self.source)
         self.assertIn('quick_review.py', text)

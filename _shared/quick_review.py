@@ -175,6 +175,16 @@ def review_once(source, review):
     return result
 
 
+def report(result):
+    """CLI output. A reviewed answer is printed verbatim so the model re-delivers the exact reviewed bytes."""
+    if result.get('status') != 'reviewed' or not isinstance(result.get('response_text'), str):
+        return json.dumps(dict(status=result.get('status')), ensure_ascii=False)
+    from auto_route import strip_purpose_line
+    return ('status: reviewed\nYour final message must be exactly the text between the markers '
+            '(copy it character for character; no rewording, nothing before or after):\n'
+            f'<<<ANSWER\n{strip_purpose_line(result["response_text"]).strip()}\nANSWER>>>')
+
+
 def command(root, session):
     py = Path(sys.executable).as_posix()
     here = Path(__file__).resolve().as_posix()
@@ -195,7 +205,8 @@ def block_reason(source):
         'List every factual claim. Each evidence excerpt is copied character for character from one command or '
         'its output (short, no paraphrase, no "->" or added words); give several excerpts for a claim that '
         'combines outputs. If the command reports a problem, fix the JSON and run it again. '
-        'Then repeat the answer unchanged (correct it first if a claim is unsupported).'
+        'On success the command prints the reviewed answer: deliver exactly that text as your final message, '
+        'character for character (no rewording, nothing added). If a claim is unsupported, say so instead.'
     )
 
 
@@ -212,7 +223,7 @@ def main():
         print(json.dumps(dict(status='rejected', reason=getattr(exc, 'reason', 'quick-review'), detail=str(exc)),
                          ensure_ascii=False))
         return 1
-    print(json.dumps(dict(status=result.get('status')), ensure_ascii=False))
+    print(report(result))
     return 0
 
 
