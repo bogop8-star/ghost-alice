@@ -207,7 +207,21 @@ def main() -> int:
     if _gate_blocks_this_turn(entries) >= RETRIES_PER_TURN:
         print(json.dumps(_allow_payload(_retry_limit_notice(reason, assessment.get('repair_target', 'completion_metadata'))), ensure_ascii=False))
         return 0
-    reason = f"{COMPLETION_GATE_MARKER} {reason} {_recovery_guidance(input_data, entries, args.platform, final_text, assessment.get('repair_target', 'completion_metadata'))}"
+    quick = None
+    if (assessment.get('repair_target') == 'response_review'
+            and os.environ.get('GHOST_ALICE_IMP_QUICK_REVIEW', '1') == '1'):
+        # IMP v3: Core keeps the blocked answer and reads sources itself; the
+        # block carries one ready command instead of a skill/reference procedure.
+        try:
+            from quick_review import block_reason, save_pending
+            if save_pending(source, final_text, input_data.get("transcript_path") or input_data.get("transcriptPath")):
+                quick = block_reason(source)
+        except Exception:
+            quick = None
+    if quick:
+        reason = f"{COMPLETION_GATE_MARKER} {quick}"
+    else:
+        reason = f"{COMPLETION_GATE_MARKER} {reason} {_recovery_guidance(input_data, entries, args.platform, final_text, assessment.get('repair_target', 'completion_metadata'))}"
     print(json.dumps(_block_payload(reason), ensure_ascii=False))
     return 0
 
