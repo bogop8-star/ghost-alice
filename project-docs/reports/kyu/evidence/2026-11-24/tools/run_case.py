@@ -29,6 +29,12 @@ ROOT = Path(r"C:\Users\N-\ga-test")
 PERF = Path(r"C:\Users\N-\hook-monitor\perf")
 CASES = PERF / "testbed" / "cases.json"
 FIXTURE = PERF / "testbed" / "fixture"
+
+
+def use_suite(name: str) -> None:
+    """Point CASES/FIXTURE at perf/<name>/ (default suite: testbed)."""
+    global CASES, FIXTURE
+    CASES, FIXTURE = PERF / name / "cases.json", PERF / name / "fixture"
 TOOLS = "Bash Read Write Edit Glob Grep Skill"
 
 
@@ -86,7 +92,9 @@ def main() -> int:
     ap.add_argument("repeat")
     ap.add_argument("--budget", type=float, default=2.0)
     ap.add_argument("--model", default="opus")
+    ap.add_argument("--suite", default="testbed")
     args = ap.parse_args()
+    use_suite(args.suite)
 
     case = next(c for c in json.loads(CASES.read_text(encoding="utf-8"))["cases"] if c["id"] == args.case)
     run_dir = ROOT / "runs" / args.arm / args.case / str(args.repeat)
@@ -136,8 +144,21 @@ def main() -> int:
                         task_tools += 1
 
     checks = check(case, answers, work, task_tools)
+    # Answer drafts that a Stop block held back: shows whether a review changed the answer.
+    drafts = []
+    if transcript:
+        last_text = None
+        for row in pb.load(transcript):
+            message = row.get("message") or {}
+            if row.get("type") == "assistant":
+                for b in message.get("content") or []:
+                    if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip():
+                        last_text = b["text"]
+            elif row.get("type") == "user" and isinstance(message.get("content"), str) \
+                    and "Stop hook feedback" in message["content"]:
+                drafts.append(last_text)
     summary = {
-        "arm": args.arm, "home": home_arm, "case": args.case, "repeat": args.repeat, "model": args.model,
+        "arm": args.arm, "home": home_arm, "suite": args.suite, "case": args.case, "repeat": args.repeat, "model": args.model,
         "session_id": session_id, "wall_s": round(time.time() - started, 1),
         "cost_usd": round(sum(r.get("total_cost_usd") or 0 for r in results), 4),
         "num_turns": sum(r.get("num_turns") or 0 for r in results),
@@ -145,6 +166,7 @@ def main() -> int:
         "is_error": any(r.get("is_error") or r.get("parse_error") for r in results),
         "task_tools": task_tools,
         "pass": all(c["ok"] for c in checks), "checks": checks,
+        "blocked_drafts": drafts, "answers": answers,
     }
     (run_dir / "check.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False))

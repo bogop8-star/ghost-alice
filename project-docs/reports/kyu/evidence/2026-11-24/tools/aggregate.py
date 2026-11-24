@@ -33,6 +33,8 @@ def load_runs(arms):
             if not check.parent.name.isdigit() or int(check.parent.name) < 1:
                 continue
             data = json.loads(check.read_text(encoding="utf-8"))
+            run_case.use_suite(data.get("suite", "testbed"))
+            cases = {c["id"]: c for c in json.loads(run_case.CASES.read_text(encoding="utf-8"))["cases"]}
             # Re-apply the current case checks to the saved answers and work folder,
             # so a corrected check never requires re-running the model.
             answers = [json.loads(p.read_text(encoding="utf-8")).get("result") or ""
@@ -59,13 +61,18 @@ LEDGER_DB = ROOT / "src" / "core" / ".tmp" / "session-intent" / "ghost-state.sql
 def recorded_reviews(session_id):
     """Count Core response reviews recorded for one test session (both arms share this ledger DB)."""
     import sqlite3
-    if not session_id or not LEDGER_DB.exists():
+    if not session_id:
         return 0
-    with sqlite3.connect(LEDGER_DB) as db:
-        return db.execute(
+    total = 0
+    for ledger in sorted((ROOT / "src").glob("*/.tmp/session-intent/ghost-state.sqlite3")):
+        with sqlite3.connect(ledger) as db:
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE name='core_completion_responses'").fetchone():
+                continue
+            total += db.execute(
             "SELECT count(*) FROM core_completion_responses r JOIN core_completion_candidates c "
             "ON json_extract(r.payload_json,'$.candidate_reference')=c.reference "
             "WHERE json_extract(c.payload_json,'$.owner.session_id')=?", (session_id,)).fetchone()[0]
+    return total
 
 
 def main() -> int:

@@ -1,6 +1,7 @@
 """Run a batch of test cases sequentially, interleaving arms and cases.
 
 Usage: python run_batch.py --arms off base --repeats 3 [--cases K1 K2 ...] [--budget 2.0]
+       arm labels may name their test home: --arms jy:base kyu13:imp
 
 Order: for each repeat, for each case, every arm in turn (arm order rotates per
 repeat) so time-of-day effects spread across arms. Existing run folders are
@@ -17,7 +18,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(r"C:\Users\N-\ga-test")
-CASES = Path(r"C:\Users\N-\hook-monitor\perf\testbed\cases.json")
+PERF = Path(r"C:\Users\N-\hook-monitor\perf")
 
 
 def main() -> int:
@@ -27,8 +28,11 @@ def main() -> int:
     ap.add_argument("--cases", nargs="*")
     ap.add_argument("--budget", type=float, default=2.0)
     ap.add_argument("--home", help="test home for every arm label (default: arm name)")
+    ap.add_argument("--suite", default="testbed")
     args = ap.parse_args()
-    cases = args.cases or [c["id"] for c in json.loads(CASES.read_text(encoding="utf-8"))["cases"]]
+    cases = args.cases or [c["id"] for c in json.loads((PERF / args.suite / "cases.json").read_text(encoding="utf-8"))["cases"]]
+    homes = {a.split(':')[0]: (a.split(':')[1] if ':' in a else args.home) for a in args.arms}
+    args.arms = list(homes)
     log = ROOT / "runs" / f"batch-{'-'.join(args.arms)}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
 
@@ -49,7 +53,7 @@ def main() -> int:
                 continue
             t = time.time()
             proc = subprocess.run([sys.executable, str(ROOT / "tools" / "run_case.py"), arm, case, rep,
-                                   "--budget", str(args.budget)] + (["--home", args.home] if args.home else []), capture_output=True, text=True, encoding="utf-8")
+                                   "--budget", str(args.budget), "--suite", args.suite] + (["--home", homes[arm]] if homes[arm] else []), capture_output=True, text=True, encoding="utf-8")
             try:
                 res = json.loads(proc.stdout.strip().splitlines()[-1])
                 spent += res.get("cost_usd") or 0
