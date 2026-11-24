@@ -198,9 +198,15 @@ def _response_review_context(route):
             key=lambda row: (row['work_unit_id'], row['contract_revision'], row['id'])))
 
 
+def _whitespace_key(text):
+    """IMP item 4: compare answers without any whitespace, so spacing-only edits match."""
+    return re.sub(r'\s+', '', text)
+
+
 def _source_response_records(connection, root, owner, route, text):
     """Resolve existing immutable records without rewriting their original keys."""
-    rows = connection.execute('''SELECT c.reference, r.reference
+    rows = connection.execute('''SELECT c.reference, r.reference,
+        json_extract(c.payload_json, '$.response_binding.text')
         FROM core_completion_candidates c LEFT JOIN core_completion_responses r
         ON json_extract(r.payload_json, '$.candidate_reference')=c.reference
         WHERE json_extract(c.payload_json, '$.kind')=?
@@ -208,13 +214,15 @@ def _source_response_records(connection, root, owner, route, text):
         AND json_extract(c.payload_json, '$.owner.platform')=?
         AND json_extract(c.payload_json, '$.owner.session_id')=?
         AND json_extract(c.payload_json, '$.route.input_event_id')=?
-        AND trim(json_extract(c.payload_json, '$.response_binding.text'), ?)=?
         ORDER BY r.reference IS NULL, c.rowid''',
-        (_SOURCE_RESPONSE_KIND, str(root), owner['platform'], owner['session_id'], route['input_event_id'],
-         ' \t\r\n', text.strip())).fetchall()
+        (_SOURCE_RESPONSE_KIND, str(root), owner['platform'], owner['session_id'],
+         route['input_event_id'])).fetchall()
     context = _response_review_context(route)
+    wanted = _whitespace_key(text)
     records = []
-    for reference, review in rows:
+    for reference, review, stored_text in rows:
+        if not isinstance(stored_text, str) or _whitespace_key(stored_text) != wanted:
+            continue
         candidate = _stored(connection, 'core_completion_candidates', reference)
         if _response_review_context(candidate['route']) == context:
             records.append((reference, candidate, review))
@@ -349,7 +357,7 @@ def _lookup_source_response(core, root, owner, connection, text):
         reviewed = _stored(connection, 'core_completion_responses', reference)
         _validate_response_review(candidate, root, owner, route)
         _validate_claim_judgments(candidate, reviewed['judgments'])
-        _require(candidate['response_binding']['text'].strip() == text.strip()
+        _require(_whitespace_key(candidate['response_binding']['text']) == _whitespace_key(text)
             and _valid_judgment(reviewed['judgment'], candidate['response_binding']['binding_id'],
                 {s['source_id'] for s in candidate['sources']}), 'response-unsupported',
             'The recorded review must bind the exact explanation')

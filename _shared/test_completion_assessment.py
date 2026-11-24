@@ -186,6 +186,28 @@ class CompletionAssessmentTests(unittest.TestCase):
         with self.assertRaises(api.CompletionAssessmentError):
             api.lookup_current_response(self.source, body)
 
+    def test_review_lookup_ignores_whitespace_only_differences(self):
+        """IMP item 4: a draft and the delivered answer that differ only in spacing are the same answer."""
+        route = self.fixture.candidate(units=())
+        route['response_purpose'] = 'explanation'
+        self.fixture.record(route)
+        api = self.api()
+        draft = 'The retained log shows the `adapter` 는 rejected before execution.'
+        delivered = 'The retained  log shows the `adapter`는 rejected\nbefore execution.'
+        self.observation.write_text('registered adapter hash mismatch. Adapter was not executed.')
+        candidate = api.prepare_response_review(self.source, response_text=draft,
+            source_paths=[str(self.observation)], claim_statements=[draft])
+        source_id = candidate['sources'][0]['source_id']
+        api.record_response_review(self.source, candidate['candidate_reference'], dict(
+            claims=[dict(binding_id=candidate['bindings'][0]['binding_id'], verdict='supported',
+                         source_ids=[source_id], rationale='The log records rejection before execution.')],
+            response=dict(binding_id=candidate['response_binding']['binding_id'], verdict='supported',
+                          source_ids=[source_id], rationale='The answer matches the log.')))
+        self.assertEqual(api.lookup_current_response(self.source, delivered)['candidate_reference'],
+                         candidate['candidate_reference'])
+        with self.assertRaises(api.CompletionAssessmentError):
+            api.lookup_current_response(self.source, delivered.replace('rejected', 'accepted'))
+
     def setUp(self):
         self.fixture = fixtures.ResponseRouteTests()
         self.fixture.setUp()
