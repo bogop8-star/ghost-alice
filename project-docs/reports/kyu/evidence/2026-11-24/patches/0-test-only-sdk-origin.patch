@@ -1,0 +1,30 @@
+diff --git a/_shared/native_transcript.py b/_shared/native_transcript.py
+index 5e08293..d5ca9ec 100644
+--- a/_shared/native_transcript.py
++++ b/_shared/native_transcript.py
+@@ -178,9 +178,25 @@ def native_input_actor(entry):
+         return 'human'
+     if is_queued_human_prompt(entry):
+         return 'human'
++    if _test_accepts_sdk_prompt(entry):
++        return 'human'
+     return None
+ 
+ 
++def _test_accepts_sdk_prompt(entry):
++    """TEST-ONLY (cost measurement harness): treat a headless `claude -p` prompt as human.
++
++    Headless prompts carry no origin.kind=human, so Core correctly leaves them
++    pending. The measurement harness sets GHOST_ALICE_TEST_ACCEPT_SDK_ORIGIN=1
++    for every compared arm so governance runs its normal path. Never set this
++    flag outside the isolated test homes.
++    """
++    return (os.environ.get('GHOST_ALICE_TEST_ACCEPT_SDK_ORIGIN') == '1'
++            and is_actual_user_prompt(entry) and entry.get('origin') is None
++            and entry.get('entrypoint') == 'sdk-cli' and entry.get('promptSource') == 'sdk'
++            and entry.get('turnOrigin') == 'sdk')
++
++
+ def is_queued_human_prompt(entry):
+     """A mid-turn human message is a queued_command attachment carrying its own human origin."""
+     attachment = entry.get('attachment') if entry.get('type') == 'attachment' else None

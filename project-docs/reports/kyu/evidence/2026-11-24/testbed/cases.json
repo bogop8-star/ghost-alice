@@ -1,0 +1,72 @@
+{
+  "schema": "ga-cost-cases.v1",
+  "fixture": "fixture",
+  "note": "Each run copies fixture/ into a fresh work folder, so cases never change the fixture. Checks are case-insensitive substring or file checks applied to the final answer text and the work folder after the run.",
+  "cases": [
+    {
+      "id": "K1",
+      "title": "No-tool question",
+      "targets": ["intake text"],
+      "prompts": ["파이썬에서 리스트와 튜플의 차이를 한 줄로 알려줘."],
+      "checks": [
+        {"type": "answer_any", "values": ["변경", "mutable", "immutable", "수정", "바꿀", "바뀌"]},
+        {"type": "max_tool_calls", "value": 0, "scope": "task"}
+      ]
+    },
+    {
+      "id": "K2",
+      "title": "Read one file",
+      "targets": ["route registration"],
+      "prompts": ["README.md 파일이 몇 줄인지 세어줘. 파일은 수정하지 마."],
+      "checks": [
+        {"type": "answer_any", "values": ["17"]},
+        {"type": "unchanged_fixture"}
+      ]
+    },
+    {
+      "id": "K3",
+      "title": "Read five files",
+      "targets": ["route registration", "response review"],
+      "prompts": ["py 폴더의 .py 파일 5개 각각에서 name() 함수가 돌려주는 문자열을 알려줘. 파일은 수정하지 마."],
+      "checks": [
+        {"type": "answer_all", "values": ["alpha", "beta", "gamma", "delta", "epsilon"]},
+        {"type": "unchanged_fixture"}
+      ]
+    },
+    {
+      "id": "K4",
+      "title": "Explanation with evidence",
+      "targets": ["review answer copy", "whitespace false positive"],
+      "prompts": ["facts.md를 근거로 프로젝트 이름, 시작일, 담당자를 알려주고, 각 값이 파일의 어느 줄에 있는지도 적어줘."],
+      "checks": [
+        {"type": "answer_all", "values": ["Lantern", "2026-03-02", "Mina Park"]}
+      ]
+    },
+    {
+      "id": "K5",
+      "title": "Task with a completion condition",
+      "targets": ["response review", "Autopilot activation"],
+      "prompts": ["output/hello.txt를 새로 만들고 내용은 hello 한 단어로 해 줘. 완료 조건은 파일이 있고 내용이 정확히 hello인 것이다. 만든 뒤 다시 읽어서 확인하고 끝났다고 해. 다른 파일은 건드리지 마."],
+      "checks": [
+        {"type": "file_equals", "path": "output/hello.txt", "value": "hello", "strip": true},
+        {"type": "unchanged_fixture"}
+      ]
+    },
+    {
+      "id": "K6",
+      "title": "Three inputs in one conversation",
+      "targets": ["context carry-over", "route registration per input"],
+      "prompts": [
+        "README.md 맨 위 제목 한 줄만 알려줘.",
+        "그 파일에서 '## '로 시작하는 소제목이 몇 개인지 세어줘.",
+        "py/alpha.py의 name() 함수가 돌려주는 문자열만 알려줘."
+      ],
+      "checks": [
+        {"type": "answer_any", "turn": 1, "values": ["테스트용 문서"]},
+        {"type": "answer_any", "turn": 2, "values": ["3"]},
+        {"type": "answer_any", "turn": 3, "values": ["alpha"]},
+        {"type": "unchanged_fixture"}
+      ]
+    }
+  ]
+}
