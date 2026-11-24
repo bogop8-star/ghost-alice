@@ -1,0 +1,767 @@
+diff --git a/_shared/auto_route.py b/_shared/auto_route.py
+new file mode 100644
+index 0000000..0000e8b
+--- /dev/null
++++ b/_shared/auto_route.py
+@@ -0,0 +1,126 @@
++"""IMP item 2': Core registers the response-route at Stop instead of blocking for it.
++
++Condition (the same one under which the original Stop guard reports
++`route-unavailable`): the current human input is canonically bound, native tool
++calls happened after it, and there is no ready route for that input.
++
++Purpose comes from the answer's first line, `[purpose: execution]` or
++`[purpose: explanation]`. A missing or unreadable marker defaults to
++`explanation`, so the Stop guard keeps requiring a response review exactly where
++a model-declared explanation would. The route selects no work units, like the
++routes models registered by hand in the baseline sessions.
++
++Set GHOST_ALICE_IMP_AUTO_ROUTE=0 to disable.
++"""
++from __future__ import annotations
++
++import os
++import re
++from pathlib import Path
++
++PURPOSE_LINE = re.compile(r'^\s*\[purpose:\s*(execution|explanation)\s*\]\s*(?:\r?\n|$)', re.IGNORECASE)
++
++
++def declared_purpose(text: str) -> str:
++    match = PURPOSE_LINE.match(text or '')
++    return match.group(1).lower() if match else 'explanation'
++
++
++def strip_purpose_line(text: str) -> str:
++    return PURPOSE_LINE.sub('', text or '', count=1)
++
++
++FILE_CHANGING_TOOLS = {'Write', 'Edit', 'MultiEdit', 'NotebookEdit'}
++
++
++def _turn_blocks(transcript_path):
++    """Assistant content blocks after the current human input (empty when unreadable)."""
++    import json
++    from native_transcript import is_actual_user_prompt
++    try:
++        rows = [json.loads(line) for line in Path(transcript_path).read_text(encoding='utf-8').splitlines()
++                if line.strip()]
++    except (OSError, TypeError, ValueError):
++        return []
++    start = max((i for i, row in enumerate(rows) if isinstance(row, dict) and is_actual_user_prompt(row)
++                 and not row.get('isSidechain')), default=-1)
++    blocks = []
++    for row in rows[start + 1:]:
++        if isinstance(row, dict) and row.get('type') == 'assistant' and not row.get('isSidechain'):
++            blocks += [b for b in (row.get('message') or {}).get('content') or [] if isinstance(b, dict)]
++    return blocks
++
++
++def turn_purpose(final_text: str, transcript_path) -> str:
++    """Purpose for this turn's automatic route.
++
++    Marker: the final answer's first line, else the first marker in this turn's
++    assistant text blocks (models often state it before tool calls).
++
++    IMP v2 review rule: `execution` is accepted only when this turn changed files
++    (a file-changing tool ran). An answer that only read and reported is an
++    explanation and keeps response review, whatever the marker says.
++    """
++    blocks = _turn_blocks(transcript_path)
++    declared = None
++    if PURPOSE_LINE.match(final_text or ''):
++        declared = declared_purpose(final_text)
++    else:
++        for block in blocks:
++            if block.get('type') == 'text' and PURPOSE_LINE.match(block.get('text') or ''):
++                declared = declared_purpose(block['text'])
++                break
++    changed_files = any(b.get('type') == 'tool_use' and b.get('name') in FILE_CHANGING_TOOLS for b in blocks)
++    return 'execution' if declared == 'execution' and changed_files else 'explanation'
++
++
++def _candidate(purpose: str) -> dict:
++    order = ('causal-answer-first-after-necessary-evidence' if purpose == 'explanation'
++             else 'imperative-result-first-after-necessary-work')
++    return {
++        'schema_version': 'response-route.v1',
++        'response_purpose': purpose,
++        'routing_surface': {
++            'intent_relation': 'new', 'response_mode': 'normal', 'response_order': order,
++            'change_depth': 'minimal', 'focus_layer': 'micro', 'verification_complexity': 'level-1',
++            'boundary_contract': 'n/a', 'forced_visibility': 'no',
++            'primary_request': 'current input (route registered by Core at Stop)',
++            'causal_axis': 'n/a',
++            'reason': f'automatic route registration; purpose={purpose} from the answer marker or default',
++        },
++        'work_units': [], 'selected_work_unit_ids': [], 'selected_criteria': [],
++    }
++
++
++def auto_register_route(source: dict, text: str, native_input: dict) -> str | None:
++    """Register the current input's route when the original guard would block; return the purpose."""
++    if os.environ.get('GHOST_ALICE_IMP_AUTO_ROUTE', '1') != '1':
++        return None
++    platform, session = source.get('GHOST_ALICE_PLATFORM'), source.get('GHOST_ALICE_SESSION_ID')
++    root = source.get('GHOST_ALICE_SESSION_INTENT_ROOT')
++    if platform != 'claude' or not session or not isinstance(root, str) or not Path(root).is_absolute():
++        return None
++    from native_completion import _ledger
++    from native_transcript import native_tool_activity
++    import response_route
++    ledger = _ledger(source)
++    with ledger._read_connection(Path(root), None) as connection:
++        state = ledger._stored_state(connection, platform, session)
++        if state is None or not ledger._canonical_input_bound(connection, Path(root), state):
++            return None
++        event = state.get('latest_input_event_id')
++        observation = dict(input_digest=state.get('latest_input_digest'),
++                           input_char_count=state.get('latest_input_char_count'))
++        try:
++            route = ledger.read_response_route(root=Path(root), platform=platform, session_id=session,
++                                               transaction=connection)
++        except ValueError:
++            route = None
++    if isinstance(route, dict) and route.get('status') == 'ready' and route.get('input_event_id') == event:
++        return None
++    activity = native_tool_activity(platform, session, native_input, input_observation=observation)
++    if activity.get('status') != 'observed':
++        return None
++    purpose = turn_purpose(text, native_input.get('transcript_path') or native_input.get('transcriptPath'))
++    response_route.record_response_route(Path(root), platform, session, event, _candidate(purpose), None)
++    return purpose
+diff --git a/_shared/claude_stop_verification_hook.py b/_shared/claude_stop_verification_hook.py
+index 2e97ec3..832884b 100644
+--- a/_shared/claude_stop_verification_hook.py
++++ b/_shared/claude_stop_verification_hook.py
+@@ -183,6 +183,12 @@ def main() -> int:
+     except ValueError:
+         # Missing native identity cannot adopt the process's ambient session.
+         source = dict(os.environ, GHOST_ALICE_PLATFORM=args.platform, GHOST_ALICE_SESSION_ID='')
++    try:
++        # IMP item 2': register the route here instead of blocking for it later.
++        from auto_route import auto_register_route
++        auto_register_route(source, final_text, input_data)
++    except Exception:  # never let the optimisation break the Stop guard
++        pass
+     assessment = assess_native_completion(source, text=final_text, phase='final', native_input=input_data)
+     body_issue = assessment['body_issue']
+     if body_issue is None:
+@@ -201,7 +207,21 @@ def main() -> int:
+     if _gate_blocks_this_turn(entries) >= RETRIES_PER_TURN:
+         print(json.dumps(_allow_payload(_retry_limit_notice(reason, assessment.get('repair_target', 'completion_metadata'))), ensure_ascii=False))
+         return 0
+-    reason = f"{COMPLETION_GATE_MARKER} {reason} {_recovery_guidance(input_data, entries, args.platform, final_text, assessment.get('repair_target', 'completion_metadata'))}"
++    quick = None
++    if (assessment.get('repair_target') == 'response_review'
++            and os.environ.get('GHOST_ALICE_IMP_QUICK_REVIEW', '1') == '1'):
++        # IMP v3: Core keeps the blocked answer and reads sources itself; the
++        # block carries one ready command instead of a skill/reference procedure.
++        try:
++            from quick_review import block_reason, save_pending
++            if save_pending(source, final_text, input_data.get("transcript_path") or input_data.get("transcriptPath")):
++                quick = block_reason(source)
++        except Exception:
++            quick = None
++    if quick:
++        reason = f"{COMPLETION_GATE_MARKER} {quick}"
++    else:
++        reason = f"{COMPLETION_GATE_MARKER} {reason} {_recovery_guidance(input_data, entries, args.platform, final_text, assessment.get('repair_target', 'completion_metadata'))}"
+     print(json.dumps(_block_payload(reason), ensure_ascii=False))
+     return 0
+ 
+diff --git a/_shared/completion_assessment.py b/_shared/completion_assessment.py
+index c5e0d03..bf9d75f 100644
+--- a/_shared/completion_assessment.py
++++ b/_shared/completion_assessment.py
+@@ -198,9 +198,20 @@ def _response_review_context(route):
+             key=lambda row: (row['work_unit_id'], row['contract_revision'], row['id'])))
+ 
+ 
++def _whitespace_key(text):
++    """IMP item 4: compare answers without any whitespace, so spacing-only edits match.
++
++    IMP item 2'-b: the leading `[purpose: ...]` line is routing metadata, not answer content.
++    """
++    text = re.sub(r'^\s*\[purpose:\s*(?:execution|explanation)\s*\]\s*(?:\r?\n|$)', '', text,
++                  count=1, flags=re.IGNORECASE)
++    return re.sub(r'\s+', '', text)
++
++
+ def _source_response_records(connection, root, owner, route, text):
+     """Resolve existing immutable records without rewriting their original keys."""
+-    rows = connection.execute('''SELECT c.reference, r.reference
++    rows = connection.execute('''SELECT c.reference, r.reference,
++        json_extract(c.payload_json, '$.response_binding.text')
+         FROM core_completion_candidates c LEFT JOIN core_completion_responses r
+         ON json_extract(r.payload_json, '$.candidate_reference')=c.reference
+         WHERE json_extract(c.payload_json, '$.kind')=?
+@@ -208,13 +219,15 @@ def _source_response_records(connection, root, owner, route, text):
+         AND json_extract(c.payload_json, '$.owner.platform')=?
+         AND json_extract(c.payload_json, '$.owner.session_id')=?
+         AND json_extract(c.payload_json, '$.route.input_event_id')=?
+-        AND trim(json_extract(c.payload_json, '$.response_binding.text'), ?)=?
+         ORDER BY r.reference IS NULL, c.rowid''',
+-        (_SOURCE_RESPONSE_KIND, str(root), owner['platform'], owner['session_id'], route['input_event_id'],
+-         ' \t\r\n', text.strip())).fetchall()
++        (_SOURCE_RESPONSE_KIND, str(root), owner['platform'], owner['session_id'],
++         route['input_event_id'])).fetchall()
+     context = _response_review_context(route)
++    wanted = _whitespace_key(text)
+     records = []
+-    for reference, review in rows:
++    for reference, review, stored_text in rows:
++        if not isinstance(stored_text, str) or _whitespace_key(stored_text) != wanted:
++            continue
+         candidate = _stored(connection, 'core_completion_candidates', reference)
+         if _response_review_context(candidate['route']) == context:
+             records.append((reference, candidate, review))
+@@ -349,7 +362,7 @@ def _lookup_source_response(core, root, owner, connection, text):
+         reviewed = _stored(connection, 'core_completion_responses', reference)
+         _validate_response_review(candidate, root, owner, route)
+         _validate_claim_judgments(candidate, reviewed['judgments'])
+-        _require(candidate['response_binding']['text'].strip() == text.strip()
++        _require(_whitespace_key(candidate['response_binding']['text']) == _whitespace_key(text)
+             and _valid_judgment(reviewed['judgment'], candidate['response_binding']['binding_id'],
+                 {s['source_id'] for s in candidate['sources']}), 'response-unsupported',
+             'The recorded review must bind the exact explanation')
+diff --git a/_shared/quick_review.py b/_shared/quick_review.py
+new file mode 100644
+index 0000000..4fe00ad
+--- /dev/null
++++ b/_shared/quick_review.py
+@@ -0,0 +1,231 @@
++"""IMP v3: one-command response review that keeps both judgments.
++
++Baseline review costs the model a skill load, a reference read, four file
++writes and two Core commands. This module keeps the same Core records and the
++same two judgments (each claim against its source, then the whole answer) but
++moves the bookkeeping into Core:
++
++- The Stop guard saves the exact blocked answer (``save_pending``), so the
++  model does not copy the answer into a file.
++- Sources are this turn's own tool calls and results, read from the native
++  transcript and snapshotted by Core, so the model does not copy sources.
++- Each claim names a verbatim ``evidence`` excerpt; Core checks that the
++  excerpt really occurs in one of those sources and binds that source. This is
++  a mechanical check the baseline review does not have.
++
++Usage (the Stop block prints the exact command):
++    python quick_review.py --root R --session S <<'JSON'
++    {"claims": [{"claim": "...", "evidence": "...", "verdict": "supported", "rationale": "..."}],
++     "response": {"verdict": "supported", "rationale": "..."}}
++    JSON
++"""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import os
++import re
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++
++VERDICTS = {'supported', 'unsupported', 'unavailable'}
++
++
++class QuickReviewError(ValueError):
++    pass
++
++
++def _dir(root, session):
++    path = Path(root) / 'quick-review' / session
++    path.mkdir(parents=True, exist_ok=True)
++    return path
++
++
++def save_pending(source, text, transcript_path):
++    """Called by the Stop guard when it blocks for response review."""
++    root, session = source.get('GHOST_ALICE_SESSION_INTENT_ROOT'), source.get('GHOST_ALICE_SESSION_ID')
++    if not (isinstance(root, str) and Path(root).is_absolute() and session and transcript_path):
++        return None
++    path = _dir(root, session) / 'pending.json'
++    path.write_text(json.dumps(dict(text=text, transcript_path=str(transcript_path)), ensure_ascii=False),
++                    encoding='utf-8')
++    return path
++
++
++def _squash(text):
++    return re.sub(r'\s+', ' ', text or '').strip()
++
++
++def _result_text(content):
++    if isinstance(content, str):
++        return content
++    if isinstance(content, list):
++        return '\n'.join(item.get('text', '') for item in content if isinstance(item, dict))
++    return ''
++
++
++def turn_sources(transcript_path):
++    """[(label, text)] for every tool call after the current human input: input + result."""
++    from native_transcript import is_actual_user_prompt
++    rows = [json.loads(line) for line in Path(transcript_path).read_text(encoding='utf-8').splitlines()
++            if line.strip()]
++    rows = [row for row in rows if isinstance(row, dict) and not row.get('isSidechain')]
++    start = max((i for i, row in enumerate(rows) if is_actual_user_prompt(row)), default=-1)
++    calls, results = {}, {}
++    for row in rows[start + 1:]:
++        for block in (row.get('message') or {}).get('content') or []:
++            if not isinstance(block, dict):
++                continue
++            if row.get('type') == 'assistant' and block.get('type') == 'tool_use':
++                calls[block['id']] = block
++            elif row.get('type') == 'user' and block.get('type') == 'tool_result':
++                results[block.get('tool_use_id')] = _result_text(block.get('content'))
++    sources = []
++    for tool_id, call in calls.items():
++        # The review command itself is never evidence (no self-citation on a retry).
++        if tool_id not in results or 'quick_review' in json.dumps(call.get('input'), ensure_ascii=False):
++            continue
++        text = (f"tool: {call.get('name')}\ninput: {json.dumps(call.get('input'), ensure_ascii=False)}\n"
++                f"result:\n{results[tool_id]}\n")
++        sources.append((tool_id, text))
++    return sources
++
++
++def _locate(claim, answer):
++    """Exact claim span in the answer; whitespace differences are tolerated."""
++    if claim in answer:
++        return claim
++    words = claim.split()
++    if not words:
++        return None
++    match = re.search(r'\s+'.join(re.escape(w) for w in words), answer)
++    return match.group(0) if match else None
++
++
++def review_once(source, review):
++    from completion_assessment import prepare_response_review, record_response_review
++    root, session = source['GHOST_ALICE_SESSION_INTENT_ROOT'], source['GHOST_ALICE_SESSION_ID']
++    if not (isinstance(review, dict) and isinstance(review.get('claims'), list) and review['claims']
++            and isinstance(review.get('response'), dict)):
++        raise QuickReviewError('input needs a non-empty "claims" list and a "response" judgment')
++    pending_path = _dir(root, session) / 'pending.json'
++    if not pending_path.is_file():
++        raise QuickReviewError('no blocked answer is waiting for review in this session')
++    pending = json.loads(pending_path.read_text(encoding='utf-8'))
++    answer = pending['text']
++
++    folder = _dir(root, session)
++    files = []
++    for tool_id, text in turn_sources(pending['transcript_path']):
++        raw = text.encode('utf-8')
++        path = folder / f"src-{hashlib.sha256(raw).hexdigest()[:16]}.txt"
++        if not path.is_file():
++            path.write_bytes(raw)
++        files.append((str(path), text))
++
++    statements, evidence_files, problems = [], [], []
++    for index, item in enumerate(review['claims'], 1):
++        claim, evidence = item.get('claim'), item.get('evidence') or []
++        excerpts = [evidence] if isinstance(evidence, str) else evidence
++        excerpts = [e for e in excerpts if isinstance(e, str) and _squash(e)]
++        if item.get('verdict') not in VERDICTS or not str(item.get('rationale') or '').strip():
++            problems.append(f'claim {index}: verdict must be one of {sorted(VERDICTS)} with a rationale')
++            continue
++        span = _locate(claim or '', answer)
++        if span is None:
++            problems.append(f'claim {index}: not found in the answer: {claim!r}')
++            continue
++        hits, missing = [], []
++        for excerpt in excerpts:
++            found = [path for path, text in files if _squash(excerpt) in _squash(text)]
++            hits += [path for path in found if path not in hits]
++            if not found:
++                missing.append(excerpt)
++        if item['verdict'] != 'unavailable' and (missing or not hits):
++            problems.append(f'claim {index}: evidence is not a verbatim excerpt of this turn\'s tool calls or '
++                            f'results: {missing or excerpts!r}')
++            continue
++        statements.append(span)
++        evidence_files.append(hits)
++    response = review['response']
++    if response.get('verdict') not in VERDICTS or not str(response.get('rationale') or '').strip():
++        problems.append('response: verdict and rationale are required')
++    if len(set(statements)) != len(statements):
++        problems.append('claims must be distinct statements')
++    if problems:
++        raise QuickReviewError('; '.join(problems))
++
++    used = sorted({path for hits in evidence_files for path in hits}) or [files[0][0]] if files else []
++    if not used:
++        raise QuickReviewError('this turn has no tool results to review against')
++    candidate = prepare_response_review(source, response_text=answer, source_paths=used,
++                                        claim_statements=statements)
++    ids = {s['locator']: s['source_id'] for s in candidate['sources']}
++    claims = [dict(binding_id=binding['binding_id'], verdict=item['verdict'],
++                   source_ids=sorted({ids[p] for p in hits}), rationale=item['rationale'])
++              for binding, item, hits in zip(candidate['bindings'], review['claims'], evidence_files)]
++    whole = dict(binding_id=candidate['response_binding']['binding_id'], verdict=response['verdict'],
++                 source_ids=sorted(ids.values()), rationale=response['rationale'])
++    result = record_response_review(source, candidate['candidate_reference'], dict(claims=claims, response=whole))
++    if result.get('status') == 'reviewed':
++        pending_path.unlink(missing_ok=True)
++    return result
++
++
++def report(result):
++    """CLI output. A reviewed answer is printed verbatim so the model re-delivers the exact reviewed bytes."""
++    if result.get('status') != 'reviewed' or not isinstance(result.get('response_text'), str):
++        return json.dumps(dict(status=result.get('status')), ensure_ascii=False)
++    from auto_route import strip_purpose_line
++    return ('status: reviewed\nYour final message must be exactly the text between the markers '
++            '(copy it character for character; no rewording, nothing before or after):\n'
++            f'<<<ANSWER\n{strip_purpose_line(result["response_text"]).strip()}\nANSWER>>>')
++
++
++def command(root, session):
++    py = Path(sys.executable).as_posix()
++    here = Path(__file__).resolve().as_posix()
++    return f'"{py}" "{here}" --root \'{root}\' --session {session}'
++
++
++def block_reason(source):
++    """Self-contained repair text for the Stop block (no skill or reference needed)."""
++    root, session = source['GHOST_ALICE_SESSION_INTENT_ROOT'], source['GHOST_ALICE_SESSION_ID']
++    return (
++        'response-review-required: before this explanation is delivered, review it against this turn\'s '
++        'own tool results in ONE Bash call (no skill or reference needed; Core already holds the answer and the sources):\n'
++        f"{command(root, session)} <<'JSON'\n"
++        '{"claims": [{"claim": "<exact sentence from your answer>", "evidence": ["<verbatim excerpt of a tool '
++        'call or result>", ...], "verdict": "supported|unsupported|unavailable", "rationale": "<why>"}],\n'
++        ' "response": {"verdict": "supported|unsupported", "rationale": "<does the whole answer fulfil the request '
++        'without overstating?>"}}\nJSON\n'
++        'List every factual claim. Each evidence excerpt is copied character for character from one command or '
++        'its output (short, no paraphrase, no "->" or added words); give several excerpts for a claim that '
++        'combines outputs. If the command reports a problem, fix the JSON and run it again. '
++        'On success the command prints the reviewed answer: deliver exactly that text as your final message, '
++        'character for character (no rewording, nothing added). If a claim is unsupported, say so instead.'
++    )
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__)
++    ap.add_argument('--root', required=True)
++    ap.add_argument('--session', required=True)
++    args = ap.parse_args()
++    source = dict(os.environ, GHOST_ALICE_SESSION_INTENT_ROOT=args.root, GHOST_ALICE_PLATFORM='claude',
++                  GHOST_ALICE_SESSION_ID=args.session)
++    try:
++        result = review_once(source, json.loads(sys.stdin.read()))
++    except (QuickReviewError, ValueError, OSError) as exc:
++        print(json.dumps(dict(status='rejected', reason=getattr(exc, 'reason', 'quick-review'), detail=str(exc)),
++                         ensure_ascii=False))
++        return 1
++    print(report(result))
++    return 0
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+diff --git a/_shared/reminder_texts.json b/_shared/reminder_texts.json
+index 1665e34..ba28b7d 100644
+--- a/_shared/reminder_texts.json
++++ b/_shared/reminder_texts.json
+@@ -1,6 +1,6 @@
+ {
+   "tool-checkpoint": "tool-checkpoint: The current-session assistant follows common governance rule 9 for this input's PreToolUse checkpoint. Display it once per input and again only when the recorded checkpoint state changes. Every tool call is still checked and audited.",
+-  "terminal-routing": "The current-session assistant classifies this input before calling tools. For an explanation or clarification answerable from supplied conversation alone, the current-session assistant uses direct-response or clarification-only and does not read files, access the ledger or register a response-route. The intake hook and strict audit still run. A correction or status question during continuing authorized work stays normal unless the user stops or replaces that work. A new completion judgment requires its own evidence. Every agent call, including governance and Ghost-ALICE Autopilot recording, counts against explicit user tool limits.",
++  "terminal-routing": "Classify before tools: a tool-free explanation or clarification gets a direct answer (no ledger, no route); anything needing inspection, changes or checks is normal work. Explicit tool limits include governance calls.",
+   "session-intent": "session-intent-analyzer: The hook records digest-only intake for the native session. On a normal route, the current-session assistant follows session-intent-analyzer to add only material semantic changes through the exact receipt. Intent records must exclude raw prompts, conversation/tool output, system instructions and secrets.",
+   "task-router": "hook-reminder: For normal work after exact session-intent intake, the current-session assistant follows task-router to select work and required skills and register the Core response-route. Tool-free terminal answers follow common governance First-Entry Contract."
+ }
+diff --git a/_shared/session_intent_analyzer_hook.py b/_shared/session_intent_analyzer_hook.py
+index 87b8190..68e9707 100644
+--- a/_shared/session_intent_analyzer_hook.py
++++ b/_shared/session_intent_analyzer_hook.py
+@@ -247,14 +247,18 @@ def observation_receipt(paths: dict[str, Path], observation: dict[str, Any] | No
+         + "\n[/session-intent-receipt]\n"
+     )
+     if observation is None:
+-        return binding + (
+-            "This receipt records native transport only; user authority awaits committed native actor evidence. "
+-            "The first native PreToolUse or Stop reconciles that evidence. For normal work, the current-session "
+-            "assistant reads session_intent_ledger.py --read-state using this receipt's --root ledger_root "
+-            "--platform platform --session-id session_id. After reconciliation, a material semantic update binds "
+-            "--expected-input-event-id to latest_input_event_id returned by that read. Pending transport has no "
+-            "input event token and cannot authorize a route or semantic update. A confirmed native notification "
+-            "retains the preceding human input and route."
++        # IMP items 2'-b and 3: Core registers the route itself at Stop, so the
++        # model only declares the purpose; the same rules in fewer words.
++        compact_receipt = {key: receipt[key] for key in
++                           ("schema_version", "intake_status", "ledger_root", "platform", "session_id")}
++        return (
++            "\n[session-intent-receipt]"
++            + json.dumps(compact_receipt, ensure_ascii=True, separators=(",", ":"))
++            + "[/session-intent-receipt]\n"
++            "Core confirms this input at the first tool call or Stop and registers its response-route itself; "
++            "do not call response_route.py. Start the answer with one purpose line: [purpose: execution] or "
++            "[purpose: explanation] (missing = explanation, which keeps response review). Only for a material "
++            "intent change, read --read-state with these coordinates and bind --expected-input-event-id."
+         )
+     return binding + (
+         "For a normal route, the current-session assistant reads SQLite with session_intent_ledger.py --read-state "
+diff --git a/_shared/test_auto_route.py b/_shared/test_auto_route.py
+new file mode 100644
+index 0000000..d872d40
+--- /dev/null
++++ b/_shared/test_auto_route.py
+@@ -0,0 +1,67 @@
++"""IMP item 2': purpose marker parsing and its default."""
++import unittest
++
++import auto_route
++
++
++class PurposeMarkerTests(unittest.TestCase):
++    def test_marker_on_first_line_sets_purpose(self):
++        self.assertEqual(auto_route.declared_purpose('[purpose: execution]\nDone.'), 'execution')
++        self.assertEqual(auto_route.declared_purpose('  [Purpose: Explanation]\r\nBecause...'), 'explanation')
++
++    def test_missing_or_misplaced_marker_defaults_to_explanation(self):
++        self.assertEqual(auto_route.declared_purpose('Done.'), 'explanation')
++        self.assertEqual(auto_route.declared_purpose('Done.\n[purpose: execution]'), 'explanation')
++        self.assertEqual(auto_route.declared_purpose('[purpose: delete-everything]\nx'), 'explanation')
++        self.assertEqual(auto_route.declared_purpose(''), 'explanation')
++
++    def test_strip_removes_only_the_leading_marker(self):
++        self.assertEqual(auto_route.strip_purpose_line('[purpose: execution]\nDone.'), 'Done.')
++        self.assertEqual(auto_route.strip_purpose_line('Done.'), 'Done.')
++
++    def test_candidate_selects_no_work_and_keeps_purpose(self):
++        candidate = auto_route._candidate('explanation')
++        self.assertEqual(candidate['response_purpose'], 'explanation')
++        self.assertEqual(candidate['work_units'], [])
++        self.assertEqual(candidate['selected_criteria'], [])
++
++    def test_turn_purpose_reads_marker_from_first_message_of_the_turn(self):
++        import json
++        import tempfile
++        from pathlib import Path
++        def user(text):
++            return dict(type='user', message=dict(role='user', content=text))
++        def assistant(text):
++            return dict(type='assistant', message=dict(content=[dict(type='text', text=text)]))
++        def tool(name):
++            return dict(type='assistant', message=dict(content=[dict(type='tool_use', name=name, input={})]))
++        head = [user('old question'), assistant('[purpose: explanation]\nold'), user('make hello.txt')]
++        with tempfile.TemporaryDirectory() as tmp:
++            path = Path(tmp) / 't.jsonl'
++            def write(rows):
++                path.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
++            # execution marker in the first message + a file-changing tool -> execution
++            write(head + [assistant('[purpose: execution]'), tool('Write'), assistant('Created.')])
++            self.assertEqual(auto_route.turn_purpose('Created.', str(path)), 'execution')
++            # no marker -> explanation
++            write(head + [tool('Write'), assistant('Created.')])
++            self.assertEqual(auto_route.turn_purpose('Created.', str(path)), 'explanation')
++
++    def test_v2_rule_read_only_turn_stays_explanation_despite_execution_marker(self):
++        import json
++        import tempfile
++        from pathlib import Path
++        rows = [dict(type='user', message=dict(role='user', content='count lines')),
++                dict(type='assistant', message=dict(content=[dict(type='text', text='[purpose: execution]')])),
++                dict(type='assistant', message=dict(content=[dict(type='tool_use', name='Bash', input={})])),
++                dict(type='assistant', message=dict(content=[dict(type='tool_use', name='Read', input={})]))]
++        with tempfile.TemporaryDirectory() as tmp:
++            path = Path(tmp) / 't.jsonl'
++            path.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
++            self.assertEqual(auto_route.turn_purpose('It has 17 lines.', str(path)), 'explanation')
++            self.assertEqual(auto_route.turn_purpose('[purpose: execution]\nIt has 17 lines.', str(path)), 'explanation')
++        self.assertEqual(auto_route.turn_purpose('x', None), 'explanation')
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/_shared/test_completion_assessment.py b/_shared/test_completion_assessment.py
+index 1764d2b..c47e206 100644
+--- a/_shared/test_completion_assessment.py
++++ b/_shared/test_completion_assessment.py
+@@ -186,6 +186,28 @@ class CompletionAssessmentTests(unittest.TestCase):
+         with self.assertRaises(api.CompletionAssessmentError):
+             api.lookup_current_response(self.source, body)
+ 
++    def test_review_lookup_ignores_whitespace_only_differences(self):
++        """IMP item 4: a draft and the delivered answer that differ only in spacing are the same answer."""
++        route = self.fixture.candidate(units=())
++        route['response_purpose'] = 'explanation'
++        self.fixture.record(route)
++        api = self.api()
++        draft = 'The retained log shows the `adapter` 는 rejected before execution.'
++        delivered = 'The retained  log shows the `adapter`는 rejected\nbefore execution.'
++        self.observation.write_text('registered adapter hash mismatch. Adapter was not executed.')
++        candidate = api.prepare_response_review(self.source, response_text=draft,
++            source_paths=[str(self.observation)], claim_statements=[draft])
++        source_id = candidate['sources'][0]['source_id']
++        api.record_response_review(self.source, candidate['candidate_reference'], dict(
++            claims=[dict(binding_id=candidate['bindings'][0]['binding_id'], verdict='supported',
++                         source_ids=[source_id], rationale='The log records rejection before execution.')],
++            response=dict(binding_id=candidate['response_binding']['binding_id'], verdict='supported',
++                          source_ids=[source_id], rationale='The answer matches the log.')))
++        self.assertEqual(api.lookup_current_response(self.source, delivered)['candidate_reference'],
++                         candidate['candidate_reference'])
++        with self.assertRaises(api.CompletionAssessmentError):
++            api.lookup_current_response(self.source, delivered.replace('rejected', 'accepted'))
++
+     def setUp(self):
+         self.fixture = fixtures.ResponseRouteTests()
+         self.fixture.setUp()
+diff --git a/_shared/test_quick_review.py b/_shared/test_quick_review.py
+new file mode 100644
+index 0000000..1b1808d
+--- /dev/null
++++ b/_shared/test_quick_review.py
+@@ -0,0 +1,148 @@
++"""IMP v3: one-command response review."""
++import json
++import tempfile
++import unittest
++from pathlib import Path
++from unittest import mock
++
++import quick_review
++
++
++def _rows():
++    return [
++        dict(type='user', message=dict(role='user', content='old question')),
++        dict(type='assistant', message=dict(content=[dict(type='tool_use', id='old', name='Bash', input={'command': 'ls'})])),
++        dict(type='user', message=dict(role='user', content=[dict(type='tool_result', tool_use_id='old', content='OLD')])),
++        dict(type='user', message=dict(role='user', content='How many lines in README.md?')),
++        dict(type='assistant', message=dict(content=[dict(type='tool_use', id='t1', name='Bash',
++                                                          input={'command': 'wc -l README.md'})])),
++        dict(type='user', message=dict(role='user', content=[dict(type='tool_result', tool_use_id='t1',
++                                                                  content='17 README.md')])),
++        dict(type='assistant', message=dict(content=[dict(type='text', text='README.md has 17 lines.')])),
++    ]
++
++
++class QuickReviewTests(unittest.TestCase):
++    def setUp(self):
++        self.tmp = tempfile.TemporaryDirectory()
++        self.root = Path(self.tmp.name)
++        self.transcript = self.root / 't.jsonl'
++        self.transcript.write_text('\n'.join(json.dumps(r) for r in _rows()), encoding='utf-8')
++        self.source = dict(GHOST_ALICE_SESSION_INTENT_ROOT=str(self.root), GHOST_ALICE_SESSION_ID='s1',
++                           GHOST_ALICE_PLATFORM='claude')
++
++    def tearDown(self):
++        self.tmp.cleanup()
++
++    def test_sources_are_only_this_turns_calls_with_input_and_result(self):
++        sources = quick_review.turn_sources(self.transcript)
++        self.assertEqual([tid for tid, _ in sources], ['t1'])
++        self.assertIn('wc -l README.md', sources[0][1])
++        self.assertIn('17 README.md', sources[0][1])
++
++    def test_locate_tolerates_whitespace_only(self):
++        self.assertEqual(quick_review._locate('has  17\nlines', 'README.md has 17 lines.'), 'has 17 lines')
++        self.assertIsNone(quick_review._locate('has 18 lines', 'README.md has 17 lines.'))
++
++    def _run(self, review):
++        quick_review.save_pending(self.source, 'README.md has 17 lines.', self.transcript)
++        calls = {}
++
++        def prepare(source, *, response_text, source_paths, claim_statements):
++            calls['prepare'] = (response_text, source_paths, claim_statements)
++            return dict(candidate_reference='c1', response_binding=dict(binding_id='r1'),
++                        bindings=[dict(binding_id=f'b{i}') for i, _ in enumerate(claim_statements)],
++                        sources=[dict(locator=p, source_id=f'id-{i}') for i, p in enumerate(source_paths)])
++
++        def record(source, reference, review):
++            calls['record'] = (reference, review)
++            return dict(status='reviewed')
++
++        with mock.patch('completion_assessment.prepare_response_review', prepare), \
++                mock.patch('completion_assessment.record_response_review', record):
++            result = quick_review.review_once(self.source, review)
++        return result, calls
++
++    def test_supported_claim_with_real_evidence_records_both_judgments(self):
++        result, calls = self._run(dict(
++            claims=[dict(claim='README.md has 17 lines.', evidence='17 README.md', verdict='supported',
++                         rationale='wc -l printed 17')],
++            response=dict(verdict='supported', rationale='answers the question exactly')))
++        self.assertEqual(result['status'], 'reviewed')
++        text, paths, statements = calls['prepare']
++        self.assertEqual(text, 'README.md has 17 lines.')
++        self.assertEqual(statements, ['README.md has 17 lines.'])
++        self.assertEqual(len(paths), 1)
++        self.assertIn('17 README.md', Path(paths[0]).read_text(encoding='utf-8'))
++        _, review = calls['record']
++        self.assertEqual(review['claims'][0]['source_ids'], ['id-0'])
++        self.assertEqual(review['response']['binding_id'], 'r1')
++        self.assertFalse((self.root / 'quick-review' / 's1' / 'pending.json').exists())
++
++    def test_invented_evidence_is_rejected(self):
++        with self.assertRaisesRegex(quick_review.QuickReviewError, 'verbatim excerpt'):
++            self._run(dict(
++                claims=[dict(claim='README.md has 17 lines.', evidence='18 README.md', verdict='supported',
++                             rationale='x')],
++                response=dict(verdict='supported', rationale='x')))
++
++    def test_evidence_from_an_earlier_turn_is_rejected(self):
++        with self.assertRaisesRegex(quick_review.QuickReviewError, 'verbatim excerpt'):
++            self._run(dict(
++                claims=[dict(claim='README.md has 17 lines.', evidence='OLD', verdict='supported', rationale='x')],
++                response=dict(verdict='supported', rationale='x')))
++
++    def test_claim_missing_from_answer_is_rejected(self):
++        with self.assertRaisesRegex(quick_review.QuickReviewError, 'not found in the answer'):
++            self._run(dict(
++                claims=[dict(claim='README.md has 18 lines.', evidence='17 README.md', verdict='supported',
++                             rationale='x')],
++                response=dict(verdict='supported', rationale='x')))
++
++    def test_without_pending_answer_nothing_is_recorded(self):
++        with self.assertRaisesRegex(quick_review.QuickReviewError, 'no blocked answer'):
++            quick_review.review_once(self.source, dict(
++                claims=[dict(claim='a', evidence='b', verdict='supported', rationale='c')],
++                response=dict(verdict='supported', rationale='d')))
++
++    def test_review_command_is_never_a_source(self):
++        rows = _rows() + [
++            dict(type='assistant', message=dict(content=[dict(type='tool_use', id='q1', name='Bash',
++                 input={'command': 'python quick_review.py <<JSON {"evidence": "18 README.md"} JSON'})])),
++            dict(type='user', message=dict(role='user', content=[dict(type='tool_result', tool_use_id='q1',
++                 content='rejected')]))]
++        self.transcript.write_text('\n'.join(json.dumps(r) for r in rows), encoding='utf-8')
++        self.assertEqual([tid for tid, _ in quick_review.turn_sources(self.transcript)], ['t1'])
++        with self.assertRaisesRegex(quick_review.QuickReviewError, 'verbatim excerpt'):
++            self._run(dict(
++                claims=[dict(claim='README.md has 17 lines.', evidence='18 README.md', verdict='supported',
++                             rationale='x')],
++                response=dict(verdict='supported', rationale='x')))
++
++    def test_several_excerpts_must_all_be_verbatim(self):
++        result, calls = self._run(dict(
++            claims=[dict(claim='README.md has 17 lines.', evidence=['wc -l README.md', '17 README.md'],
++                         verdict='supported', rationale='x')],
++            response=dict(verdict='supported', rationale='x')))
++        self.assertEqual(result['status'], 'reviewed')
++        with self.assertRaisesRegex(quick_review.QuickReviewError, 'invented'):
++            self._run(dict(
++                claims=[dict(claim='README.md has 17 lines.', evidence=['17 README.md', 'invented'],
++                             verdict='supported', rationale='x')],
++                response=dict(verdict='supported', rationale='x')))
++
++    def test_report_prints_reviewed_answer_verbatim_without_purpose_line(self):
++        out = quick_review.report(dict(status='reviewed', response_text='[purpose: explanation]\nIt has 17 lines.'))
++        self.assertIn('<<<ANSWER\nIt has 17 lines.\nANSWER>>>', out)
++        self.assertNotIn('purpose', out.split('<<<ANSWER')[1])
++        self.assertEqual(quick_review.report(dict(status='unsupported')), '{"status": "unsupported"}')
++
++    def test_block_reason_is_self_contained(self):
++        text = quick_review.block_reason(self.source)
++        self.assertIn('quick_review.py', text)
++        self.assertIn("--session s1", text)
++        self.assertNotIn('references/', text)
++
++
++if __name__ == '__main__':
++    unittest.main()
