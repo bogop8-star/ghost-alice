@@ -199,7 +199,12 @@ def _response_review_context(route):
 
 
 def _whitespace_key(text):
-    """IMP item 4: compare answers without any whitespace, so spacing-only edits match."""
+    """IMP item 4: compare answers without any whitespace, so spacing-only edits match.
+
+    IMP item 2'-b: the leading `[purpose: ...]` line is routing metadata, not answer content.
+    """
+    text = re.sub(r'^\s*\[purpose:\s*(?:execution|explanation)\s*\]\s*(?:\r?\n|$)', '', text,
+                  count=1, flags=re.IGNORECASE)
     return re.sub(r'\s+', '', text)
 
 

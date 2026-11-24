@@ -183,6 +183,12 @@ def main() -> int:
     except ValueError:
         # Missing native identity cannot adopt the process's ambient session.
         source = dict(os.environ, GHOST_ALICE_PLATFORM=args.platform, GHOST_ALICE_SESSION_ID='')
+    try:
+        # IMP item 2': register the route here instead of blocking for it later.
+        from auto_route import auto_register_route
+        auto_register_route(source, final_text, input_data)
+    except Exception:  # never let the optimisation break the Stop guard
+        pass
     assessment = assess_native_completion(source, text=final_text, phase='final', native_input=input_data)
     body_issue = assessment['body_issue']
     if body_issue is None:
