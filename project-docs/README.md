@@ -22,8 +22,10 @@ cd $HOME
 git clone --branch test-baseline-2026-11-16 https://github.com/bogop8-star/ghost-alice.git ghost-alice
 git clone --branch v0.5.1 https://github.com/AidALL/ghost-alice-autopilot.git ghost-alice-autopilot
 cd $HOME\ghost-alice
-.\install.ps1 -Platform claude -AddonSource $HOME\ghost-alice-autopilot\addons\autopilot-mode
+.\install.ps1 -Platform claude -AddonSource $HOME\ghost-alice-autopilot
 ```
+
+`-AddonSource` 에는 Autopilot 저장소의 맨 위 폴더를 줍니다. 설치 도구가 그 폴더의 `addons-manifest.json` 을 읽기 때문입니다. `addons\autopilot-mode` 까지 적으면 `manifest not found` 로 설치가 실패합니다.
 
 설치 뒤 `~/.ghost-alice/install-state/claude.json` 의 `source_head` 가 `c6019ac` 로 시작하는지 확인합니다.
 
