@@ -145,7 +145,8 @@ Publication and application retain immutable provenance/integrity checks.
     if phase == 'final':
         issue = selected['claim_report_issue']
         if issue is None and selected['route_binding'] != 'current' and native_activity is not None:
-            if native_activity['status'] == 'observed':
+            # Local fix 2026-11-24: read-only inputs answer without a registered route.
+            if native_activity['status'] == 'observed' and not native_activity.get('read_only'):
                 issue = ('route-unavailable: This input contains native tool calls but has no current Core response-route. '
                     'The current-session assistant follows task-router to register this input\'s work and response purpose. '
                     'Retain the tool results; route registration does not require repeating the work.')

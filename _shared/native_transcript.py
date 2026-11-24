@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 
 
@@ -53,6 +54,76 @@ def is_actual_user_prompt(entry):
     items = content if isinstance(content, list) else [content]
     return bool(content) and not any(isinstance(item, dict) and item.get('type') == 'tool_result'
                                      for item in items)
+
+
+# Local fix 2026-11-24. Tools that cannot change files, and shell commands made only of
+# read commands or Ghost-ALICE's own record scripts. Anything not listed counts as work.
+_READ_ONLY_TOOLS = {'Read', 'Glob', 'Grep', 'LS', 'NotebookRead', 'Skill', 'ToolSearch'}
+_RECORD_SCRIPTS = ('session_intent_ledger.py', 'response_route.py', 'completion_assessment.py')
+_READ_COMMANDS = {'cat', 'head', 'tail', 'ls', 'dir', 'grep', 'rg', 'wc', 'pwd', 'cd', 'echo', 'printf', 'type', 'sort', 'uniq',
+                  'cut', 'nl', 'file', 'stat', 'test', 'true', 'od', 'tr', 'basename', 'dirname', 'get-content', 'gc', 'get-childitem', 'gci',
+                  'select-string', 'sls', 'select-object', 'measure-object', 'test-path', 'get-item', 'write-output'}
+
+
+_READ_GIT = {'rev-parse', 'status', 'log', 'diff', 'show', 'ls-files'}
+
+
+def _read_only_call(call):
+    name, data = call.get('name'), call.get('input')
+    if name in _READ_ONLY_TOOLS:
+        return True
+    if name not in {'Bash', 'PowerShell'} or not isinstance(data, dict) or not isinstance(data.get('command'), str):
+        return False
+    command = data['command']
+    if any(script in command for script in _RECORD_SCRIPTS):
+        return True
+    return _read_only_command(command)
+
+
+def _read_only_command(command):
+    if re.search(r'\bawk\b', command) and re.search(r'system|getline', command):
+        return False
+    # A command substitution is a command of its own: each innermost $( … ) is judged by the
+    # same rules, then stands in the outer command as a plain word.
+    for _ in range(20):
+        inner = re.search(r'\$\(([^()]*)\)', command)
+        if inner is None:
+            break
+        if not _read_only_command(inner.group(1)):
+            return False
+        command = command[:inner.start()] + 'S' + command[inner.end():]
+    # Output redirection to a file is a write. Discarding or merging streams is not.
+    # Quoted text is data (a grep pattern, a label); it is set aside before the commands are read.
+    plain = re.sub(r'"[^"`]*"|\'[^\']*\'', ' Q ', command)
+    plain = re.sub(r'\d?>\s*(/dev/null|\$null|&\d)', ' ', plain)
+    if '>' in plain or '`' in plain or '$(' in plain:
+        return False
+    for segment in re.split(r'&&|\|\||[;|\n]', plain):
+        words = segment.replace('(', ' ').split()
+        while words and words[0] in {'do', 'then', 'else'}:
+            words = words[1:]
+        if not words or words[0] in {'for', 'done', 'fi'}:
+            continue
+        head = words[0].lower()
+        if re.fullmatch(r'\$?[a-z_][a-z0-9_]*=\S*', head) or (head.startswith('$') and words[1:2] == ['=']):
+            continue                                  # a variable set to a literal value
+        if head.startswith('[io.file]::read'):
+            continue
+        if head == 'awk':
+            if 'system' in segment or 'getline' in segment:
+                return False
+        elif head == 'sed':
+            if '-n' not in words or any(word.startswith('-i') for word in words):
+                return False
+        elif head == 'find':
+            if any(word in {'-delete', '-exec', '-execdir', '-ok'} for word in words):
+                return False
+        elif head == 'git':
+            if words[1:2] == [] or words[1] not in _READ_GIT:
+                return False
+        elif head not in _READ_COMMANDS:
+            return False
+    return True
 
 
 def native_tool_activity(platform, session_id, native_input, *, input_observation=None):
@@ -133,15 +204,21 @@ def native_tool_activity(platform, session_id, native_input, *, input_observatio
     owned = [row for row in rows if row.get('sessionId') == session_id and not row.get('isSidechain')]
     for index in range(len(owned) - 1, -1, -1):
         if is_actual_user_prompt(owned[index]):
+            calls = []
             for row in owned[index + 1:]:
                 message = row.get('message')
                 if (row.get('type') != 'assistant' or not isinstance(message, dict)
                         or message.get('role') != 'assistant'):
                     continue
                 content = message.get('content')
-                if isinstance(content, list) and any(isinstance(item, dict)
-                        and item.get('type') == 'tool_use' for item in content):
-                    return result('observed', 'current-turn-tool-call')
+                calls += [item for item in content if isinstance(item, dict)
+                          and item.get('type') == 'tool_use'] if isinstance(content, list) else []
+            if calls:
+                # Local fix 2026-11-24: an input that only read files (or kept Ghost-ALICE's own
+                # records) is reported separately so completion does not demand a route for it.
+                observed = result('observed', 'current-turn-tool-call')
+                observed['read_only'] = all(_read_only_call(call) for call in calls)
+                return observed
             return result('absent', 'current-turn-has-no-tool-call')
     return result('unavailable', 'native-user-boundary-unavailable')
 

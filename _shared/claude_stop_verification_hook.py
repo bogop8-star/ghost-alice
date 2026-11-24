@@ -153,6 +153,30 @@ def _retry_limit_notice(reason: str, repair_target='completion_metadata') -> str
     )
 
 
+# Local fix 2026-11-24: every block and notice also tells the user, in Korean, what was held,
+# why, and what the user has to do. The English text above it stays for the assistant.
+_KOREAN_WHY = {
+    "route-unavailable": "이번 입력에서 파일을 바꾸거나 명령을 실행했는데, 그 작업의 목적을 적은 기록(response-route)이 없습니다.",
+    "native-activity-unavailable": "이번 입력에서 도구를 썼는지 대화 기록으로 확인하지 못했습니다.",
+    "criterion-unbound": "답변에 적힌 완료 근거가 어느 완료 조건에 해당하는지 연결되지 않았습니다.",
+    "response-assessment-required": "답변 내용을 근거와 대조한 검토 기록이 없습니다.",
+    "claim-evidence-unbound": "답변의 일부 문장이 제시한 근거로 뒷받침되지 않습니다.",
+    "assessment-unsupported": "검토 결과 답변의 주장 중 근거가 부족한 것이 있습니다.",
+}
+
+
+def _korean_guide(reason: str, blocked: bool) -> str:
+    code = reason.split(":", 1)[0].strip()
+    why = _KOREAN_WHY.get(code, "완료 근거 기록이 Ghost-ALICE가 받는 형식과 맞지 않습니다.")
+    if blocked:
+        return ("\n[사용자 안내] 무엇이 막혔나: Ghost-ALICE가 이번 답변을 끝내기 전에 한 번 멈췄습니다. "
+                f"왜: {why} "
+                "다음에 할 일: 사용자가 할 일은 없습니다. 어시스턴트가 기록을 채운 뒤 이어서 답하고, 앞서 나온 답변 내용은 그대로 유효합니다.")
+    return ("\n[사용자 안내] 무엇이 남았나: 답변은 그대로 나갔고, Ghost-ALICE 기록 하나가 채워지지 않았습니다. "
+            f"왜: {why} "
+            "다음에 할 일: 사용자가 할 일은 없습니다. 답변을 그대로 쓰셔도 됩니다.")
+
+
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--platform", choices=("claude", "codex"), default="claude")
@@ -199,9 +223,11 @@ def main() -> int:
     # One retry per turn: a defect that survives it ends the turn with a visible notice instead of another
     # rewrite. The notice is not a pass; the answer stays marked as lacking valid evidence.
     if _gate_blocks_this_turn(entries) >= RETRIES_PER_TURN:
-        print(json.dumps(_allow_payload(_retry_limit_notice(reason, assessment.get('repair_target', 'completion_metadata'))), ensure_ascii=False))
+        print(json.dumps(_allow_payload(_retry_limit_notice(reason, assessment.get('repair_target', 'completion_metadata'))
+            + _korean_guide(reason, False)), ensure_ascii=False))
         return 0
-    reason = f"{COMPLETION_GATE_MARKER} {reason} {_recovery_guidance(input_data, entries, args.platform, final_text, assessment.get('repair_target', 'completion_metadata'))}"
+    reason = (f"{COMPLETION_GATE_MARKER} {reason} {_recovery_guidance(input_data, entries, args.platform, final_text, assessment.get('repair_target', 'completion_metadata'))}"
+        + _korean_guide(reason, True))
     print(json.dumps(_block_payload(reason), ensure_ascii=False))
     return 0
 
