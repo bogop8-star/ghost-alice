@@ -235,7 +235,9 @@ class UnroutedNativeWorkTests(unittest.TestCase):
             result = subprocess.run([sys.executable, '-B', str(hook)],
                 input=json.dumps(dict(session_id='current', transcript_path=str(transcript),
                     last_assistant_message=body)), text=True, capture_output=True, check=True,
-                env=dict(os.environ, **source, CLAUDE_CODE_ENTRYPOINT='claude-desktop', PYTHONDONTWRITEBYTECODE='1'))
+                # This test covers the guard itself; automatic route registration is tested below.
+                env=dict(os.environ, **source, CLAUDE_CODE_ENTRYPOINT='claude-desktop', PYTHONDONTWRITEBYTECODE='1',
+                         GHOST_ALICE_IMP_AUTO_ROUTE='0'))
             return json.loads(result.stdout)
         rejected = stop()
         self.assertEqual(rejected.get('decision'), 'block')
@@ -259,6 +261,39 @@ class UnroutedNativeWorkTests(unittest.TestCase):
         transcript.write_text('\n'.join(json.dumps(row) for row in entries))
         self.assertNotEqual(stop().get('decision'), 'block')
 
+
+    def test_claude_unrouted_file_write_gets_core_route_and_still_requires_review(self):
+        """With automatic registration, Core registers the route instead of blocking for it.
+
+        No purpose line means explanation, so the same answer is still held for response review.
+        """
+        fixture = fixtures.ResponseRouteTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.coords['platform'] = 'claude'
+        fixture.event = fixture.intake('Create the weekly memo from the supplied notes.')
+        source = dict(GHOST_ALICE_CORE_ROOT=str(fixtures.ROOT),
+            GHOST_ALICE_SESSION_INTENT_ROOT=str(fixture.root),
+            GHOST_ALICE_PLATFORM='claude', GHOST_ALICE_SESSION_ID='current')
+        transcript = Path(fixture.tmp.name) / 'native.jsonl'
+        entries = [dict(type='user', sessionId='current', message=dict(role='user', content='Create the memo.')),
+            dict(type='assistant', sessionId='current', message=dict(role='assistant', content=[
+                dict(type='tool_use', name='Write', input=dict(file_path='/isolated/memo.md', content='memo'))]))]
+        transcript.write_text('\n'.join(json.dumps(row) for row in entries))
+        hook = Path(os.environ.get('GHOST_ALICE_TEST_SHARED_ROOT', Path(__file__).parent)) / 'claude_stop_verification_hook.py'
+        result = subprocess.run([sys.executable, '-B', str(hook)],
+            input=json.dumps(dict(session_id='current', transcript_path=str(transcript),
+                last_assistant_message='memo.md를 만들었습니다.')), text=True, capture_output=True, check=True,
+            env=dict(os.environ, **source, CLAUDE_CODE_ENTRYPOINT='claude-desktop', PYTHONDONTWRITEBYTECODE='1'))
+        blocked = json.loads(result.stdout)
+        self.assertEqual(blocked.get('decision'), 'block')
+        self.assertNotIn('route-unavailable', blocked['reason'])
+        self.assertIn('response-review-required', blocked['reason'])
+        route = importlib.import_module('native_completion')._ledger(source).read_response_route(
+            root=fixture.root, platform='claude', session_id='current')
+        self.assertEqual(route['status'], 'ready')
+        self.assertEqual(route['input_event_id'], fixture.event)
+        self.assertEqual(route['response_purpose'], 'explanation')
 
 class NativeActivityTests(unittest.TestCase):
     def setUp(self):
