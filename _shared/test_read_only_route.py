@@ -14,6 +14,10 @@ import unittest
 
 import test_response_route as fixtures
 
+# The PowerShell read command given in case 3 of the 2026-11-25 hook-off/A/B comparison.
+CASE3_COMMAND = ('if (Test-Path -LiteralPath .\\README.md) { $p = Resolve-Path -LiteralPath .\\README.md; '
+                 '@(Get-Content -LiteralPath $p | Where-Object { $_ -ne $null }).Count }')
+
 
 def call(name, **data):
     return dict(type='tool_use', name=name, input=data)
@@ -71,6 +75,24 @@ class ReadOnlyCallTests(unittest.TestCase):
             '$p = "f"; (Get-Content $p | Measure-Object -Line).Lines',
             'Get-ChildItem test-fixture | Select-Object Name',
             '$r = Get-Content x', "$env:FOO = 'x'; Get-Content x",
+            # The 2026-11-25 comparison, case 3: A blocked this exact read command in all three runs.
+            CASE3_COMMAND,
+            # .NET readers, pipeline filters and expressions over what was read.
+            "[IO.File]::ReadAllBytes('README.md').Length",
+            '$b = [IO.File]::ReadAllBytes((Resolve-Path README.md)); ($b | Where-Object { $_ -eq 10 }).Count',
+            '$t = [IO.File]::ReadAllText("$PWD/README.md"); $t.Split("`n").Count',
+            "[System.IO.File]::ReadAllLines((Resolve-Path 'README.md')).Count",
+            "[Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes('a.txt'))",
+            '$c = [IO.File]::ReadAllText("$PWD/hello.txt"); "len=$($c.Length) exact=$($c -ceq 1)"',
+            'Get-ChildItem py -Filter *.py | ForEach-Object { $_.Name; Get-Content $_.FullName -TotalCount 1 }',
+            "Get-ChildItem py | Where-Object { $_.Extension -eq '.py' } | Select-Object Name, Length | Format-Table",
+            'foreach ($f in Get-ChildItem py -Filter *.py) { Write-Output $f.Name; Get-Content $f.FullName | Select-Object -First 1 }',
+            '$lines = Get-Content README.md; $lines.Count; $lines[0]',
+            '(Get-Content README.md -Raw) -split "`n" | Measure-Object | Select-Object -ExpandProperty Count',
+            '$n = 0; Get-Content f | ForEach-Object { $n += 1 }; $n',
+            "if (Test-Path out.txt) { Get-Content out.txt } else { 'missing' }",
+            'Get-Content a.txt 2>$null | Sort-Object | Get-Unique', 'Get-FileHash README.md | Format-List',
+            '$x=Get-Content a; $x.Length',
         ]
         for command in commands:
             with self.subTest(command=command):
@@ -102,7 +124,25 @@ class ReadOnlyCallTests(unittest.TestCase):
     def test_powershell_commands_that_can_change_files_are_work(self):
         for command in ('Set-Content a.txt hi', 'New-Item x', 'Remove-Item x', 'Get-Content a | Out-File b',
                 '$r = Remove-Item x', '$x = hostname', '(Get-Item x).Delete()', '[IO.File]::WriteAllText("a","b")',
-                'Get-ChildItem | ForEach-Object { Remove-Item $_ }', '& rm x'):
+                'Get-ChildItem | ForEach-Object { Remove-Item $_ }', '& rm x',
+                # Writing cmdlets and redirection, wherever they sit in the command.
+                'Get-Content a > b', "'x' | Add-Content b", 'Get-Content a | Tee-Object b', 'Copy-Item a b',
+                'Get-Content a | ForEach-Object { $_ > b }', "[IO.File]::ReadAllText('a') | Set-Content b",
+                "(Get-Content a).Replace('a','b') | Set-Content a", 'Get-Content a; del b',
+                # A script block, a parenthesised part or a string can hold a command.
+                'Get-ChildItem | Where-Object { Remove-Item $_.FullName }', 'if (Test-Path a) { Remove-Item a }',
+                'foreach ($f in Get-ChildItem) { Remove-Item $f }', 'foreach ($f in (Remove-Item x)) { $f }',
+                'Get-Content (Remove-Item x)', 'Write-Output (New-Item y)', '$n += (New-Item z).Length',
+                '"$(Remove-Item x)"', '$(Remove-Item x).Count',
+                CASE3_COMMAND.replace('@(Get-Content', '@(Remove-Item'),
+                # Members that change a file, and calls whose target is not known.
+                'Get-ChildItem | ForEach-Object Delete', 'Get-ChildItem | % { $_.Delete() }', '$x.Save("a")',
+                '$a = @(1,2); $a.Clear()', '(Get-Item x).IsReadOnly = $true', "$f = Get-Item x; $f.Attributes = 'Hidden'",
+                "[IO.File]::Delete('a')", '[IO.Path]::GetTempFileName()', "New-Object IO.StreamWriter('a')",
+                '$e = { Remove-Item x }; $e.Invoke()',
+                # Running another program or script.
+                '$x=hostname', '& $cmd', "$cmd = 'rm'; & $cmd x", "Invoke-Expression 'rm x'", 'iex $s', '. ./run.ps1',
+                './run.ps1', 'Start-Process notepad', 'python x.py'):
             with self.subTest(command=command):
                 self.assertFalse(self.read_only(shell(command, 'PowerShell')))
 
@@ -177,6 +217,7 @@ class ReadOnlyStopTests(unittest.TestCase):
         answer = 'The title is "Test document".'
         self.assertNotEqual(self.stop(answer, call('Read', file_path='/isolated/README.md')).get('decision'), 'block')
         self.assertNotEqual(self.stop(answer, shell('head -n 1 /isolated/README.md')).get('decision'), 'block')
+        self.assertNotEqual(self.stop('17', shell(CASE3_COMMAND, 'PowerShell')).get('decision'), 'block')
 
     def test_unrouted_writing_input_is_still_blocked_with_user_guidance(self):
         blocked = self.stop('I wrote the title to title.txt.', call('Read', file_path='/isolated/README.md'),

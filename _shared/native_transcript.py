@@ -77,6 +77,28 @@ _SED_PRINT = re.compile(r'(\d+|\$)(,(\d+|\$))?p')
 _PYTHON = re.compile(r'(^|[\\/])(python3?|py)(\.exe)?$|^\$\{?py(thon)?\}?$', re.I)
 _LITERAL = re.compile(r'Q\d+|S|-?\d+(\.\d+)?')
 _ASSIGNMENT = re.compile(r'\$?[A-Za-z_][A-Za-z0-9_:]*=\S*')
+# PowerShell. Cmdlets that only read or shape what they are given, the .NET members that only
+# read, and the words an expression is made of. A script block or a parenthesised part is
+# judged as commands of its own, so `ForEach-Object { Remove-Item $_ }` is still work.
+_PS_READ_COMMANDS = {'where-object', 'where', '?', 'foreach-object', '%', 'resolve-path', 'sort-object', 'group-object',
+                     'select', 'measure', 'format-table', 'ft', 'format-list', 'fl', 'out-string', 'out-null', 'out-host',
+                     'write-host', 'join-path', 'split-path', 'get-location', 'gl', 'get-filehash', 'get-date',
+                     'convertfrom-json', 'convertto-json', 'convertfrom-csv', 'convertto-csv', 'import-csv',
+                     'compare-object', 'get-unique', 'get-itemproperty', 'get-member'}
+_PS_KEYWORDS = {'if', 'elseif', 'else', 'while', 'foreach', 'return', 'try', 'finally'}
+_PS_STATIC = re.compile(
+    r'\[(?:system\.)?(?:io\.file\]::(?:readall(?:bytes|text|lines)|readlines|exists)'
+    r'|io\.directory\]::(?:getfiles|getdirectories|enumeratefiles|exists)'
+    r'|io\.path\]::(?:getfilename|getfilenamewithoutextension|getextension|getdirectoryname|getfullpath|combine|join)'
+    r'|text\.encoding\]::\w+|(?:string|math|convert|regex|char|int|datetime)\]::\w+)', re.I)
+_PS_PURE_METHODS = {'split', 'trim', 'trimend', 'trimstart', 'substring', 'tostring', 'toupper', 'tolower', 'contains',
+                    'startswith', 'endswith', 'indexof', 'lastindexof', 'padleft', 'padright', 'gettype', 'getstring',
+                    'getbytes', 'count'}
+_PS_ASSIGN = {'=', '+=', '-=', '*=', '/='}
+_PS_OPERATOR = re.compile(r'-(?:[ci]?(?:eq|ne|gt|ge|lt|le|like|notlike|match|notmatch|replace|split|join|contains'
+                          r'|notcontains|in|notin)|and|or|not|xor|is|isnot|as|f|band|bor)|[+\-*/%,]|\.\.', re.I)
+_PS_TOKEN = re.compile(r'[@!,]*(?:\[[\w.]+(?:\[\])?\])*(?:S|Q\d+|\$[\w:]+|-?\d+(?:\.\d+)?(?:kb|mb|gb)?)?'
+                       r'(?:\[[-\w$.:,]*\])*(?:\.\w+(?:\[[-\w$.:,]*\])*)*,?', re.I)
 
 
 def _read_only_call(call):
@@ -85,17 +107,17 @@ def _read_only_call(call):
         return True
     if name not in {'Bash', 'PowerShell'} or not isinstance(data, dict) or not isinstance(data.get('command'), str):
         return False
-    return _read_only_command(data['command'])
+    return _read_only_command(data['command'], name == 'PowerShell')
 
 
-def _read_only_command(command):
+def _read_only_command(command, powershell=False):
     # A command substitution is a command of its own: each innermost $( … ) is judged by the
     # same rules, then stands in the outer command as a plain word.
     for _ in range(20):
         inner = re.search(r'\$\(([^()]*)\)', command)
         if inner is None:
             break
-        if not _read_only_command(inner.group(1)):
+        if not _read_only_command(inner.group(1), powershell):
             return False
         command = command[:inner.start()] + 'S' + command[inner.end():]
     # Quoted text is data (a grep pattern, a label). It is set aside while the commands are
@@ -106,12 +128,25 @@ def _read_only_command(command):
         quoted.append(match.group(0)[1:-1])
         return f' Q{len(quoted) - 1} '
 
-    plain = re.sub(r'"[^"`]*"|\'[^\']*\'', keep, command)
+    # A backtick inside PowerShell double quotes is an escape ("`n"); in sh it runs a command.
+    plain = re.sub(r'"(?:[^"`]|`.)*"|\'[^\']*\'' if powershell else r'"[^"`]*"|\'[^\']*\'', keep, command, flags=re.S)
     # Discarding or merging streams is not a write.
     plain = re.sub(r'\d?>\s*(/dev/null|\$null|&\d)', ' ', plain)
+    if powershell:
+        plain = _PS_STATIC.sub('S', plain)
     # Backticks, unresolved or process substitution and method calls can run anything.
-    if '`' in plain or '$(' in plain or '<(' in plain or '>(' in plain or re.search(r'\.\s*[A-Za-z_]\w*\s*\(', plain):
+    if '`' in plain or '$(' in plain or '<(' in plain or '>(' in plain:
         return False
+    methods = re.findall(r'\.\s*([A-Za-z_]\w*)\s*\(', plain)
+    if methods and not (powershell and all(method.lower() in _PS_PURE_METHODS for method in methods)):
+        return False
+    if powershell:
+        # The call operator runs whatever its operand names.
+        if re.search(r'(?<!&)&(?!&)', plain):
+            return False
+        plain = re.sub(r'(\$[\w:]+)\s*([+\-*/]?=)', r'\1 \2 ', plain)
+        # A script block or a parenthesised part holds commands of its own.
+        plain = re.sub(r'[{}()]', ';', plain)
 
     def text(word):
         match = re.fullmatch(r'Q(\d+)', word)
@@ -123,6 +158,17 @@ def _read_only_command(command):
             words = words[1:]
         if not words or words[0] in {'for', 'done', 'fi'}:
             continue
+        if powershell:
+            while words and words[0].lower() in _PS_KEYWORDS:
+                words = words[1:]
+            if words[:1] and words[0].startswith('$') and words[1:2] and words[1].lower() == 'in':
+                words = words[2:]                     # foreach ($item in <command>)
+            if not words:
+                continue
+            if words[1:2] and words[1] in _PS_ASSIGN:
+                if not re.fullmatch(r'\$[\w:]+', words[0]):
+                    return False                      # setting a property or an element changes its owner
+                words[1] = '='
         # A leading assignment only sets a variable; the command after it is still judged.
         if words[0].startswith('$') and words[1:2] == ['=']:
             words = words[2:]
@@ -131,6 +177,14 @@ def _read_only_command(command):
                 words = words[1:]
         if not words or (len(words) == 1 and _LITERAL.fullmatch(words[0])):
             continue
+        if powershell:
+            if any(word in _PS_ASSIGN for word in words):
+                return False
+            # An expression reads values; every word in it has to be a value or an operator.
+            if _PS_TOKEN.fullmatch(words[0]) or _PS_OPERATOR.fullmatch(words[0]):
+                if all(_PS_TOKEN.fullmatch(word) or _PS_OPERATOR.fullmatch(word) for word in words):
+                    continue
+                return False
         head = text(words[0])
         # Ghost-ALICE's own record scripts keep the ledger; they are not the user's work.
         if _PYTHON.search(head) and any(text(word).replace('\\', '/').split('/')[-1] in _RECORD_SCRIPTS for word in words[1:]):
@@ -140,10 +194,11 @@ def _read_only_command(command):
             return False
         head = head.lower()
         arguments = [word for word in words[1:] if not word.startswith('-')]
-        if head.startswith('[io.file]::read'):
-            continue
         if '::' in segment:
             return False
+        if powershell and head in {'foreach-object', '%'} and any(
+                word.lower() not in {'-begin', '-process', '-end'} for word in words[1:]):
+            return False                              # ForEach-Object <member> calls that member
         if any(word.split('=')[0] == option or (len(option) == 2 and word.startswith(option) and not word.startswith('--'))
                for option in _WRITING_OPTIONS.get(head, ()) for word in words[1:]):
             return False
@@ -162,7 +217,7 @@ def _read_only_command(command):
         elif head == 'git':
             if words[1:2] == [] or words[1] not in _READ_GIT:
                 return False
-        elif head not in _READ_COMMANDS and head != 'find':
+        elif head not in _READ_COMMANDS and head != 'find' and not (powershell and head in _PS_READ_COMMANDS):
             return False
     return True
 
