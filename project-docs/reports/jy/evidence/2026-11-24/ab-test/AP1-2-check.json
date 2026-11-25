@@ -1,0 +1,33 @@
+{
+  "arm": "b",
+  "home": "b",
+  "suite": "autopilot",
+  "case": "AP1",
+  "repeat": "2",
+  "model": "claude-opus-5-5",
+  "session_id": "<session-id>",
+  "wall_s": 35.2,
+  "cost_usd": 0.4273,
+  "num_turns": 9,
+  "duration_ms": 32337,
+  "is_error": false,
+  "task_tools": 5,
+  "pass": true,
+  "checks": [
+    {
+      "check": "file_equals",
+      "ok": true,
+      "got": "alpha\nbeta\ngamma\n"
+    },
+    {
+      "check": "unchanged_fixture",
+      "ok": true
+    }
+  ],
+  "blocked_drafts": [
+    "[completion-check]\n- criterion: output/report.txt에 정확히 3줄(alpha, beta, gamma)이 있어야 함\n- evidence: 파일을 만든 뒤 `wc -l output/report.txt`를 실행해 `3`을 확인했고, `cat`으로 읽은 내용은 alpha / beta / gamma였음\n- verdict: pass\n- unverified: 없음\n\n`output/report.txt`를 새로 만들었습니다. 다시 읽어 보니 정확히 3줄이고 순서대로 `alpha`, `beta`, `gamma`가 들어 있습니다. 시작할 때 `output` 폴더는 이미 있었고 이 파일은 없었습니다. 다른 파일은 건드리지 않았습니다.\n\nPowerShell로 줄 수를 세는 명령은 실행 전에 두 번 거부되어서, 줄 수 확인은 Bash로 했습니다."
+  ],
+  "answers": [
+    "[completion-check]\n- acceptance-criteria:\n  - three-lines: output/report.txt contains exactly three lines: alpha, beta and gamma [source: user-explicit]\n- claim-evidence-map:\n  - claim: output/report.txt was created and contains exactly three lines: alpha, beta and gamma\n    criterion: three-lines\n    evidence: Bash `wc -l output/report.txt` printed `3 output/report.txt`, and `cat output/report.txt` printed alpha / beta / gamma\n    verdict: pass\n- unverified:\n  - none\n- evidence: Bash `wc -l output/report.txt` and `cat output/report.txt`, run after the file was written this turn\n\n`output/report.txt`를 새로 만들었습니다. 다시 읽어 보니 정확히 3줄이고 순서대로 `alpha`, `beta`, `gamma`가 들어 있습니다. 시작할 때 `output` 폴더는 이미 있었고 이 파일은 없었습니다. 다른 파일은 건드리지 않았습니다.\n\nPowerShell로 줄 수를 세는 명령은 실행 전에 두 번 거부되어서, 줄 수 확인은 Bash로 했습니다."
+  ]
+}
