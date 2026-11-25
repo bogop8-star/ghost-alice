@@ -4,7 +4,7 @@ Nov 24, 2026 · jy
 
 - 기준 버전: `test-baseline-2026-11-16` 과 다릅니다. A는 Core `core/main` `450e4b3`, B는 Core `kyu/core-review-lite` `15b6e2b`(닫힌 PR #13)입니다. 두 후보의 공통 조상은 기준 커밋 `c6019ac` 이고, 둘 다 Autopilot `v0.5.1` `2075768` 과 시험 전용 패치 `0-test-only-sdk-origin.patch` 를 얹었습니다.
 - 확인 환경: Windows 11 Pro 25H2 (10.0.26200.9974), PowerShell 7.6.10, Python 3.14.4, Git 2.55.0, Claude Code CLI 2.1.331 (`claude -p`, 모델 `claude-opus-5-5`, Claude Team 로그인)
-- 관련 링크: [A·B 비교 시험 안내](../kyu/evidence/2026-11-24/TESTING.md), [kyu 성능 측정 보고서](../kyu/2026-11-24-performance-measurement.md), [훅 끔·켬·수정 후 비교 테스트](2026-11-24-hook-on-off-fix-test.md), [이슈 1 초안](issues/2026-11-24/1-read-only-input-blocked.md), 증거 [evidence/2026-11-24/ab-test](evidence/2026-11-24/ab-test/)
+- 관련 링크: [A·B 비교 시험 안내](../kyu/evidence/2026-11-24/TESTING.md), [kyu 성능 측정 보고서](../kyu/2026-11-24-performance-measurement.md), [훅 끔·켬·수정 후 비교 테스트](2026-11-24-hook-on-off-fix-test.md), [이슈 1 초안](issues/2026-11-24/1-read-only-input-blocked.md), 증거 [evidence/2026-11-24/ab-test](evidence/2026-11-24/ab-test/), 쉬운 설명 페이지 [ab-cost-eli5.html](evidence/2026-11-24/ab-test/ab-cost-eli5.html) (브라우저로 열기)
 
 ## 1. 목표
 

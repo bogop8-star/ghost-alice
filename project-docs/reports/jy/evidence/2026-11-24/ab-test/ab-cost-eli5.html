@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>비용 비교 시험 한눈에</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 배치: 한 줄 결론 → 두 방식 그림 → 금액 막대 → 한눈에 표 → 지시별 카드 → Autopilot 확인 → 어떤 방법이 좋은가 */
+:root {
+  --bg: #f2f4f8; --surface: #ffffff; --sunk: #e7ecf4; --ink: #17223a; --muted: #5a6680; --line: #d4dbe7;
+  --a: #1c68cf; --b: #9c2f8b;
+  --good: #197f48; --warn: #a85f00; --bad: #c2352b; --na: #7b8598;
+  --display: "Jua", "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
+  --body: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141d; --surface: #182130; --sunk: #121a27; --ink: #e7ecf6; --muted: #9ba7bc; --line: #2a3649;
+    --a: #6eabff; --b: #e584d5; --good: #55cc8c; --warn: #f2ae49; --bad: #ff8073; --na: #8f9bb0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141d; --surface: #182130; --sunk: #121a27; --ink: #e7ecf6; --muted: #9ba7bc; --line: #2a3649;
+  --a: #6eabff; --b: #e584d5; --good: #55cc8c; --warn: #f2ae49; --bad: #ff8073; --na: #8f9bb0; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1000px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.25; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); }
+h2 { font-size: clamp(1.5rem, 4vw, 2rem); }
+h3 { font-size: 1.3rem; }
+p { margin: 0; }
+.lead { font-size: 1.12rem; max-width: 42em; color: var(--muted); }
+.sec { display: flex; flex-direction: column; gap: 18px; }
+.sub { color: var(--muted); max-width: 46em; }
+.a { --env: var(--a); } .b { --env: var(--b); }
+
+.envs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.env { background: var(--surface); border: 2px solid var(--env); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.env svg { width: 100%; max-width: 150px; height: auto; align-self: center; color: var(--env); }
+.env .name { font-family: var(--display); font-size: 1.45rem; color: var(--env); }
+.env ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }
+.env .tech { font-size: 0.85rem; color: var(--muted); }
+
+.bars { background: var(--surface); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--line); }
+.bar-row { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 10px; align-items: center; }
+.bar-row .lbl { font-family: var(--display); font-size: 1.1rem; color: var(--env); }
+.track { background: var(--sunk); border-radius: 8px; height: 34px; }
+.fill { background: var(--env); height: 100%; border-radius: 8px; }
+.bar-row .val { grid-column: 2; font-variant-numeric: tabular-nums; font-size: 0.92rem; color: var(--muted); }
+.bar-row .val b { color: var(--ink); }
+
+.board-scroll { overflow-x: auto; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
+table.board { border-collapse: collapse; width: 100%; min-width: 600px; font-variant-numeric: tabular-nums; }
+.board th, .board td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.board tr:last-child td { border-bottom: 0; }
+.board thead th { font-family: var(--display); font-weight: 400; font-size: 1.05rem; color: var(--env, var(--ink)); background: var(--sunk); }
+.board a { color: var(--ink); text-decoration-color: var(--line); text-underline-offset: 3px; }
+.board a:hover, .board a:focus-visible { text-decoration-color: var(--ink); }
+.cheap { font-weight: 700; }
+.dot { display: inline-flex; align-items: center; gap: 7px; font-size: 0.9rem; font-weight: 600; color: var(--tone); }
+.dot::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--tone); flex: none; }
+.good { --tone: var(--good); } .warn { --tone: var(--warn); } .bad { --tone: var(--bad); } .na { --tone: var(--na); }
+.dot.warn::before { border-radius: 3px; }
+.dot.bad::before { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.9rem; }
+
+.case { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; scroll-margin-top: 16px; }
+.case-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.num { font-family: var(--display); font-size: 1rem; background: var(--ink); color: var(--bg); border-radius: 999px; min-width: 2.4em; height: 2.1em; display: inline-grid; place-items: center; padding: 0 0.5em; }
+.tag { margin-left: auto; font-size: 0.82rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1.5px solid var(--tone); color: var(--tone); white-space: nowrap; }
+.say { background: var(--sunk); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.k { display: block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); }
+.say q { quotes: "“" "”"; font-weight: 500; }
+.say .note { font-size: 0.88rem; color: var(--muted); }
+.results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.res { border-radius: 12px; border: 1px solid var(--line); border-top: 5px solid var(--env); padding: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.res .who { font-family: var(--display); font-size: 1.1rem; color: var(--env); }
+.res .txt { font-size: 0.93rem; }
+.res .meta { margin-top: auto; padding-top: 6px; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; border-top: 1px dashed var(--line); }
+.guide { padding: 0 2px; font-size: 0.95rem; }
+.gap { border-left: 5px solid var(--tone); background: var(--sunk); border-radius: 0 12px 12px 0; padding: 10px 14px; }
+
+.ap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ap .res { --env: var(--b); }
+
+.verdict { background: var(--ink); color: var(--bg); border-radius: 22px; padding: 26px; display: flex; flex-direction: column; gap: 12px; }
+.verdict h2 { color: var(--bg); }
+.verdict ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; max-width: 46em; }
+.limits { font-size: 0.92rem; color: var(--muted); display: flex; flex-direction: column; gap: 6px; max-width: 48em; }
+.limits ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }
+@media (max-width: 720px) {
+  .envs, .results, .ap { grid-template-columns: minmax(0, 1fr); }
+  .tag { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="sec">
+    <h1>JY 방식과 kyu 방식, 같은 일을 시키면 돈이 얼마나 드나</h1>
+    <p class="lead">팀원 kyu가 부탁한 비용 비교 시험입니다. 2026-11-24에 jy PC에서 같은 지시 6개를 두 방식으로 3번씩 시켜 금액, 막힘, 정답을 비교했습니다. 완료 조건이 있는 지시 하나는 kyu 방식에서 3번 더 돌렸습니다.</p>
+  </header>
+
+  <section class="sec" aria-labelledby="h-envs">
+    <h2 id="h-envs">비교한 두 방식</h2>
+    <div class="envs">
+      <div class="env a">
+        <svg viewBox="0 0 150 90" aria-hidden="true"><circle cx="38" cy="26" r="11" fill="currentColor"/><rect x="24" y="40" width="28" height="38" rx="8" fill="currentColor"/><rect x="78" y="22" width="48" height="52" rx="6" fill="none" stroke="currentColor" stroke-width="5"/><path d="M88 40h28M88 52h28M88 64h16" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>
+        <div class="name">A · JY 방식</div>
+        <ul><li>읽기만 한 답은 그냥 통과시킵니다. 검토도 안 합니다.</li><li>파일을 바꾼 답은 "경로 없음"으로 한 번 붙잡습니다.</li></ul>
+        <div class="tech">core/main 450e4b3</div>
+      </div>
+      <div class="env b">
+        <svg viewBox="0 0 150 90" aria-hidden="true"><circle cx="38" cy="26" r="11" fill="currentColor"/><rect x="24" y="40" width="28" height="38" rx="8" fill="currentColor"/><circle cx="98" cy="42" r="19" fill="none" stroke="currentColor" stroke-width="6"/><path d="m112 57 16 17" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="m90 42 6 6 11-12" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="name">B · kyu 방식</div>
+        <ul><li>"경로" 서류는 Core가 대신 써 줍니다.</li><li>읽고 알려 주는 답은 명령 한 번으로 근거와 대조(검토)하게 합니다.</li></ul>
+        <div class="tech">kyu/core-review-lite 15b6e2b (닫힌 PR 13)</div>
+      </div>
+    </div>
+    <p class="sub">두 방식 설명은 kyu의 시험 안내서(TESTING.md) 1절에 적힌 것입니다. 모델은 claude-opus-5-5, 실행은 claude -p 자동 실행, 실제 설치본과 분리된 시험용 폴더에서 했습니다.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-money">
+    <h2 id="h-money">총 금액 (각 18회)</h2>
+    <div class="bars">
+      <div class="bar-row a"><div class="lbl">A · JY</div><div class="track"><div class="fill" style="width:95.5%"></div></div><div class="val"><b>$8.69</b> · 1회 평균 30초 · 정답 18/18 · 막힘 6번</div></div>
+      <div class="bar-row b"><div class="lbl">B · kyu</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="val"><b>$9.10</b> (A보다 4.8% 비쌈) · 1회 평균 33초 · 정답 18/18 · 막힘 19번</div></div>
+    </div>
+    <p class="sub">전체로는 거의 같습니다. 하지만 지시마다 어느 쪽이 싼지가 다릅니다. 아래 표를 보면 돈이 어디서 새는지 보입니다.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-board">
+    <h2 id="h-board">지시 6개 한눈에 (3회 합계 금액)</h2>
+    <div class="legend"><span class="dot good">막힘 없이 통과</span><span class="dot warn">답은 맞지만 붙잡힘</span><span class="dot bad">안내서 설명과 다르게 동작</span></div>
+    <div class="board-scroll"><table class="board" id="board"></table></div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-cases">
+    <h2 id="h-cases">지시별로 보면</h2>
+    <p class="sub">카드마다 실제로 시킨 말, 안내서가 말한 두 방식의 동작, 실제 결과, 둘의 차이를 적었습니다. 금액은 3회 합계입니다.</p>
+    <div id="cases" class="sec"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-ap">
+    <h2 id="h-ap">Autopilot 확인 · kyu 방식에서 3회</h2>
+    <div class="say">
+      <span class="k">시킨 말</span>
+      <q>output/report.txt를 새로 만들어 줘. 내용은 정확히 세 줄이고 첫째 줄은 alpha, 둘째 줄은 beta, 셋째 줄은 gamma야. 완료 조건: output/report.txt 에 3줄이 있어야 함. 만든 뒤 다시 읽어서 줄 수를 확인하고 완료를 보고해. 다른 파일은 건드리지 마.</q>
+    </div>
+    <div class="guide"><span class="k">안내서가 확인하라고 한 것</span>완료 조건이 있으면 B가 서류를 대신 쓰지 않고 예전처럼 "경로 없음"으로 붙잡는가. Autopilot 완료 기록이 남는가.</div>
+    <div class="ap">
+      <div class="res"><div class="who">1회</div><span class="dot bad">기록 없음</span><div class="txt">파일 맞음. "경로 없음" 막힘 없음. Autopilot은 "할 작업 없음"으로 건너뜀</div><div class="meta">$0.32 · 20초</div></div>
+      <div class="res"><div class="who">2회</div><span class="dot bad">기록 없음</span><div class="txt">파일 맞음. "경로 없음" 막힘 없음. 완료 표시 형식 오류로 1번 막힘. Autopilot 기록 실패</div><div class="meta">$0.43 · 35초</div></div>
+      <div class="res"><div class="who">3회</div><span class="dot bad">기록 없음</span><div class="txt">파일 맞음. "경로 없음" 막힘 없음. 완료 표시 형식 오류로 1번 막힘. Autopilot 기록 실패</div><div class="meta">$0.35 · 23초</div></div>
+    </div>
+    <div class="gap bad"><span class="k">차이와 이유</span>3번 모두 붙잡지 않았고, Autopilot 기록도 한 번도 남지 않았습니다. B는 "장부"에 완료 조건이 적혀 있어야 예전처럼 붙잡는데, 3번 모두 Claude가 완료 조건을 장부에 적지 않고 바로 파일을 만들었습니다. 그래서 B가 빈 서류(할 작업 0개)를 대신 써 버렸고, Autopilot은 기록할 작업이 없었습니다.</div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-pick">
+    <div class="verdict">
+      <h2 id="h-pick">어떤 방법이 좋은가</h2>
+      <ol>
+        <li>돈으로는 결판이 안 납니다. B가 4.8% 비싸서, 안내서 6절의 "30% 넘게 비싸면 다시 논의" 기준에 한참 못 미칩니다.</li>
+        <li>B의 검토는 이번 시험에서 답을 하나도 고치지 않았습니다. 막힘 19번 모두 고치기 전과 후의 답 내용이 같았습니다. 지금은 검토 비용만 들었습니다.</li>
+        <li>B의 "서류 대신 쓰기"는 완료 조건이 있는 일에서 Autopilot 기록을 막았습니다(3번 중 3번).</li>
+        <li>A의 약점은 두 곳으로 좁습니다. 파워셸로 읽은 답을 잘못 붙잡는 것(README 줄 수), 파일을 만든 답을 붙잡는 것(hello 파일)입니다.</li>
+        <li>그래서 이 시험만 보면 A(JY 방식)를 유지하고 A의 파워셸 오판을 고치는 쪽이 낫습니다. 다만 안내서 6절의 최종 기준인 "검토 효과 시험"(SK 담당, 약한 모델로 함정 문제)은 아직 결과가 없어, 최종 결정은 그 결과를 본 뒤입니다.</li>
+      </ol>
+    </div>
+    <div class="limits">
+      <p><b>알아 둘 것</b></p>
+      <ul>
+        <li>지시마다 3번씩만 돌렸습니다. 지시별 차이는 우연일 수 있습니다.</li>
+        <li>금액은 Claude Code가 계산한 정가 기준이고, 실제 구독 청구액과 다릅니다. 실제로 든 비용은 $18.89로 안내서 예상($12~15)보다 많았습니다.</li>
+        <li>사람이 대화창에서 직접 입력한 시험이 아니라 자동 실행 시험입니다.</li>
+        <li>다른 PC(kyu PC)의 숫자와는 직접 비교하지 않았습니다. 안내서 2절의 원칙입니다.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+const CASES = [
+  { id: "K1", name: "도구 없이 답하는 질문", say: "파이썬에서 리스트와 튜플의 차이를 한 줄로 알려줘.",
+    guide: "A·B 둘 다 막을 일이 없음.",
+    a: ["good", "3/3 정답. 막힘 없음", "$0.794"], b: ["good", "3/3 정답. 막힘 없음", "$0.801"],
+    gap: ["good", "차이 없습니다. 아무것도 안 붙잡아도 1번에 약 $0.265가 듭니다. 대화를 시작할 때 Ghost-ALICE 안내문을 읽어 들이는 기본 비용입니다."] },
+  { id: "K2", name: "파일 1개 줄 수 세기", say: "README.md 파일이 몇 줄인지 세어줘. 파일은 수정하지 마.", note: "정답은 17줄",
+    guide: "A는 읽기만 했으니 통과. B는 읽은 답이니 검토.",
+    a: ["bad", "3/3 정답. 그런데 3/3 \"경로 없음\"으로 붙잡힘", "$1.541"], b: ["warn", "3/3 정답. 3/3 검토로 붙잡힘", "$1.104"],
+    gap: ["bad", "A가 안내서 설명과 다르게 붙잡혔습니다. Claude가 줄 수를 파워셸 명령(if, Where-Object, Resolve-Path 등)으로 셌는데, A가 이걸 \"읽기\"로 알아보지 못했습니다. 그래서 A가 B보다 40% 비쌌습니다."] },
+  { id: "K3", name: "파일 5개 읽기", say: "py 폴더의 .py 파일 5개 각각에서 name() 함수가 돌려주는 문자열을 알려줘. 파일은 수정하지 마.",
+    guide: "A는 통과. B는 검토.",
+    a: ["good", "3/3 정답. 막힘 없음", "$0.906"], b: ["warn", "3/3 정답. 3/3 검토로 붙잡힘", "$1.279"],
+    gap: ["warn", "안내서 설명대로입니다. B가 41% 비쌌고, 그 차이는 검토 비용입니다. 검토 뒤에도 답은 그대로였습니다."] },
+  { id: "K4", name: "문서를 근거로 설명", say: "facts.md를 근거로 프로젝트 이름, 시작일, 담당자를 알려주고, 각 값이 파일의 어느 줄에 있는지도 적어줘.",
+    guide: "A는 통과. B는 검토.",
+    a: ["good", "3/3 정답. 막힘 없음", "$0.849"], b: ["warn", "3/3 정답. 3/3 검토로 붙잡힘", "$1.042"],
+    gap: ["warn", "안내서 설명대로입니다. B가 23% 비쌌습니다. 검토 뒤에도 답은 그대로였습니다."] },
+  { id: "K5", name: "파일 만들기", say: "output/hello.txt를 새로 만들고 내용은 hello 한 단어로 해 줘. 완료 조건은 파일이 있고 내용이 정확히 hello인 것이다. 만든 뒤 다시 읽어서 확인하고 끝났다고 해. 다른 파일은 건드리지 마.",
+    guide: "A는 파일을 바꿨으니 \"경로 없음\"으로 붙잡음. B는 서류를 대신 써 주니 안 붙잡음.",
+    a: ["warn", "3/3 파일 맞음. 3/3 \"경로 없음\"으로 붙잡힘", "$1.794"], b: ["good", "3/3 파일 맞음. 1/3만 완료 표시 형식 오류로 붙잡힘", "$1.054"],
+    gap: ["warn", "안내서 설명대로입니다. A는 붙잡힌 뒤 Claude가 서류를 직접 쓰느라 도구를 1번에 5~10번 더 썼고, B보다 1.7배 비쌌습니다."] },
+  { id: "K6", name: "한 대화에서 질문 3번", say: "① README.md 맨 위 제목 한 줄만 알려줘. ② 그 파일에서 '## '로 시작하는 소제목이 몇 개인지 세어줘. ③ py/alpha.py의 name() 함수가 돌려주는 문자열만 알려줘.",
+    guide: "A는 모두 통과. B는 질문마다 검토.",
+    a: ["good", "3/3 정답. 막힘 없음", "$2.804"], b: ["warn", "3/3 정답. 질문 9번 모두 검토로 붙잡힘", "$3.822"],
+    gap: ["warn", "안내서 설명대로입니다. B가 36% 비쌌습니다. 읽는 질문이 이어지는 대화에서는 B의 검토 비용이 그대로 쌓입니다."] },
+];
+const TONE = { good: "통과", warn: "붙잡힘", bad: "설명과 다름" };
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const num = s => parseFloat(s.replace("$", ""));
+
+const board = document.getElementById("board");
+const hr = el("tr");
+[["", "지시"], ["a", "A · JY"], ["b", "B · kyu"], ["", "더 싼 쪽"]].forEach(([c, t]) => { const th = el("th", c, t); th.scope = "col"; hr.append(th); });
+const thead = el("thead"); thead.append(hr); board.append(thead);
+const tbody = el("tbody"); board.append(tbody);
+const cases = document.getElementById("cases");
+
+CASES.forEach(c => {
+  const tr = el("tr");
+  const nameCell = el("td"); const link = el("a", "", c.id + " " + c.name); link.href = "#" + c.id; nameCell.append(link); tr.append(nameCell);
+  ["a", "b"].forEach(k => { const td = el("td"); const d = el("span", "dot " + c[k][0], c[k][2]); td.append(d); tr.append(td); });
+  const ca = num(c.a[2]), cb = num(c.b[2]);
+  const diff = Math.abs(ca - cb) / Math.min(ca, cb);
+  tr.append(el("td", "cheap", diff < 0.05 ? "비슷함" : (ca < cb ? "A" : "B") + " (" + Math.round(diff * 100) + "% 쌈)"));
+  tbody.append(tr);
+
+  const card = el("article", "case"); card.id = c.id;
+  const head = el("div", "case-head"); head.append(el("span", "num", c.id), el("h3", "", c.name), el("span", "tag " + c.gap[0], TONE[c.gap[0]] === "설명과 다름" ? "안내서 설명과 다름" : "안내서 설명대로"));
+  card.append(head);
+  const say = el("div", "say"); say.append(el("span", "k", "시킨 말"), el("q", "", c.say)); if (c.note) say.append(el("span", "note", c.note)); card.append(say);
+  const guide = el("div", "guide"); guide.append(el("span", "k", "안내서가 말한 동작"), document.createTextNode(c.guide)); card.append(guide);
+  const res = el("div", "results");
+  [["a", "A · JY 방식"], ["b", "B · kyu 방식"]].forEach(([k, label]) => {
+    const box = el("div", "res " + k);
+    box.append(el("div", "who", label), el("span", "dot " + c[k][0], TONE[c[k][0]]), el("div", "txt", c[k][1]), el("div", "meta", "3회 합계 " + c[k][2]));
+    res.append(box);
+  });
+  card.append(res);
+  const gap = el("div", "gap " + c.gap[0]); gap.append(el("span", "k", "차이와 이유"), document.createTextNode(c.gap[1])); card.append(gap);
+  cases.append(card);
+});
+</script>
+</body>
+</html>
