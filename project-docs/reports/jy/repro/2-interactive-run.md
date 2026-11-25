@@ -95,17 +95,11 @@ pwsh -NoProfile -File .\install_arm.ps1 -Arm b -Core "$T\src\core-b" -Addon "$T\
 
 각각 끝에 `[5/5] Verification ok` 가 나오면 성공입니다. off 환경은 설치하지 않습니다(Ghost-ALICE가 없어야 하므로).
 
-### 2-3. 실행기 받기
+### 2-3. 실행기 위치
 
-실행기는 팀 저장소의 `ctaleez51` 브랜치에 있습니다. 같은 창에 이어서 붙여 넣습니다.
+실행기는 2-1에서 받은 팀 저장소 안에 있습니다. 따로 받을 것은 없습니다.
 
-```powershell
-cd "$T\src\team"
-git fetch origin ctaleez51
-git worktree add ..\jy origin/ctaleez51
-```
-
-실행기 위치는 `~/ga-test/src/jy/project-docs/reports/jy/evidence/2026-11-25/runner` 입니다. 실행기는 PATH에 있는 `claude` 를 씁니다.
+실행기 위치는 `~/ga-test/src/team/project-docs/reports/jy/evidence/2026-11-25/runner` 입니다. 실행기는 PATH에 있는 `claude` 를 씁니다.
 
 ### 2-4. 로그인과 작업 폴더 허락 (off, a, b 세 번)
 
@@ -143,7 +137,7 @@ Claude가 뜨면:
 새 PowerShell 7 창(Windows 터미널이나 PowerShell 창. 편집기 안의 터미널 말고)에서 붙여 넣습니다.
 
 ```powershell
-cd "$HOME\ga-test\src\jy\project-docs\reports\jy\evidence\2026-11-25\runner"; python ab_runner.py --list
+cd "$HOME\ga-test\src\team\project-docs\reports\jy\evidence\2026-11-25\runner"; python ab_runner.py --list
 ```
 
 지시 12개 목록이 나오면 준비가 된 것입니다. 이어서 전체를 돌립니다.
