@@ -61,14 +61,14 @@
 | 파일 | 역할 | 상태 |
 |---|---|---|
 | `ga_status.py` (+ `test_ga_status.py`, 테스트 11개) | 설치·동작 상태와 공식 동향 점검. 읽기 전용 | kyu가 "상태 확인해줘" 하면 실행해 해석해 준다 |
-| `langfuse_relay.py` (+ `test_langfuse_relay.py`, 테스트 27개) | Ghost-ALICE 훅 기록과 Claude Code 대화를 Langfuse로 전송 | 별도 창(`start_relay.cmd`)에서 실행 중 |
+| `langfuse_relay.py` (+ `test_langfuse_relay.py`, 테스트 30개) | Ghost-ALICE 훅 기록과 Claude Code 대화를 Langfuse로 전송 | 별도 창(`start_relay.cmd`)에서 실행 중 |
 | `setup_relay.cmd` / `setup_relay.ps1` / `설치방법.txt` / `langfuse-relay-share.zip` | 팀원용 relay 설치 묶음 | 팀원은 설치하지 않기로 함(각자 다른 전송 방식 사용 중) |
 | `server.py` / `index.html` | 사례 모니터 (http://127.0.0.1:8765) | **현재 꺼져 있음.** 필요하면 `python server.py` |
 | `README.md` | 위 도구 사용법 | |
 
 ### Langfuse relay 설정 (`~/.ghost-alice/secrets.env`, 값은 문서에 넣지 않음)
 
-- 공유 구글 계정 1개, 프로젝트 1개(TEAM, 이름 "My Project"), 지역 JP (`https://jp.cloud.langfuse.com`)
+- 공유 구글 계정 1개, 지역 JP (`https://jp.cloud.langfuse.com`). 11/25부터 `TEAM` 키는 새 프로젝트 **"ghost alice project"** 를 가리킵니다. 옛 프로젝트 "My Project"는 중복이 섞인 보관용이고, 옛 키는 지웠습니다. 자세한 내용은 10절 "새 Langfuse 프로젝트로 옮겨 다시 쌓기"에 있습니다.
 - `LANGFUSE_MEMBER=kyu`, `LANGFUSE_TARGETS=TEAM`, `LANGFUSE_RELAY_CONTENT=full`(질문·답변·도구 입출력까지, 비밀값 가림)
 - `LANGFUSE_RELAY_SESSIONS=8ae8df84-…,ca061f72-…` → **새 세션 ID를 쉼표로 추가하고 relay를 다시 켠다.** 이미 건너뛴 기록이 필요하면 `~/.ghost-alice/langfuse-relay/state.json` 에서 그 세션 파일들의 커서를 지우고 다시 켠다(같은 ID로 덮어써져 중복되지 않음).
 - `llm_call` 기록에 모델·토큰을 보내 Langfuse가 비용을 계산한다(API 정가 기준 추정치).
@@ -516,6 +516,44 @@ PR #11 검토 때 찾은 점(jy에게 아직 전달 안 함):
 - 이미 Langfuse에 들어간 중복은 지우지 않았습니다. 11/24 17:47 이전 기록으로 비용을 계산할 때는 `message_id` 로 중복을 빼야 합니다. 세션별 중복 정도는 `python perf/lf_dupes.py <세션 ID>` 로 봅니다(읽기 전용, 키는 출력하지 않음).
 - 고치기 전에 보낸 줄은 옛 방식 ID입니다. 다음에 파일이 한 번 더 다시 써지면 그 줄들이 새 방식 ID로 한 번 더 들어갈 수 있습니다. 그 뒤로는 늘지 않습니다.
 - JY·SK에게 고친 `langfuse_relay.py` 와 `perf/lf_dupes.py` 를 보내는 메시지를 대화에서 만들었고, kyu가 보냅니다. `hook-monitor` 는 git 저장소가 아니라 파일로 전달합니다. 받은 사람은 relay 창 닫기, 파일 교체, `start_relay.cmd` 다시 실행 순서로 적용합니다. 실제로 보냈는지와 적용했는지는 확인이 필요합니다.
+- 위 두 점은 11/25 새 프로젝트로 옮기면서 정리됐습니다(아래 절). 팀원에게 보낼 파일은 11/25 수정까지 들어간 **최신** `langfuse_relay.py` 입니다.
+
+### 새 Langfuse 프로젝트로 옮겨 다시 쌓기 (11/25)
+
+**왜 옮겼나.** 옛 프로젝트 "My Project"에는 이미 중복이 많이 들어가 있었습니다(이 세션만 `llm_call` 4,001개, 실제 1,200개). 중복을 하나씩 지우려면 옛 ID를 모두 계산해야 합니다. 그래서 대시보드 숫자를 그대로 믿을 수 있게 새 프로젝트에 처음부터 다시 쌓았습니다. 옛 프로젝트에 다시 쌓을 이유는 없습니다.
+
+**키 바꾸기.** kyu가 Langfuse 화면에서 새 프로젝트 "ghost alice project"와 키를 만들었습니다. `~/.ghost-alice/secrets.env` 의 `TEAM` 키 값만 새 키로 바꿨고, 옛 키는 지웠습니다. `LANGFUSE_TARGETS=TEAM`, `LANGFUSE_MEMBER=kyu` 는 그대로입니다. 키 값은 대화나 문서에 넣지 않습니다.
+
+**훅·도구 기록 ID도 내용 기반으로 고침.** 10절 수정 뒤에도 훅 기록(`strict-hook-output.jsonl`)과 도구 기록(`io-trace.jsonl`)은 ID가 "파일 경로 + 바이트 위치"였습니다. 로그가 다시 써지거나 옮겨지거나 처음부터 다시 읽히면 중복될 수 있었습니다.
+
+- 이제 줄 내용의 해시(`_row_digest`, 정렬한 JSON의 SHA-256 앞 32자)로 ID를 만듭니다.
+- 같은 내용의 줄이 연달아 나오면(같은 도구를 1초 안에 두 번 호출) 반복 번호를 붙여 따로 남깁니다. 커서에 `last_digest`, `repeat` 를 저장합니다.
+- 파일이 짧아져 처음부터 다시 읽을 때 이 두 값도 초기화합니다. 이 초기화가 커서 값을 읽기 전에 먼저 일어나도록 순서를 고쳤습니다.
+- 테스트 `test_rewritten_hook_and_tool_logs_resend_with_the_same_ids` 를 추가했습니다. `test_langfuse_relay.py` 30개가 모두 통과합니다. 고치기 전 파일은 대화 임시 폴더에 `langfuse_relay.before-hookids.py` 로 남겼습니다(재부팅·정리 때 사라질 수 있음).
+
+**비우고 다시 보내기 (11/25 11:17~11:30).**
+
+1. relay를 껐습니다.
+2. 새 프로젝트에 먼저 들어간 kyu 세션 4개(기록 19,224개)를 `DELETE /api/public/traces` 로 지웠습니다. 남은 기록이 0개인 것을 두 번 확인했습니다.
+3. `~/.ghost-alice/langfuse-relay/state.json` 을 백업하고 `TEAM` 진행 위치를 처음으로 되돌렸습니다. 백업은 `state.json.before-new-project-20261125`(새 프로젝트로 옮기기 전)와 `state.json.before-resend-ids-20261125`(다시 보내기 전) 두 개입니다.
+4. 11:21에 relay를 다시 켰습니다(프로세스 4212). 약 3분 만에 파일 96개를 다 보냈습니다.
+
+**확인 결과 (이 세션 `95c6673a`, 11:26~11:30에 세 번 같은 값).**
+
+| 항목 | 결과 |
+|---|---|
+| 모델 호출 `llm_call` | 1,302개 = 실제 메시지 1,302개, 중복 0 |
+| 전체 기록 | 12,338개, 모두 다른 ID |
+| 훅 기록 | 5,596개 모두 새 방식 ID와 일치, 옛 ID 0개 |
+
+보낸 직후(11:25)에는 같은 ID가 두 번씩 보였지만 2분쯤 뒤 Langfuse가 하나로 합쳤습니다. 숫자는 보낸 뒤 몇 분 지나서 확인해야 합니다.
+
+**알아 둘 점**
+
+- 새 프로젝트에는 지금 kyu 기록만 있습니다. JY·SK는 새 키와 최신 relay 파일을 받아 적용해야 새 프로젝트에 쌓입니다. kyu가 메시지와 키를 따로 보냅니다.
+- 팀원이 옮기기 전에 `LANGFUSE_MEMBER` 이름을 정해야 합니다. 나중에 이름을 바꾸면 ID가 달라져 중복이 생깁니다.
+- 기록을 다시 보내야 할 때는 relay를 끄고, 해당 Langfuse 기록을 지우고, `state.json` 을 백업한 뒤 커서를 지우고, 다시 켭니다. 지우지 않고 다시 보내도 같은 ID라 합쳐지지만, 고치기 전 방식 ID가 남아 있으면 그것은 합쳐지지 않습니다.
+- 확인 도구: `python perf/lf_dupes.py <세션 ID>`(모델 호출 중복 수, 읽기 전용, 키 출력 안 함).
 
 ### 이 세션에서 고친 것·배운 것
 
@@ -542,6 +580,6 @@ PR #11 검토 때 찾은 점(jy에게 아직 전달 안 함):
 3. 최종 보고서와 AidALL 제출 초안을 팀 저장소에 올릴지 정합니다(kyu가 보류).
 4. AidALL 제출: 최신 버전을 시험용 홈에 따로 설치해 C1~C5를 다시 재현하고, B1~B3 초안의 빈칸과 개인정보를 확인하고, 누가 낼지 정합니다.
 5. PR #16(JY 보고서 추가분), PR #24(SK 이슈)를 검토합니다. SK가 PR #23을 혼자 합친 것은 팀 규칙(팀원 확인 뒤 합침)과 맞지 않아 팀에 알릴지 정합니다.
-6. Langfuse 활용 개선: ① relay 중복 저장은 고침(위 "Langfuse relay 중복 저장 수정"). 남은 것은 ② 세션 태그(`PC`, `Core` 커밋)와 팀원 사용자 이름 통일, ③ 점수로 검증 결과 기록, ④ A·B 시험 기록도 Langfuse로 보내기. JY·SK가 고친 relay를 적용했는지 먼저 확인합니다.
+6. Langfuse 활용 개선: ① relay 중복 저장은 고쳤고, 새 프로젝트 "ghost alice project"에 kyu 기록을 다시 쌓았습니다(위 두 절). 다음은 ② JY·SK에게 새 키와 최신 `langfuse_relay.py`, `perf/lf_dupes.py` 를 보내고 `LANGFUSE_MEMBER` 이름을 먼저 통일하기, ③ 세션 태그(`PC`, `Core` 커밋), ④ 점수로 검증 결과 기록, ⑤ A·B 시험 기록도 Langfuse로 보내기입니다. 보조 에이전트 대화 기록이 빠지는지는 아직 확인하지 않았습니다.
 7. Autopilot 효과 측정: 완료 조건이 있는 케이스로 켬·끔을 비교합니다. JY의 Autopilot 확인 케이스를 그대로 쓸 수 있습니다.
 8. 기다리는 것: SK의 `skproject` PR, JY 재설치 확인 표.
