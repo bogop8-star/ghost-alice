@@ -61,7 +61,10 @@ def main() -> int:
                 continue
             t = time.time()
             proc = subprocess.run([sys.executable, str(_HERE / "run_case.py"), arm, case, rep,
-                                   "--budget", str(args.budget), "--suite", args.suite, "--model", args.model] + (["--home", homes[arm]] if homes[arm] else []), capture_output=True, text=True, encoding="utf-8")
+                                   "--budget", str(args.budget), "--suite", args.suite, "--model", args.model] + (["--home", homes[arm]] if homes[arm] else []), capture_output=True, text=True, encoding="utf-8",
+                                  # The child's stdout is read as UTF-8; without this it uses the
+                                  # Windows ANSI code page and Korean answers stop the batch.
+                                  env=dict(os.environ, PYTHONIOENCODING="utf-8"))
             try:
                 res = json.loads(proc.stdout.strip().splitlines()[-1])
                 spent += res.get("cost_usd") or 0

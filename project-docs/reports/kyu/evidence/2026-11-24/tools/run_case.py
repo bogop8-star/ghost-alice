@@ -105,7 +105,8 @@ def check(case: dict, answers: list[str], work: Path, task_tools: int) -> list[d
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("arm", help="result label, e.g. off, base, imp, imp2")
-    ap.add_argument("--home", choices=["off", "base", "imp"], help="test home to run in (default: same as arm)")
+    ap.add_argument("--home", help="test home name, i.e. ~/ga-test/home-<name> made by install_arm.ps1 -Arm <name> "
+                                   "(default: same as arm)")
     ap.add_argument("case")
     ap.add_argument("repeat")
     ap.add_argument("--budget", type=float, default=2.0)
@@ -113,6 +114,11 @@ def main() -> int:
     ap.add_argument("--suite", default="testbed")
     args = ap.parse_args()
     use_suite(args.suite)
+    # Any installed home name works (TESTING.md uses a and b). Stop before creating a run
+    # folder when the home is missing, so a typo does not leave a half-made run behind.
+    home_dir = ROOT / f"home-{args.home or args.arm}"
+    if not home_dir.is_dir():
+        sys.exit(f"test home not found: {home_dir} (install it with install_arm.ps1 -Arm {args.home or args.arm})")
 
     case = next(c for c in json.loads(CASES.read_text(encoding="utf-8"))["cases"] if c["id"] == args.case)
     run_dir = ROOT / "runs" / args.arm / args.case / str(args.repeat)
@@ -187,7 +193,9 @@ def main() -> int:
         "blocked_drafts": drafts, "answers": answers,
     }
     (run_dir / "check.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(json.dumps(summary, ensure_ascii=False))
+    # run_batch.py reads this line as UTF-8. ASCII escapes keep it readable even when this
+    # process's stdout uses the Windows ANSI code page (cp949 on Korean Windows).
+    print(json.dumps(summary, ensure_ascii=True))
     return 0
 
 
