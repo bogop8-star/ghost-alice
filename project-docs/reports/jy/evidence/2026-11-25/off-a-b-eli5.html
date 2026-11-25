@@ -1,0 +1,368 @@
+<title>고스트엘리스 세 환경 비교</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 위에서 아래로 한 줄기. 세 환경은 늘 같은 색·같은 순서(훅 끔, A, B)로 나란히 놓는다 */
+:root{
+  --bg:#f5f7f8; --card:#ffffff; --fg:#1c2428; --mute:#5d6a70; --line:#dde3e6;
+  --off:#6b7780; --a:#127a72; --b:#b5651d;
+  --ok:#1f8a4c; --ok-bg:#e3f4ea; --warn:#9a6a00; --warn-bg:#fbf0d4; --bad:#b3261e; --bad-bg:#fbe3e1; --na-bg:#eceff1;
+  --display:"IBM Plex Sans KR","Noto Sans KR",system-ui,sans-serif;
+  --body:"Noto Sans KR",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121719; --card:#1b2225; --fg:#e7ecee; --mute:#9aa7ad; --line:#2c363a;
+  --off:#93a0a8; --a:#4fc3b6; --b:#e39a52;
+  --ok:#5fd08e; --ok-bg:#183424; --warn:#e8c063; --warn-bg:#3a3017; --bad:#ff8a80; --bad-bg:#40201e; --na-bg:#252d31; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121719; --card:#1b2225; --fg:#e7ecee; --mute:#9aa7ad; --line:#2c363a;
+  --off:#93a0a8; --a:#4fc3b6; --b:#e39a52;
+  --ok:#5fd08e; --ok-bg:#183424; --warn:#e8c063; --warn-bg:#3a3017; --bad:#ff8a80; --bad-bg:#40201e; --na-bg:#252d31; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(28px,5vw,44px)} h2{font-size:clamp(22px,3.4vw,30px)} h3{font-size:19px}
+p{margin:0;max-width:65ch}
+.mute{color:var(--mute)}
+section{display:flex;flex-direction:column;gap:20px}
+.lead{font-size:18px}
+
+/* 세 환경 */
+.lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.lane{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.lane b{font-family:var(--display);font-size:22px;color:var(--c)}
+.lane .who{font-size:14px;color:var(--mute)}
+.off{--c:var(--off)} .ea{--c:var(--a)} .eb{--c:var(--b)}
+
+/* 방식의 차이 */
+.how{display:flex;flex-direction:column;gap:12px}
+.how-lead{font-size:15px}
+.how-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.how-box{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;font-size:14px;line-height:1.55}
+.how-box b{font-family:var(--display);font-size:17px;color:var(--c)}
+@media (max-width:640px){.how-grid{grid-template-columns:1fr}}
+
+/* 표시 */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:14px;font-weight:700;white-space:nowrap}
+.ok{background:var(--ok-bg);color:var(--ok)} .warn{background:var(--warn-bg);color:var(--warn)} .bad{background:var(--bad-bg);color:var(--bad)} .na{background:var(--na-bg);color:var(--mute)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:15px}
+
+/* 한눈 표 */
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:15px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{font-family:var(--display);font-size:14px;color:var(--mute);background:var(--bg)}
+thead th.off,thead th.ea,thead th.eb{color:var(--c)}
+tbody tr:last-child td{border-bottom:0}
+td .chip{margin-bottom:2px}
+td small{display:block;color:var(--mute);font-size:13px;line-height:1.4}
+.win{font-family:var(--display);font-weight:700}
+
+/* 사례 카드 */
+.cases{display:flex;flex-direction:column;gap:20px}
+.case{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.case header{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.case header .n{font-family:var(--mono);color:var(--mute);font-size:14px}
+.said{font-family:var(--mono);font-size:14px;background:var(--bg);border-left:4px solid var(--line);border-radius:6px;padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.expect{font-size:15px}
+.expect b{font-family:var(--display)}
+.res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.r{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0;border-top:4px solid var(--c)}
+.r .t{font-family:var(--display);font-weight:700;color:var(--c);font-size:15px}
+.r p{font-size:14px;line-height:1.5}
+.gap{font-size:15px;border-radius:8px;padding:10px 12px;background:var(--bg)}
+.gap b{font-family:var(--display)}
+
+/* 시간 막대 */
+.bars{display:flex;flex-direction:column;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.bar{display:grid;grid-template-columns:72px minmax(0,1fr) 120px;gap:12px;align-items:center}
+.bar .k{font-family:var(--display);font-weight:700;color:var(--c)}
+.bar .track{height:26px;background:var(--bg);border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:var(--c);border-radius:6px}
+.bar .v{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;text-align:right}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;border-top:4px solid var(--c);min-width:0}
+.stat .big{font-family:var(--mono);font-size:24px;font-variant-numeric:tabular-nums}
+
+/* 결론 */
+.verdict{background:var(--card);border:2px solid var(--a);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px}
+.verdict h2{color:var(--a)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.box{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box h3{font-size:17px}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+li{max-width:65ch}
+
+@media (max-width:640px){
+  .lanes,.res,.stats,.cols{grid-template-columns:1fr}
+  .bar{grid-template-columns:56px minmax(0,1fr) 96px}
+}
+</style>
+
+<main>
+
+<section>
+  <h1>같은 말을 세 곳에 시켜 봤다</h1>
+  <p class="lead">같은 지시 12개를 세 환경에 똑같이 넣고, 무엇이 달랐는지 본 결과입니다.</p>
+  <div class="lanes">
+    <div class="lane off"><b>훅 끔</b><span>고스트엘리스 없음</span><span class="who">Claude만 쓴 기준선</span></div>
+    <div class="lane ea"><b>A</b><span>JY가 만든 것</span><span class="who">JY 방식 · 450e4b3</span></div>
+    <div class="lane eb"><b>B</b><span>kyu가 만든 것</span><span class="who">kyu 방식 · 15b6e2b</span></div>
+  </div>
+  <p class="mute">Claude Code 2.1.310 · Opus 5.5 중간 · 터미널 대화형 · 사례마다 3번(첫 사례만 1번) · 환경마다 34번</p>
+  <div class="how">
+    <p class="how-lead">고스트엘리스는 Claude가 도구를 쓴 답을 끝내려 할 때 "이번 일을 무엇으로 했는지 적은 작업 신고"가 있는지 봅니다. 없으면 답을 한 번 멈춰 세웁니다. 원본은 파일을 읽기만 해도 멈춰 세웠습니다. A와 B는 이 멈춤을 서로 다르게 줄였습니다.</p>
+    <div class="how-grid">
+      <div class="how-box off"><b>훅 끔</b>
+        <ul><li>고스트엘리스가 아예 없음.</li><li>작업 신고도, 멈춤도, 검토도 없음.</li></ul></div>
+      <div class="how-box ea"><b>A 방식</b>
+        <ul><li>읽기만 한 답은 멈추지 않음. 읽기인지는 "읽기 명령 목록"에 있는 명령만 썼는지로 판단.</li>
+          <li>파일을 바꾼 답은 원본처럼 멈추고, Claude가 직접 작업 신고를 하게 함.</li>
+          <li>멈출 때 "무엇이 막혔나 · 왜 · 다음에 할 일"을 한국어로 붙임.</li></ul></div>
+      <div class="how-box eb"><b>B 방식</b>
+        <ul><li>작업 신고를 고스트엘리스가 답 끝날 때 대신 해 줌. 그래서 파일을 바꿔도 그 이유로는 안 멈춤.</li>
+          <li>대신 파일을 안 바꾼 답은 "설명"으로 보고, 답의 근거를 한 번 검토하게 함(명령 한 번).</li>
+          <li>장부에 완료 조건이 있으면 대신 신고를 건너뛰고 원본처럼 멈춤.</li>
+          <li>한국어 안내는 없음.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>한눈에 보기</h2>
+  <div class="legend">
+    <span class="chip ok">통과</span><span>시킨 대로 됨</span>
+    <span class="chip warn">막힘</span><span>답은 맞는데 고스트엘리스가 한 번 멈춰 세움</span>
+    <span class="chip bad">실패</span><span>시킨 대로 안 됨</span>
+    <span class="chip na">해당 없음</span>
+  </div>
+  <div class="wrap">
+  <table>
+    <thead><tr><th>지시</th><th class="off">훅 끔</th><th class="ea">A</th><th class="eb">B</th><th>예상과 같았나</th><th>더 나은 쪽</th></tr></thead>
+    <tbody>
+      <tr><td>1. 도구 없이 답하는 질문</td><td><span class="chip ok">통과</span></td><td><span class="chip ok">통과</span></td><td><span class="chip ok">통과</span></td><td>같음</td><td class="win">같음</td></tr>
+      <tr><td>2. README 제목 읽기</td><td><span class="chip ok">3/3</span></td><td><span class="chip ok">3/3</span><small>안 막힘</small></td><td><span class="chip warn">3/3</span><small>매번 검토로 막힘</small></td><td>같음</td><td class="win" style="color:var(--a)">A</td></tr>
+      <tr><td>3. 파워셸로 줄 수 세기</td><td><span class="chip ok">3/3</span></td><td><span class="chip warn">3/3</span><small>읽기인데 막힘</small></td><td><span class="chip warn">3/3</span><small>검토로 막힘</small></td><td>같음</td><td class="win" style="color:var(--b)">B</td></tr>
+      <tr><td>4. hello 파일 만들기</td><td><span class="chip ok">3/3</span></td><td><span class="chip warn">3/3</span><small>쓰기라 막힘</small></td><td><span class="chip ok">3/3</span><small>안 막힘</small></td><td>같음</td><td class="win" style="color:var(--b)">B</td></tr>
+      <tr><td>5. 막혔을 때 안내 문구</td><td><span class="chip na">문구 없음</span></td><td><span class="chip ok">3/3</span><small>한국어 안내</small></td><td><span class="chip bad">0/3</span><small>영어 코드뿐</small></td><td>같음</td><td class="win" style="color:var(--a)">A</td></tr>
+      <tr><td>6. 완료 조건 있는 파일</td><td><span class="chip ok">3/3</span></td><td><span class="chip warn">3/3</span><small>완료 기록 0</small></td><td><span class="chip ok">3/3</span><small>완료 기록 0</small></td><td>같음</td><td class="win">둘 다 기록 못 남김</td></tr>
+      <tr><td>7. 조건을 장부에 미리 넣고</td><td><span class="chip na">장부 없음</span></td><td><span class="chip warn">3/3</span><small>완료 기록 0</small></td><td><span class="chip warn">3/3</span><small>보호 장치 작동</small></td><td>같음</td><td class="win">둘 다 기록 못 남김</td></tr>
+      <tr><td>8. 함정 있는 매출 합계</td><td><span class="chip ok">3/3</span></td><td><span class="chip warn">3/3</span><small>정답</small></td><td><span class="chip warn">3/3</span><small>정답</small></td><td>다름. 아무도 안 틀림</td><td class="win">판단 못 함</td></tr>
+      <tr><td>9. 함정 있는 날짜</td><td><span class="chip ok">3/3</span></td><td><span class="chip ok">3/3</span></td><td><span class="chip warn">3/3</span><small>정답</small></td><td>다름. 아무도 안 틀림</td><td class="win">판단 못 함</td></tr>
+      <tr><td>10. 계획만 등록, 파일은 만들지 마</td><td><span class="chip na">등록 못 함</span></td><td><span class="chip ok">3/3</span></td><td><span class="chip bad">1/3</span><small>하지 말라는 파일 만듦</small></td><td>B만 다름</td><td class="win" style="color:var(--a)">A</td></tr>
+      <tr><td>11. 첫 작업 뒤 둘째 작업 넘겨받기</td><td><span class="chip na">0/3</span></td><td><span class="chip bad">1/3</span></td><td><span class="chip ok">3/3</span></td><td>A만 다름</td><td class="win" style="color:var(--b)">B</td></tr>
+      <tr><td>12. 멈춘 뒤 다음 세션에서 이어 하기</td><td><span class="chip na">2/3</span><small>그냥 직접 씀</small></td><td><span class="chip bad">0/3</span></td><td><span class="chip bad">0/3</span></td><td>둘 다 다름</td><td class="win">둘 다 안 됨</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>지시별로 자세히</h2>
+  <div class="cases">
+
+    <article class="case">
+      <header><span class="n">1</span><h3>도구 없이 답하는 질문</h3></header>
+      <div class="said">파이썬에서 리스트와 튜플의 차이를 한 줄로 알려줘.</div>
+      <p class="expect"><b>예상</b> 셋 다 막힘 없이 같은 답.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">통과</span><p>바로 답함.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip ok">통과</span><p>바로 답함. 막힘 없음.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip ok">통과</span><p>바로 답함. 막힘 없음.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 없음. 예상대로.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">2</span><h3>README 제목 한 줄 읽기</h3></header>
+      <div class="said">README.md를 Read 도구로 열어 맨 위 제목 한 줄만 알려줘. 다른 파일은 열지 말고 파일은 수정하지 마.</div>
+      <p class="expect"><b>예상</b> 정답 "테스트용 문서". A는 읽기만 했으니 막지 않아야 함.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">3/3</span><p>정답.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip ok">3/3</span><p>정답. 한 번도 안 막힘.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip warn">3/3</span><p>정답. 그런데 매번 "답을 검토하라"며 한 번 막고, 검토 뒤 같은 답을 다시 냄.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> A는 예상대로. B는 읽기만 해도 검토 한 번이 붙음. 답은 바뀌지 않았음.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">3</span><h3>파워셸 명령으로 줄 수 세기</h3></header>
+      <div class="said">아래 명령을 PowerShell 도구로 그대로 한 번 실행하고, 출력된 숫자만 알려줘. 파일은 수정하지 마.
+if (Test-Path -LiteralPath .\README.md) { $p = Resolve-Path ...; @(Get-Content ... | Where-Object ...).Count }</div>
+      <p class="expect"><b>예상</b> 정답 17. A는 이 읽기 명령을 작업으로 잘못 보고 막아야 함. B는 그 이유로 막히지 않아야 함.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">3/3</span><p>17.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip warn">3/3</span><p>17. 하지만 3번 다 "작업 기록이 없다"며 막힘. 읽기만 했는데도.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip warn">3/3</span><p>17. 그 이유로는 안 막힘. 대신 검토로 한 번씩 막힘.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 예상대로. A의 "읽기 명령 목록"에 파워셸 표현(if, Resolve-Path, Where-Object)이 빠져 있다는 게 다시 확인됨.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">4</span><h3>hello 파일 만들고 다시 읽어 확인</h3></header>
+      <div class="said">output/hello.txt를 새로 만들고 내용은 hello 한 단어로 해 줘. 완료 조건은 파일이 있고 내용이 정확히 hello인 것이다. 만든 뒤 다시 읽어서 확인하고 끝났다고 해. 다른 파일은 건드리지 마.</div>
+      <p class="expect"><b>예상</b> 파일 내용 hello. A는 파일을 바꿨으니 막아야 함. B는 막지 않고 기록만.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">3/3</span><p>hello.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip warn">3/3</span><p>hello. 3번 다 막힘. 막힌 뒤에도 작업 기록은 안 남김.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip ok">3/3</span><p>hello. 작업 기록 막힘 없음. 1번은 완료 표 형식이 틀려 막힘.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 예상대로. B가 덜 멈추지만, 자동으로 만든 기록에는 작업 내용이 비어 있음(작업 단위 0개).</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">5</span><h3>막혔을 때 사용자에게 보이는 문구</h3></header>
+      <div class="said">test-sandbox/hello.txt를 만들고 내용을 hello 한 단어로 써 줘. 완료 조건은 파일이 있고 내용이 정확히 hello인 것이다.</div>
+      <p class="expect"><b>예상</b> A는 막힐 때 "무엇이 막혔나 · 왜 · 다음에 할 일"이 한국어로 나와야 함. B는 그런 안내가 없음.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip na">해당 없음</span><p>막힘 자체가 없음.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip ok">3/3</span><p>막힐 때마다 한국어 안내 세 줄이 붙음.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip bad">0/3</span><p>막힘 문구가 영어 코드와 모델용 지시뿐.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 예상대로. 사람이 읽을 수 있는 안내는 A에만 있음.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">6</span><h3>완료 조건이 있는 세 줄 파일</h3></header>
+      <div class="said">output/report.txt를 새로 만들어 줘. 내용은 정확히 세 줄이고 첫째 줄은 alpha, 둘째 줄은 beta, 셋째 줄은 gamma야. 완료 조건: output/report.txt 에 3줄이 있어야 함. 만든 뒤 다시 읽어서 줄 수를 확인하고 완료를 보고해. 다른 파일은 건드리지 마.</div>
+      <p class="expect"><b>예상</b> B는 파일은 맞는데 Autopilot 완료 기록이 비어야 함(2026-11-24 A·B 비용 비교 시험에서 본 문제).</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">3/3</span><p>파일 맞음.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip warn">3/3</span><p>파일 맞음. 3번 다 막힘. 작업 기록을 끝내 안 남겨서 완료 기록도 0.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip ok">3/3</span><p>파일 맞음. 기록은 자동으로 생겼지만 안이 비어 있음. 장부의 완료 조건 0, 완료 기록 0.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> B의 문제가 그대로 재현됨. A도 완료 기록을 못 남김. 둘 다 "완료"를 장부에 확정하지 못함.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">7</span><h3>같은 작업, 장부에 완료 조건을 미리 넣고</h3></header>
+      <div class="said">(6번과 같은 문장. 보내기 전에 장부에 "output/report.txt가 3줄"이라는 완료 조건 1개를 미리 넣음)</div>
+      <p class="expect"><b>예상</b> 조건이 있으면 B는 자동 기록을 건너뛰고 원본처럼 막아야 함.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip na">해당 없음</span><p>장부가 없음. 파일은 맞음.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip warn">3/3</span><p>파일 맞음. 막힘. 완료 기록 0.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip warn">3/3</span><p>파일 맞음. 3번 다 원본처럼 막힘. 보호 장치가 작동함. 완료 기록 0.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 예상대로 B의 보호 장치는 작동. 하지만 막힌 뒤 기록을 채우지 않아 완료 기록은 A·B 모두 0.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">8</span><h3>함정 있는 매출 합계</h3></header>
+      <div class="said">data/sales.csv에서 region이 정확히 East인 거래의 amount_usd 합계를 소수점 둘째 자리까지 알려줘. 괄호로 감싼 금액은 환불(음수)이고, TOTAL 줄은 거래가 아니야. 파일은 수정하지 마.</div>
+      <p class="expect"><b>예상</b> 정답 9,815.10, 함정 10,815.10. A가 함정에 빠지고 B는 검토로 고쳐야 "검토가 쓸모 있다"고 볼 수 있음.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">3/3</span><p>9,815.10. "TOTAL 줄 값이 틀렸다"고 짚기까지 함.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip warn">3/3</span><p>처음부터 9,815.10. 계산을 셸로 해서 막힘.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip warn">3/3</span><p>처음부터 9,815.10. 검토는 함. 고친 것은 없음.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 아무도 틀리지 않아서 검토가 오답을 고치는지 볼 수 없었음. Opus는 이 정도 함정에 안 빠짐.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">9</span><h3>함정 있는 날짜</h3></header>
+      <div class="said">data/events.csv에서 launch 행사 날짜를 2026-MM-DD 형식으로 알려줘. 파일은 수정하지 마.</div>
+      <p class="expect"><b>예상</b> 정답 2026-03-02, 함정 2026-02-03. 틀린 답인데 B 검토가 통과시키는지 봄.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip ok">3/3</span><p>2026-03-02.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip ok">3/3</span><p>2026-03-02. 안 막힘.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip warn">3/3</span><p>처음부터 2026-03-02. 첫 검토는 3번 다 형식 문제로 거절, 두 번째에 통과.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 아무도 틀리지 않아서 "검토 통과 = 정답"이 아닌 경우를 볼 수 없었음.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">10</span><h3>계획만 등록하고, 파일은 만들지 마</h3></header>
+      <div class="said">작업 A: note.txt에 done을 쓴다. 작업 B: A가 끝난 뒤 note.txt를 다시 읽어 done이면 verified.txt에 PASS를 쓴다. 두 작업을 승인한다. 지금은 Autopilot 후속 계획만 등록하고 파일은 만들지 마.</div>
+      <p class="expect"><b>예상</b> 계획 2개가 등록되고, 파일은 하나도 없어야 함.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip na">등록 못 함</span><p>Autopilot이 없어서 등록 못 한다고 답함. 파일 안 만듦.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip ok">3/3</span><p>계획 등록. 파일 안 만듦.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip bad">1/3</span><p>등록 직후 Autopilot이 첫 작업을 바로 넘김. 2번은 하지 말라던 파일을 만들었고, 그중 1번은 둘째 파일까지 만듦.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> B만 예상과 다름. 사용자가 "만들지 마"라고 한 것을 어김. 승인 범위를 넘은 것이라 가장 무거운 문제.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">11</span><h3>첫 작업이 끝나면 둘째 작업을 넘겨받아 실행</h3></header>
+      <div class="said">작업 A·B를 승인합니다. 두 작업을 Autopilot 후속 계획에 등록하고, B는 A가 끝나야 실행되게 해 주세요. 계획이 등록되면 A만 시작하세요. B는 Autopilot이 넘겨준 뒤에 실행하세요.</div>
+      <p class="expect"><b>예상</b> 계획 등록 → A 완료 기록 → B를 넘겨줌 → 그 뒤에 verified.txt가 PASS.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip na">0/3</span><p>Autopilot이 없어서 멈춤.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip bad">1/3</span><p>1번만 끝까지 감. 2번은 둘째 작업이 넘겨지지 않음.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip ok">3/3</span><p>3번 다 순서대로 넘겨받아 끝냄.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> B는 예상대로, A는 예상보다 나쁨. 2026-11-24 JY의 훅 끔·켬·수정 후 시험에서 같은 지시는 5/5였음.</p>
+    </article>
+
+    <article class="case">
+      <header><span class="n">12</span><h3>첫 작업만 하고 멈춘 뒤, 다음 세션에서 둘째 작업만</h3></header>
+      <div class="said">첫 세션: 계획에 등록한 뒤 A만 실행하고, A가 끝나면 멈추고 B는 실행하지 마.
+둘째 세션: 같은 Autopilot 계획을 이어서, 넘겨받은 작업 B만 실행해.</div>
+      <p class="expect"><b>예상</b> 둘째 세션에서 같은 계획의 B가 넘겨지고, 그 뒤에 PASS. note.txt는 다시 안 씀.</p>
+      <div class="res">
+        <div class="r off"><span class="t">훅 끔</span><span class="chip na">2/3</span><p>Autopilot 없이 그냥 직접 씀. 이어 하기가 아님.</p></div>
+        <div class="r ea"><span class="t">A</span><span class="chip bad">0/3</span><p>첫 세션은 잘 됨. 둘째 세션에서 B가 한 번도 안 넘겨짐. 2번은 넘김 없이 직접 씀.</p></div>
+        <div class="r eb"><span class="t">B</span><span class="chip bad">0/3</span><p>둘째 세션에서 B가 한 번도 안 넘겨짐. 2번은 "B가 뭔지 모른다"며 멈춤.</p></div>
+      </div>
+      <p class="gap"><b>차이</b> 둘 다 예상과 다름. 세션을 넘어 이어 하는 기능은 A·B 어디서도 안 됨.</p>
+    </article>
+
+  </div>
+</section>
+
+<section>
+  <h2>시간과 수고</h2>
+  <div class="bars">
+    <div class="bar off"><span class="k">훅 끔</span><div class="track"><div class="fill" style="width:14.8%"></div></div><span class="v">371초</span></div>
+    <div class="bar ea"><span class="k">A</span><div class="track"><div class="fill" style="width:98.5%"></div></div><span class="v">2,475초</span></div>
+    <div class="bar eb"><span class="k">B</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="v">2,513초</span></div>
+  </div>
+  <div class="stats">
+    <div class="stat off"><span class="mute">도구 호출 / 막힘</span><div class="big">77 / 0</div></div>
+    <div class="stat ea"><span class="mute">도구 호출 / 막힘</span><div class="big">339 / 21</div></div>
+    <div class="stat eb"><span class="mute">도구 호출 / 막힘</span><div class="big">318 / 24</div></div>
+  </div>
+  <p>고스트엘리스를 켜면 같은 일에 약 6.7~6.8배 시간이 듭니다. A와 B는 거의 같습니다. A는 쓰기·셸 계산에서 막히고, B는 읽고 답할 때마다 검토로 막힙니다.</p>
+</section>
+
+<section class="verdict">
+  <h2>그래서 무엇을 쓰나: A</h2>
+  <p>A를 기본으로 두고, A에서 깨진 곳을 고치는 쪽이 가장 낫습니다.</p>
+  <div class="cols">
+    <div class="box">
+      <h3>A를 고르는 이유</h3>
+      <ul>
+        <li>"파일 만들지 마"를 3번 다 지킴. B는 2번 어김. 승인 범위를 지키는 게 이 도구의 본업.</li>
+        <li>막혔을 때 사용자가 읽을 수 있는 한국어 안내가 있음.</li>
+        <li>읽고 답하는 일에 검토가 안 붙음. B의 검토는 이번에 오답을 한 번도 고치지 못함.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>A에서 고칠 것</h3>
+      <ul>
+        <li>파워셸 읽기 표현을 읽기 명령 목록에 넣기(3번 사례의 헛막힘).</li>
+        <li>파일을 바꾼 일은 막힌 뒤에도 기록이 안 채워져 완료 기록이 0 (4·6·7번).</li>
+        <li>둘째 작업 넘겨받기가 1/3로, 2026-11-24 JY 시험의 5/5보다 나빠진 원인 찾기 (11번).</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>B에서 볼 만한 것</h3>
+      <ul>
+        <li>둘째 작업 넘겨받기는 3/3으로 A보다 잘 됨.</li>
+        <li>조건이 있을 때 자동 기록을 건너뛰는 보호 장치는 작동함.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>A·B 모두 안 되는 것</h3>
+      <ul>
+        <li>완료 조건 있는 작업에서 Autopilot 완료 기록이 남지 않음.</li>
+        <li>멈춘 뒤 다음 세션에서 이어 하기가 한 번도 안 됨.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="mute">한계: 모델은 Opus 5.5 하나, 사례마다 3번. 함정 사례는 아무도 틀리지 않아 "검토가 오답을 고치는가"는 이 시험으로 판단할 수 없습니다.</p>
+</section>
+
+</main>
