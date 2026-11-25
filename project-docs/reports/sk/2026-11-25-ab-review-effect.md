@@ -4,7 +4,7 @@ Nov 25, 2026 · sk
 
 - 기준 버전: `test-baseline-2026-11-16` (Core `c6019ac`, Autopilot `v0.5.1` `2075768`). 시험에는 `core/main` `450e4b3`(A)과 `kyu/core-review-lite` `15b6e2b`(B)을 썼습니다.
 - 확인 환경: Windows 11 Pro, Git Bash와 PowerShell 7, Python 3.14.7, Claude Code 2.1.330(시험 중 업데이트 없음), 모델은 Sonnet 5.5와 Haiku 5.5
-- 관련 링크: 안내서 [`TESTING.md`](../../evidence/2026-11-24/TESTING.md), kyu 성능 보고서 [`2026-11-24-performance-measurement.md`](../kyu/2026-11-24-performance-measurement.md)
+- 관련 링크: 안내서 [`TESTING.md`](../kyu/evidence/2026-11-24/TESTING.md), kyu 성능 보고서 [`2026-11-24-performance-measurement.md`](../kyu/2026-11-24-performance-measurement.md)
 - 시험 원자료(실행 폴더 120개, `check.json`, 집계 표)는 시험 PC의 `~/ga-test/runs`와 `~/ga-test/results-trap-*.md`에 있고, 이 보고서에는 표와 해당 `check.json`에서 가져온 문장만 적습니다.
 
 ## 1. 목표
@@ -38,7 +38,9 @@ Nov 25, 2026 · sk
 | 오류 실행 | 0 | 0 | 0 | 0 |
 | Stop 차단 | 6 | 30 | 2 | 30 |
 | 답에 "검토 실패·정정" 문구가 붙은 실행 | 0 | 1 | 0 | 6 |
-| 첫 답을 검토가 바꾼 실행 (`blocked_drafts`와 최종 답 비교) | — | 1 | 2 (두 모델의 A는 검토가 없어 차이가 생기지 않는 것이 정상) | 8 |
+| 첫 답을 검토가 바꾼 실행 (`blocked_drafts`와 최종 답 비교) | — | 1 | 2 (두 모델의 A는 검토가 없어 차이가 생기지 않는 것이 정상) ※ | 8 |
+
+※ kyu 메모(2026-11-25, SK 부재 중 추가): Haiku A 칸의 2와 같은 칸의 설명이 맞지 않습니다. A도 Stop에서 2번 막혔으므로(위 "Stop 차단" 2) 그 2건에서 첫 답과 최종 답이 달라졌을 수 있습니다. 그 2건이 무엇인지는 시험 PC의 원자료에만 있어 SK 확인이 필요합니다. 숫자와 설명은 바꾸지 않았습니다.
 
 ### 3-3. 손 확인
 
