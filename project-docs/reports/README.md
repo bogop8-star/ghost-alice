@@ -19,3 +19,4 @@
 | 2026-11-24 | jy | [훅 끔·켬·수정 후 비교 테스트](jy/2026-11-24-hook-on-off-fix-test.md) |
 | 2026-11-24 | kyu | [Ghost-ALICE 성능 측정과 개선안 비교](kyu/2026-11-24-performance-measurement.md) |
 | 2026-11-24 | sk | [jy 이슈 1~4 두 번째 재현 시도와 켬/끔 허위율 벤치 준비](sk/2026-11-24-repro-and-onoff-bench.md) |
+| 2026-11-25 | jy | [훅 끔·JY 방식(A)·kyu 방식(B) 대화형 비교: 지시 12개](jy/2026-11-25-hook-off-a-b-comparison.md) |
