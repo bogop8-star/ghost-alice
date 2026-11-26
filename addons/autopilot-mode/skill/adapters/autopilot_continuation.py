@@ -8,16 +8,26 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, timezone
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import autopilot_completion_contract as contract
 import autopilot_completion_service as service
 import autopilot_storage as storage
-from autopilot_work_items import validate_work_items, derive_ready_queue
+from autopilot_work_items import validate_work_items, derive_ready_queue, TERMINAL_STATUSES as TERMINAL
 
 
 def _key(ref):
     return ref['work_unit_id'], ref['contract_revision'], ref.get('criterion_id', ref.get('id'))
+
+
+def _plan_contracts_hold(current, planned):
+    """Each currently selected contract must be the one the plan froze for that unit.
+
+    A later route may select fewer planned units than the route that admitted the
+    plan; it may not select an unplanned unit or a changed contract.
+    """
+    frozen = {c['work_unit_id']: c for c in planned}
+    return bool(current) and all(frozen.get(c['work_unit_id']) == c for c in current)
 
 
 def _selection_ok(selection):
@@ -97,6 +107,130 @@ def register_continuation_plan(source, *, expected_input_event_id, items, approv
     return dict(status='admitted',plan_id=identity)
 
 
+# Taking over an earlier session's plan. A plan belongs to the session that admitted it,
+# so a new session never runs it directly: it reads the earlier plan, admits the unfinished
+# tasks' criteria under its own authority, and registers them as its own plan.
+_RESUMED_STATUSES = {'ready', 'running', 'reopened', 'waiting'}
+
+
+def _earlier_run_dir(run_dir, session_id, earlier_session_id):
+    """The earlier session's run beside this session's run, under the same platform."""
+    run_dir = Path(run_dir)
+    if run_dir.name != session_id or run_dir.parent.parent.name != 'sessions':
+        raise ValueError('plan adoption requires a session-derived Ghost-ALICE Autopilot run')
+    if (not isinstance(earlier_session_id, str) or not earlier_session_id.strip()
+            or PurePath(earlier_session_id).name != earlier_session_id or earlier_session_id in {'.', '..'}):
+        raise ValueError('earlier session id must be a plain session id')
+    if earlier_session_id == session_id:
+        raise ValueError('plan adoption needs another session of this ledger')
+    return run_dir.parent / earlier_session_id
+
+
+def _adoption_items(plan, earlier_statuses, current_rows):
+    """Unfinished tasks of an earlier plan, mapped onto this session's admitted criteria.
+
+    earlier_statuses maps (work_unit_id, contract_revision, criterion_id) to the earlier
+    session's criterion status; current_rows are this session's selected criterion rows.
+    """
+    definitions = {_key(c): c for snapshot in plan['contracts'] for c in snapshot['criteria']}
+    items = validate_work_items(copy.deepcopy(plan['items']))
+    completed = []
+    for task in items:
+        if task['status'] == 'completed':
+            if any(earlier_statuses.get(_key(r)) != 'met' for r in task['criterion_refs']):
+                raise ValueError(f"earlier task {task['id']} is marked completed but its criteria are not met")
+            completed.append(task['id'])
+    remaining = [t for t in items if t['status'] not in TERMINAL]
+    if not remaining:
+        raise ValueError('the earlier plan has nothing left to take over')
+    for task in remaining:
+        refs = []
+        for r in task['criterion_refs']:
+            earlier = definitions.get(_key(r))
+            if earlier is None:
+                raise ValueError(f"earlier plan has no contract for criterion {r['criterion_id']}")
+            matches = [c for c in current_rows if c.get('admitted') is True and c.get('id') == earlier['id']
+                       and c.get('summary') == earlier['summary'] and c.get('source') == earlier['source']]
+            if len(matches) != 1:
+                raise ValueError(f"criterion {earlier['id']} ({earlier['summary']!r}, source {earlier['source']}) "
+                                 'must be admitted and selected exactly once in this session before adoption')
+            refs.append(dict(work_unit_id=matches[0]['work_unit_id'],
+                             contract_revision=matches[0]['contract_revision'], criterion_id=earlier['id']))
+        task['criterion_refs'] = refs
+        task['depends_on'] = [d for d in task['depends_on'] if d not in completed]
+        if task['status'] in _RESUMED_STATUSES:
+            task['status'] = 'ready'
+        task.pop('attempt', None)
+        task.pop('completion', None)
+    return dict(items=remaining, completed=completed, allowed_surfaces=list(plan['allowed_surfaces']))
+
+
+def _read_earlier_plan(current, target, material, earlier_session_id, plan_id=None):
+    run_dir = _earlier_run_dir(target['logical_run_dir'], current['GHOST_ALICE_SESSION_ID'], earlier_session_id)
+    authority = dict(service._v2_authority(current), session_id=earlier_session_id)
+    try:
+        plan = storage.read_continuation_plan(run_dir, authority)
+    except (OSError, ValueError) as exc:
+        raise ValueError(f'no readable plan for session {earlier_session_id}: {exc}') from exc
+    if plan is None or (plan_id is not None and plan['plan_id'] != plan_id):
+        raise ValueError(f'session {earlier_session_id} has no plan {plan_id or ""}'.strip())
+    from autopilot_work_items import _load_core_ledger_module
+    core = _load_core_ledger_module(material['state_path'], current)
+    state = core.read_session_state(root=Path(current['GHOST_ALICE_SESSION_INTENT_ROOT']),
+        platform=current['GHOST_ALICE_PLATFORM'], session_id=earlier_session_id)
+    statuses = {_key(c): c.get('status') for c in state.get('acceptance_criteria', []) if 'work_unit_id' in c}
+    return plan, statuses
+
+
+def resumable_plans(source):
+    """Read-only list of earlier sessions' plans in this ledger that still have unfinished tasks.
+
+    Each entry gives the criteria this session must admit before adopt_continuation_plan.
+    """
+    current, root, target, material, selection = service._v2_material(source)
+    run_dir = Path(target['logical_run_dir'])
+    found = []
+    if run_dir.parent.parent.name != 'sessions' or not run_dir.parent.is_dir():
+        return found
+    for other in sorted(run_dir.parent.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if other.name == current['GHOST_ALICE_SESSION_ID'] or not (other / storage.AUTHORITY_FILE).is_file():
+            continue
+        try:
+            plan, statuses = _read_earlier_plan(current, target, material, other.name)
+        except (ValueError, KeyError):
+            continue
+        definitions = {_key(c): c for s in plan['contracts'] for c in s['criteria']}
+        unfinished = [t for t in plan['items'] if t['status'] not in TERMINAL]
+        if not unfinished:
+            continue
+        found.append(dict(session_id=other.name, plan_id=plan['plan_id'], allowed_surfaces=plan['allowed_surfaces'],
+            completed=[t['id'] for t in plan['items'] if t['status'] == 'completed'],
+            unfinished=[dict(id=t['id'], status=t['status'], prompt=t['prompt'], depends_on=t['depends_on'],
+                criteria_to_admit=[{k: definitions[_key(r)][k] for k in ('id', 'summary', 'source')}
+                                   for r in t['criterion_refs'] if _key(r) in definitions])
+                for t in unfinished]))
+    return found
+
+
+def adopt_continuation_plan(source, *, expected_input_event_id, earlier_session_id, plan_id, approval_evidence):
+    """Register the unfinished part of an earlier session's plan as this session's plan.
+
+    This session must already own and select the unfinished tasks' criteria with the
+    earlier definitions. Completed earlier tasks satisfy dependencies only when their
+    criteria are met in the earlier session's ledger.
+    """
+    if not isinstance(approval_evidence, dict):
+        raise ValueError('continuation requires explicit approval evidence')
+    current, root, target, material, selection = service._v2_material(source, expected_input=expected_input_event_id)
+    plan, statuses = _read_earlier_plan(current, target, material, earlier_session_id, plan_id)
+    adopted = _adoption_items(plan, statuses, material['intent_state']['acceptance_criteria'])
+    evidence = dict(copy.deepcopy(approval_evidence), adopted_from=dict(session_id=earlier_session_id,
+        plan_id=plan['plan_id'], completed=adopted['completed']))
+    result = register_continuation_plan(source, expected_input_event_id=expected_input_event_id,
+        items=adopted['items'], approval_evidence=evidence, allowed_surfaces=adopted['allowed_surfaces'])
+    return dict(result, adopted_from=evidence['adopted_from'], tasks=[t['id'] for t in adopted['items']])
+
+
 def advance_continuation(source, payload, *, hook_input=None):
     """Dispatch an approved dependency-ready task after privileged criterion application."""
     if service._v2_run_is_paused(source): return payload
@@ -113,7 +247,7 @@ def advance_continuation(source, payload, *, hook_input=None):
         _,_,_,material,selection=service._v2_material(current,transaction=store.connection,
             claim_scope=service._v2_claim_scope(hook_input))
         binding,reference,snapshots=service._v2_contracts(current,root,target,material)
-        if not _selection_ok(selection) or reference!=plan['target'] or snapshots!=plan['contracts']:
+        if not _selection_ok(selection) or reference!=plan['target'] or not _plan_contracts_hold(snapshots,plan['contracts']):
             return dict(payload,continuation=dict(status='parked',reason='current-plan-contract-changed'))
         statuses={_key(c):c.get('status') for c in material['intent_state']['acceptance_criteria']}
         results={r['work_unit_id']:r for r in payload.get('completion_recording',{}).get('units',[])}
