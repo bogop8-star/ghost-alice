@@ -32,10 +32,15 @@ plan = json.loads(Path(sys.argv[2]).read_text())
 result = register_continuation_plan(dict(os.environ),
     expected_input_event_id=plan['expected_input_event_id'],
     items=plan['items'], approval_evidence=plan['approval_evidence'],
-    allowed_surfaces=plan['allowed_surfaces'])
+    allowed_surfaces=plan['allowed_surfaces'],
+    hold_until_next_input=plan.get('hold_until_next_input', False))
 print(json.dumps(result))
 PY
 ```
+
+Set `hold_until_next_input` to `true` in `PLAN_INPUT` when the user's current request says not to run the plan now: "register only", "do not create the files yet", "stop after task A", "do not run task B". The plan is then recorded, but `advance_continuation` dispatches nothing in this session until a later user input; at this input's Stop it reports `continuation: {status: "held"}`. A task the current-session assistant runs itself in this turn (for example task A in "run A, then stop") is still recorded as completed when its proof applies. Use the hold instead of registering a later task as `blocked`: a `blocked` task never becomes dependency-ready without a revised plan. Leave it `false` when the user wants the next task handed over in this session after the current one.
+
+Register the plan with one work unit per task, each owning only that task's criteria, and select all planned work units in the route that admits the plan. After the plan is admitted, do not register a different route for the same input before the response review is recorded: a route change after the review makes the prepared receipt stale and the completion is not recorded.
 
 The API validates current selection, item references, surfaces and dependencies, persists the admitted queue in the resolved Ghost-ALICE Autopilot runtime target, and returns `{"status":"admitted","plan_id":"sha256:..."}`. The assistant retains that returned ID. An identical plan preserves its dispatch state; an invalid binding or shape raises an error and admits no plan. Read the exit status/error rather than claiming admission from the proposed JSON. If scratch files are prohibited, the exposed Python tool may pass the same constructed object directly to this API; it does not waive any origin or schema requirement.
 
@@ -65,7 +70,7 @@ print(json.dumps(resumable_plans(dict(os.environ)), ensure_ascii=False, indent=1
 PY
 ```
 
-2. Choose the plan that matches the user's request. If more than one plan matches and the request does not identify one, ask the user which plan to continue.
+2. Choose the plan that matches the user's request. When several earlier plans hold the same unfinished tasks (the same prompts and criteria), continue the newest one without asking. Ask the user only when the matching plans hold different unfinished work.
 3. Admit every `criteria_to_admit` entry of the unfinished tasks in the current session's ledger with the exact `id`, `summary` and `source`, under a work unit and contract revision owned by the current session (session-intent-analyzer owns the ledger write). Then register the current response route selecting those work units and criteria (task-router owns route registration).
 4. Adopt the plan with the current event, the earlier `session_id` and `plan_id`, and approval evidence that quotes the user's current request:
 

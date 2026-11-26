@@ -30,6 +30,15 @@ def _plan_contracts_hold(current, planned):
     return bool(current) and all(frozen.get(c['work_unit_id']) == c for c in current)
 
 
+def _ledger_statuses(current, material, transaction):
+    """Criterion status for every owned criterion in this session, selected or not."""
+    from autopilot_work_items import _load_core_ledger_module
+    core = _load_core_ledger_module(material['state_path'], current)
+    state = core.read_session_state(root=Path(current['GHOST_ALICE_SESSION_INTENT_ROOT']),
+        platform=current['GHOST_ALICE_PLATFORM'], session_id=current['GHOST_ALICE_SESSION_ID'], transaction=transaction)
+    return {_key(c): c.get('status') for c in state.get('acceptance_criteria', []) if 'work_unit_id' in c}
+
+
 def _selection_ok(selection):
     return selection['status'] == 'selected' or selection.get('reason') in {
         'no-current-unmet-criteria', 'response-no-publication'}
@@ -44,14 +53,20 @@ def _surface_allowed(surface, allowed):
         for root in allowed)
 
 
-def register_continuation_plan(source, *, expected_input_event_id, items, approval_evidence, allowed_surfaces):
+def register_continuation_plan(source, *, expected_input_event_id, items, approval_evidence, allowed_surfaces,
+                               hold_until_next_input=False):
     """Validate and store a supplied approved plan against current selected criteria.
 
     Installed references/continuation.md owns the model's complete caller procedure.
     Plan admission may precede the current response review or Stop application;
     advance_continuation determines execution eligibility after application.
     Invalid input raises ValueError. An identical plan retains dispatch history.
+    hold_until_next_input=True records the plan without dispatching any task until a
+    later user input in this session (the user said to register only, or to stop after
+    the current task). A new session that adopts the plan starts from its own input.
     """
+    if not isinstance(hold_until_next_input, bool):
+        raise ValueError('hold_until_next_input must be true or false')
 
     if (not isinstance(approval_evidence, dict) or approval_evidence.get('decision') not in {'approved','approve','go'}
             or not isinstance(approval_evidence.get('source'), str) or not approval_evidence['source'].strip()):
@@ -91,6 +106,8 @@ def register_continuation_plan(source, *, expected_input_event_id, items, approv
     binding,reference,snapshots=service._v2_contracts(current,root,target,material)
     definition=dict(schema_version='autopilot-continuation-plan.v2',target=reference,
         contracts=snapshots,items=tasks,approval_evidence=copy.deepcopy(approval_evidence),allowed_surfaces=allowed_surfaces)
+    if hold_until_next_input:
+        definition['hold_input_event_id']=binding['input_event_id']
     identity=contract.digest(definition)
     with service._v2_recording_transaction(root,current,target) as store:
         if store is None: raise ValueError('continuation target unavailable')
@@ -110,7 +127,9 @@ def register_continuation_plan(source, *, expected_input_event_id, items, approv
 # Taking over an earlier session's plan. A plan belongs to the session that admitted it,
 # so a new session never runs it directly: it reads the earlier plan, admits the unfinished
 # tasks' criteria under its own authority, and registers them as its own plan.
-_RESUMED_STATUSES = {'ready', 'running', 'reopened', 'waiting'}
+# 'blocked' is included because a task held for the user's go-ahead is exactly what the
+# user releases by asking a new session to continue it.
+_RESUMED_STATUSES = {'ready', 'running', 'reopened', 'waiting', 'blocked'}
 
 
 def _earlier_run_dir(run_dir, session_id, earlier_session_id):
@@ -249,7 +268,10 @@ def advance_continuation(source, payload, *, hook_input=None):
         binding,reference,snapshots=service._v2_contracts(current,root,target,material)
         if not _selection_ok(selection) or reference!=plan['target'] or not _plan_contracts_hold(snapshots,plan['contracts']):
             return dict(payload,continuation=dict(status='parked',reason='current-plan-contract-changed'))
-        statuses={_key(c):c.get('status') for c in material['intent_state']['acceptance_criteria']}
+        # The selected projection holds only the units this route selects. A finished task
+        # outside the current route must be judged on the whole ledger, or it looks unmet
+        # and is dispatched again.
+        statuses=_ledger_statuses(current,material,store.connection)
         results={r['work_unit_id']:r for r in payload.get('completion_recording',{}).get('units',[])}
         items=validate_work_items(plan['items'])
         unavailable={_key(c) for result in results.values() for c in result.get('retained_coverage_errors',[])}
@@ -267,7 +289,7 @@ def advance_continuation(source, payload, *, hook_input=None):
             blocked.update(descendants)
         for item in items:
             refs=item['criterion_refs']
-            if item['status']=='completed' and any(statuses.get(_key(r))!='met' for r in refs):
+            if item['status']=='completed' and any(statuses.get(_key(r)) not in (None,'met') for r in refs):
                 item['status']='reopened'
                 plan['dispatches'].pop(item['id'],None)
                 plan['events'].append(dict(event='task-proof-invalidated',task_id=item['id'],criterion_refs=refs))
@@ -277,11 +299,12 @@ def advance_continuation(source, payload, *, hook_input=None):
                 item['status']='completed'
                 plan['events'].append(dict(event='task-applied',task_id=item['id'],criterion_refs=refs,
                     application_references=sorted({results[r['work_unit_id']]['application_reference'] for r in refs})))
-        ready=derive_ready_queue(items)
+        held=plan.get('hold_input_event_id')==binding['input_event_id']
+        ready=derive_ready_queue(items) if not held else []
         by_id={t['id']:t for t in items}
         # A running task may resume once after real owning-criterion progress;
         # input timestamps and response text are deliberately absent.
-        candidates=[t for t in items if t['id'] in ready or (t['status']=='running'
+        candidates=[] if held else [t for t in items if t['id'] in ready or (t['status']=='running'
             and all(by_id[d]['status']=='completed' for d in t['depends_on']))]
         selected=None
         for task in candidates:
@@ -307,5 +330,7 @@ def advance_continuation(source, payload, *, hook_input=None):
         # Queue dispatch is the current action; recording details remain structured.
         return dict(payload,systemMessage=message,continuation=dict(status='dispatched',task_id=selected['id'],
             criterion_refs=selected['criterion_refs'],plan_id=plan['plan_id']))
+    if held and not all(t['status']=='completed' for t in items):
+        return dict(payload,continuation=dict(status='held',plan_id=plan['plan_id']))
     status='complete' if not blocked and all(t['status']=='completed' for t in items) else 'parked' if candidates or blocked else 'waiting'
     return dict(payload,continuation=dict(status=status,plan_id=plan['plan_id']))
