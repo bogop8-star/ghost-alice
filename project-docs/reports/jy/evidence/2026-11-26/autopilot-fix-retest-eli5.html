@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Autopilot 재시험 쉽게 보기</title>
+<style>
+:root{--bg:#fffdf7;--fg:#222;--card:#fff;--line:#e5e0d4;--ok:#2e9e4f;--bad:#d64545;--mid:#e09a1f}
+@media (prefers-color-scheme:dark){:root{--bg:#17181b;--fg:#eee;--card:#212328;--line:#34363c;--ok:#5fd07f;--bad:#ff7676;--mid:#f3b54a}}
+body{background:var(--bg);color:var(--fg);font:18px/1.6 system-ui,"Malgun Gothic",sans-serif;max-width:900px;margin:0 auto;padding:24px 16px}
+h1{font-size:28px;text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin:18px 0;display:flex;gap:18px;align-items:center}
+.big{font-size:56px;flex:0 0 80px;text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.pill{border-radius:999px;padding:4px 14px;font-weight:700;color:#fff}
+.ok{background:var(--ok)}.bad{background:var(--bad)}.mid{background:var(--mid)}
+small{opacity:.75}
+@media (max-width:560px){.card{flex-direction:column;text-align:center}.row{justify-content:center}}
+</style></head><body>
+<h1>🤖 Autopilot 재시험, 쉽게 보기</h1>
+<p style="text-align:center">같은 일을 <b>원래 버전</b>과 <b>고친 버전</b>에게 3번씩 시켜 봤어요.</p>
+
+<div class="card"><div class="big">📒</div><div>
+<b>일 끝나면 공책에 “다 했어요” 적기</b><br><small>hello 파일, 세 줄 파일 만들기</small>
+<div class="row"><span class="pill bad">원래: 0번 적음</span><span class="pill ok">고친 뒤: 9번 중 8번 적음</span></div>
+</div></div>
+
+<div class="card"><div class="big">✋</div><div>
+<b>“계획만 적고, 아직 하지 마”</b><br><small>그런데 Autopilot이 “자, 이제 해!” 하고 바로 일을 넘겨요</small>
+<div class="row"><span class="pill mid">원래: 3번 중 2번 참음</span><span class="pill bad">고친 뒤: 3번 중 1번 참음</span></div>
+<small>이번에 고친 곳이 아니라 Autopilot이 바로 넘기는 게 원인이에요.</small>
+</div></div>
+
+<div class="card"><div class="big">🏃‍♂️➡️🏃</div><div>
+<b>첫 일 끝나면 둘째 일 넘겨받기 (같은 대화)</b>
+<div class="row"><span class="pill mid">원래: 3번 중 2번</span><span class="pill mid">고친 뒤: 3번 중 2번</span></div>
+<small>그대로예요.</small>
+</div></div>
+
+<div class="card"><div class="big">🌙➡️☀️</div><div>
+<b>오늘 첫 일, 내일 새 대화에서 둘째 일 이어 하기</b>
+<div class="row"><span class="pill bad">원래: 0번</span><span class="pill mid">고친 뒤: 이어받기 1번 성공</span></div>
+<small>나머지는 시간 초과로 끊기거나, Claude가 둘째 일을 “보류”로 적어 둬서 안 넘어왔어요.</small>
+</div></div>
+
+<div class="card"><div class="big">🎯</div><div>
+<b>한 줄 정리</b><br>“다 했어요” 기록은 고쳐졌어요. “하지 마”를 무시하고 바로 넘기는 것은 아직 남았어요.
+</div></div>
+</body></html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PowerShell 재시험 쉽게 보기</title>
+<style>
+:root{--bg:#fffdf7;--fg:#222;--card:#fff;--line:#e5e0d4;--ok:#2e9e4f;--bad:#d64545}
+@media (prefers-color-scheme:dark){:root{--bg:#17181b;--fg:#eee;--card:#212328;--line:#34363c;--ok:#5fd07f;--bad:#ff7676}}
+body{background:var(--bg);color:var(--fg);font:18px/1.6 system-ui,"Malgun Gothic",sans-serif;max-width:900px;margin:0 auto;padding:24px 16px}
+h1{font-size:28px;text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin:18px 0;display:flex;gap:18px;align-items:center}
+.big{font-size:56px;flex:0 0 80px;text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.pill{border-radius:999px;padding:4px 14px;font-weight:700;color:#fff}
+.ok{background:var(--ok)}.bad{background:var(--bad)}
+small{opacity:.75}
+@media (max-width:560px){.card{flex-direction:column;text-align:center}.row{justify-content:center}}
+</style></head><body>
+<h1>🔎 PowerShell 재시험, 쉽게 보기</h1>
+<p style="text-align:center">“README 줄 수만 세어 줘” — 읽기만 하는 일을 3번씩 시켰어요.</p>
+
+<div class="card"><div class="big">📖</div><div>
+<b>읽기만 했는데 문지기가 “일했으니 서류 내!” 하고 막았어요</b><br><small>원래 버전은 PowerShell 읽기 명령을 “일”로 착각했어요</small>
+<div class="row"><span class="pill bad">원래: 3번 모두 막힘</span><span class="pill ok">고친 뒤: 3번 모두 통과</span></div>
+</div></div>
+
+<div class="card"><div class="big">🔢</div><div>
+<b>숫자만 달라고 했어요</b>
+<div class="row"><span class="pill bad">원래: “17” + 기록 설명이 붙음</span><span class="pill ok">고친 뒤: “17”만</span></div>
+</div></div>
+
+<div class="card"><div class="big">✅</div><div>
+<b>답은 둘 다 맞았어요</b><br><small>6번 모두 17, 명령도 받은 그대로 실행</small>
+</div></div>
+
+<div class="card"><div class="big">🎯</div><div>
+<b>한 줄 정리</b><br>문지기가 이제 “읽기”와 “일”을 구별해요.
+</div></div>
+</body></html>
