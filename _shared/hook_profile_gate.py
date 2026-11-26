@@ -1012,16 +1012,30 @@ def _run(hook_id: str, payload: str, *, platform: str | None = None, binding=Non
     if not child_env.get("GHOST_ALICE_PYTHON"):
         child_env["GHOST_ALICE_PYTHON"] = sys.executable
     started = time.perf_counter()
-    result = subprocess.run(
-        argv,
-        input=stdin_text if stdin_text else None,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        env=child_env,
-        check=False,
-    )
+    # Local fix 2026-11-26: ask for the work route before the first file-changing tool call,
+    # so Ghost-ALICE Autopilot's origin capture precedes the work it records.
+    route_denial = None
+    if hook_id == "tool-checkpoint" and binding is not None:
+        try:
+            from pre_tool_route_gate import route_gate_denial
+            route_denial = route_gate_denial(env, hook_payload)
+        except Exception:
+            route_denial = None  # Any lookup failure is left to the Stop gate.
+    if route_denial:
+        result = subprocess.CompletedProcess(argv, 0, stdout=json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse", "permissionDecision": "deny",
+            "permissionDecisionReason": route_denial}}, ensure_ascii=False) + "\n", stderr="")
+    else:
+        result = subprocess.run(
+            argv,
+            input=stdin_text if stdin_text else None,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=child_env,
+            check=False,
+        )
     observed_duration = time.perf_counter() - started
     declared, host_stdout = _take_surface_declaration(result.stdout)
     hook_payload = _payload_from_stdin(stdin_text)

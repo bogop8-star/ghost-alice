@@ -77,6 +77,9 @@ _SED_PRINT = re.compile(r'(\d+|\$)(,(\d+|\$))?p')
 _PYTHON = re.compile(r'(^|[\\/])(python3?|py)(\.exe)?$|^\$\{?py(thon)?\}?$', re.I)
 _LITERAL = re.compile(r'Q\d+|S|-?\d+(\.\d+)?')
 _ASSIGNMENT = re.compile(r'\$?[A-Za-z_][A-Za-z0-9_:]*=\S*')
+_UNSAFE_PYTHON = re.compile(r'\bopen\s*\(|\.write|\bos\b|subprocess|shutil|\bsystem\b|\bexec\b|\beval\b|__import__|'
+                            r'\bPath\b|pathlib|unlink|remove|rename|mkdir|rmdir|touch|sqlite3|socket|urllib|requests|'
+                            r'\binput\s*\(|compile\s*\(|importlib|ctypes|pickle', re.I)
 # PowerShell. Cmdlets that only read or shape what they are given, the .NET members that only
 # read, and the words an expression is made of. A script block or a parenthesised part is
 # judged as commands of its own, so `ForEach-Object { Remove-Item $_ }` is still work.
@@ -120,6 +123,15 @@ def _read_only_command(command, powershell=False):
         if not _read_only_command(inner.group(1), powershell):
             return False
         command = command[:inner.start()] + 'S' + command[inner.end():]
+    if not powershell:
+        # A plain shell variable set to a literal in this command stands for
+        # that literal where it is used, so S="…/response_route.py"; python "$S" is judged as
+        # the script it names. Values holding $ or a backtick are left unresolved.
+        for match in re.finditer(r'(?:^|[;&|\n]\s*)([A-Za-z_]\w*)=(?:"([^"$`]*)"|\'([^\']*)\'|([^\s;&|$`"\']+))',
+                                 command):
+            literal = next((part for part in match.groups()[1:] if part is not None), '')
+            command = re.sub(r'"\$\{?%s\}?"|\$\{%s\}|\$%s\b' % ((re.escape(match.group(1)),) * 3),
+                             lambda _: '"' + literal + '"', command)
     # Quoted text is data (a grep pattern, a label). It is set aside while the commands are
     # read and looked up again where a command treats it as a script (sed, awk).
     quoted = []
@@ -188,6 +200,12 @@ def _read_only_command(command, powershell=False):
         head = text(words[0])
         # Ghost-ALICE's own record scripts keep the ledger; they are not the user's work.
         if _PYTHON.search(head) and any(text(word).replace('\\', '/').split('/')[-1] in _RECORD_SCRIPTS for word in words[1:]):
+            continue
+        # Inline Python that only reads and prints (json.load(sys.stdin),
+        # print) is read-only; code that can open, write, delete, run or import a writer is work.
+        if _PYTHON.search(head) and words[1:2] == ['-c'] and len(words) >= 3 and re.fullmatch(r'Q\d+', words[2]):
+            if _UNSAFE_PYTHON.search(text(words[2])):
+                return False
             continue
         # Output redirection to a file is a write.
         if '>' in segment:
@@ -352,6 +370,7 @@ def native_input_actor(entry):
     if is_queued_human_prompt(entry):
         return 'human'
     return None
+
 
 
 def is_queued_human_prompt(entry):

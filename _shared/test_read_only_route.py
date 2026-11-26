@@ -146,6 +146,25 @@ class ReadOnlyCallTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertFalse(self.read_only(shell(command, 'PowerShell')))
 
+    def test_record_reads_seen_on_2026_11_26_are_read_only(self):
+        # The pre-tool route gate denied these read-only record commands in a real run.
+        script = 'C:/home/.claude/skills/session-intent-analyzer/scripts/session_intent_ledger.py'
+        for command in (
+                f'S="{script}"; ls x 2>&1; python "$S" --root "C:/l" --platform claude --session-id s --read-state',
+                f'python "{script}" --read-state | python -c "import json,sys; d=json.load(sys.stdin); '
+                "print(json.dumps({k:d.get(k) for k in ['ledger_revision']},ensure_ascii=False,indent=1))\"; ls output 2>&1",
+                'cat state.json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))"'):
+            with self.subTest(command=command):
+                self.assertTrue(self.read_only(shell(command)))
+
+    def test_python_inline_code_that_can_change_files_is_work(self):
+        for command in ('python -c "open(\'x\',\'w\').write(\'a\')"', 'python -c "import os; os.remove(\'x\')"',
+                        'python -c "import shutil; shutil.rmtree(\'x\')"', 'python -c "exec(input())"',
+                        'python -c "__import__(\'os\').system(\'rm x\')"', "python -c 'from pathlib import Path; Path(\"x\").touch()'",
+                        'S="x.py"; python "$S"', 'S="session_intent_ledger.py"; python "$S"; rm -rf y'):
+            with self.subTest(command=command):
+                self.assertFalse(self.read_only(shell(command)))
+
     def test_own_record_scripts_are_read_only(self):
         for script in ('session_intent_ledger.py', 'response_route.py', 'completion_assessment.py'):
             with self.subTest(script=script):
@@ -228,6 +247,25 @@ class ReadOnlyStopTests(unittest.TestCase):
         for part in ('[사용자 안내]', '무엇이 막혔나:', '왜:', '다음에 할 일:'):
             with self.subTest(part=part):
                 self.assertIn(part, blocked['reason'])
+
+    def test_route_block_says_the_ledger_is_not_a_user_file(self):
+        # 2026-11-25 comparison: after "다른 파일은 건드리지 마", A's assistant refused in all six
+        # blocked runs to register the route because it took the Ghost-ALICE ledger for a user file.
+        blocked = self.stop('I wrote the title to title.txt.', shell('head -n 1 /isolated/README.md > title.txt'))
+        self.assertEqual(blocked.get('decision'), 'block')
+        self.assertIn('not a user project file', blocked['reason'])
+        self.assertIn('does not forbid', blocked['reason'])
+
+    def test_route_block_says_how_a_completion_condition_is_recorded(self):
+        # With the ledger note alone, the assistant registered a route with no work unit and no
+        # criterion, so Ghost-ALICE Autopilot still had nothing to record.
+        blocked = self.stop('I wrote the title to title.txt.', shell('head -n 1 /isolated/README.md > title.txt'))
+        self.assertIn('admitted criterion', blocked['reason'])
+        self.assertIn('execution work unit', blocked['reason'])
+        # With the route alone, the assistant answered without the response review, so there
+        # was still no authenticated proof for Ghost-ALICE Autopilot to apply.
+        self.assertIn('verification-before-completion', blocked['reason'])
+        self.assertIn('response review', blocked['reason'])
 
 
 class KoreanGuideTests(unittest.TestCase):

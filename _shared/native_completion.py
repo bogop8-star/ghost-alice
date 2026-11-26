@@ -20,6 +20,14 @@ from completion_check_validator import looks_like_evidence_claim, validate_compl
 from completion_route import select_completion_route
 from native_transcript import native_tool_activity
 
+# Local fix 2026-11-25. After "다른 파일은 건드리지 마", assistants refused to register the
+# route because they took the Ghost-ALICE ledger for a user file, so no completion was recorded.
+_LEDGER_SCOPE_NOTE = (
+    "Registering the route writes only Ghost-ALICE's own session ledger through Core's record "
+    'scripts; that ledger is not a user project file, so a user instruction not to touch other '
+    'files does not forbid it. An explicit user prohibition of Ghost-ALICE recording, or a user '
+    'tool or command limit, still applies.')
+
 
 def _source_status_issue(reasons, *, explanation=False):
     """Describe observed source state without replacing the assistant's judgment."""
@@ -149,7 +157,13 @@ Publication and application retain immutable provenance/integrity checks.
             if native_activity['status'] == 'observed' and not native_activity.get('read_only'):
                 issue = ('route-unavailable: This input contains native tool calls but has no current Core response-route. '
                     'The current-session assistant follows task-router to register this input\'s work and response purpose. '
-                    'Retain the tool results; route registration does not require repeating the work.')
+                    'Retain the tool results; route registration does not require repeating the work. '
+                    'When the user stated a completion condition, first record it through session-intent-analyzer as an '
+                    'admitted criterion owned by an execution work unit (work_unit_id and contract_revision), then register '
+                    'the route selecting that execution work unit and criterion; Ghost-ALICE Autopilot records completion '
+                    'only for a selected execution work unit with admitted criteria. Before the final completion answer, '
+                    'follow verification-before-completion (references/autopilot-publication.md) to prepare and record '
+                    'the response review; a completion answer without a recorded response review leaves the criterion unmet.')
             elif native_activity['status'] == 'unavailable':
                 issue = ('native-activity-unavailable: Native current-turn activity could not be established '
                     f"({native_activity['reason']}); this is not evidence of a tool-free input. "
@@ -157,6 +171,7 @@ Publication and application retain immutable provenance/integrity checks.
                     'Retain existing results; do not repeat the work.')
             if issue is not None:
                 repair_target = 'response_route'
+                issue += ' ' + _LEDGER_SCOPE_NOTE
         if issue is None and report_review_issue:
             issue = report_review_issue
             repair_target = report_review_target
@@ -165,7 +180,7 @@ Publication and application retain immutable provenance/integrity checks.
         if issue is None and (marker or selected['required_completion_check']) and selected['route_binding'] != 'current':
             issue = ('route-unavailable: The current-session assistant must use task-router to register the current '
                 'response-route through Core before submitting evidence. Retain existing proof; '
-                'a missing route does not invalidate the business result.')
+                'a missing route does not invalidate the business result. ' + _LEDGER_SCOPE_NOTE)
         if issue is None:
             issue = validate_completion_text(validation_text,
                 require_completion_check=selected['required_completion_check'])
