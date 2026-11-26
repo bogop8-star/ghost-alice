@@ -2,7 +2,7 @@
 
 Nov 26, 2026 · jy
 
-- 기준 버전: 원본 A는 Core `core/main` `450e4b3`(JY 방식)와 Autopilot `v0.5.1` `2075768` 입니다. 수정 A는 같은 두 커밋에 이 보고서 2절의 수정을 더한 것입니다(Core PR #39, Autopilot PR #40).
+- 기준 버전: 원본 A는 Core `core/main` `450e4b3`(JY 방식)와 Autopilot `v0.5.1` `2075768` 입니다. 수정 A는 같은 두 커밋에 이 보고서 2절의 수정을 더한 것입니다(Core PR #39의 첫 커밋, Autopilot PR #40의 첫 커밋 `4b136ee`). #40에 뒤에 추가한 커밋(`943896b` 보류·재넘김 수정, `14a096d` 검토 반영)은 이 재시험에 들어 있지 않습니다.
 - 확인 환경: Windows 11 Pro 25H2 (10.0.26200, 한국어), Python 3.14.4, Claude Code CLI 2.1.310 (터미널 대화형, 모델 `claude-opus-5-5`, effort `medium`, 권한 모드 `auto`)
 - 관련 링크: [훅 끔·A·B 대화형 비교](2026-11-25-hook-off-a-b-comparison.md) (#32), PowerShell 읽기 판별 수정 PR #37, Core 수정 PR #39, Autopilot 수정 PR #40, PowerShell 재시험 [2026-11-26-powershell-read-fix-retest.md](2026-11-26-powershell-read-fix-retest.md), 그림 설명(ELI5) [evidence/2026-11-26/autopilot-fix-retest-eli5.html](evidence/2026-11-26/autopilot-fix-retest-eli5.html)
 
@@ -66,7 +66,7 @@ Autopilot (`addons/autopilot-mode/skill/`)
 
 | 항목 | 원본 A | 수정 A |
 | --- | ---: | ---: |
-| 시간 합계 | 2,006.3초 | 4,968.6초 |
+| 시간 합계 | 2,006.3초 | 4,968.6초 (늘어난 주된 이유: 장부 기록·경로 등록·응답 검토 절차, 디스크 검색 848초) |
 | 원본 대비 | - | 2.5배 |
 | 도구 호출 | 238 | 560 |
 | Stop 막힘 | 9 | 2 |
@@ -144,6 +144,8 @@ Autopilot (`addons/autopilot-mode/skill/`)
 | 7 | Claude가 "B는 실행하지 마"를 B 보류 등록으로 처리함 | 12번 수정 3회차: B를 "사용자 승인 후 실행"으로 등록, 새 세션에서 `waiting` | 새 세션에서 넘김이 일어나지 않음 | 기록만 |
 
 ## 5. 확인하지 못한 것
+
+- #40의 뒤 커밋 `943896b`, `14a096d`(보류·재넘김·이어받기 수정)는 이 재시험 뒤에 들어가 대화형으로 시험하지 않았습니다. 단위 시험만 통과했습니다.
 
 - 지시마다 3회입니다. 1/3과 2/3의 차이가 우연인지 확인하지 않았습니다.
 - 12번은 수정 A 3회 중 2회가 실행기의 20분 제한에 걸려 끊겼습니다. 제한을 늘리고 회차마다 장부를 비운 조건에서는 다시 돌리지 않았습니다.
