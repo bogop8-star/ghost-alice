@@ -2,45 +2,146 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Autopilot 재시험 쉽게 보기</title>
 <style>
-:root{--bg:#fffdf7;--fg:#222;--card:#fff;--line:#e5e0d4;--ok:#2e9e4f;--bad:#d64545;--mid:#e09a1f}
-@media (prefers-color-scheme:dark){:root{--bg:#17181b;--fg:#eee;--card:#212328;--line:#34363c;--ok:#5fd07f;--bad:#ff7676;--mid:#f3b54a}}
-body{background:var(--bg);color:var(--fg);font:18px/1.6 system-ui,"Malgun Gothic",sans-serif;max-width:900px;margin:0 auto;padding:24px 16px}
-h1{font-size:28px;text-align:center}
-.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin:18px 0;display:flex;gap:18px;align-items:center}
-.big{font-size:56px;flex:0 0 80px;text-align:center}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.pill{border-radius:999px;padding:4px 14px;font-weight:700;color:#fff}
+:root{--bg:#fffdf7;--fg:#222;--mut:#666;--card:#fff;--line:#e2dccd;--ok:#2e9e4f;--bad:#d64545;--mid:#d9891a;--box:#f3efe4;--arrow:#888}
+@media (prefers-color-scheme:dark){:root{--bg:#17181b;--fg:#eee;--mut:#aaa;--card:#212328;--line:#3a3d44;--ok:#5fd07f;--bad:#ff7676;--mid:#f3b54a;--box:#2a2d33;--arrow:#999}}
+body{background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,"Malgun Gothic",sans-serif;max-width:980px;margin:0 auto;padding:24px 16px}
+h1{font-size:28px;text-align:center;margin-bottom:4px}
+.sub{text-align:center;color:var(--mut);margin-top:0}
+.legend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:14px 0 6px;font-size:15px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px 18px;margin:22px 0}
+.card h2{font-size:20px;margin:0 0 4px}
+.q{color:var(--mut);font-size:14px;margin:0 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 0}
+.pill{border-radius:999px;padding:3px 12px;font-weight:700;color:#fff;font-size:14px}
 .ok{background:var(--ok)}.bad{background:var(--bad)}.mid{background:var(--mid)}
-small{opacity:.75}
-@media (max-width:560px){.card{flex-direction:column;text-align:center}.row{justify-content:center}}
+svg{width:100%;height:auto;display:block;margin:8px 0}
+svg text{fill:var(--fg);font-family:system-ui,"Malgun Gothic",sans-serif}
+.lbl{font-size:13px}.big{font-size:30px}.cap{font-size:14px;font-weight:700}
+.boxr{fill:var(--box);stroke:var(--line);stroke-width:1.5}
+.arr{stroke:var(--arrow);stroke-width:2.5;fill:none;marker-end:url(#a)}
+svg text.x{fill:var(--bad);font-weight:800}svg text.v{fill:var(--ok);font-weight:800}svg text.w{fill:var(--mid);font-weight:800}
+.lane{font-size:14px;font-weight:700}
+.sum{background:var(--box);border-radius:14px;padding:12px 16px;margin-top:26px}
 </style></head><body>
-<h1>🤖 Autopilot 재시험, 쉽게 보기</h1>
-<p style="text-align:center">같은 일을 <b>원래 버전</b>과 <b>고친 버전</b>에게 3번씩 시켜 봤어요.</p>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker></defs></svg>
 
-<div class="card"><div class="big">📒</div><div>
-<b>일 끝나면 공책에 “다 했어요” 적기</b><br><small>hello 파일, 세 줄 파일 만들기</small>
-<div class="row"><span class="pill bad">원래: 0번 적음</span><span class="pill ok">고친 뒤: 9번 중 8번 적음</span></div>
-</div></div>
+<h1>🤖 Autopilot 문제, 그림으로 보기</h1>
+<p class="sub">같은 일을 <b>원래 버전</b>과 <b>고친 버전</b>에 3번씩 시켜 봤어요 (2026-11-26)</p>
+<div class="legend"><span>🧑 사람</span><span>🤖 Claude</span><span>🚚 Autopilot(다음 일을 넘겨주는 배달원)</span><span>📒 완료 기록 공책</span><span>🚧 문지기(훅)</span></div>
 
-<div class="card"><div class="big">✋</div><div>
-<b>“계획만 적고, 아직 하지 마”</b><br><small>그런데 Autopilot이 “자, 이제 해!” 하고 바로 일을 넘겨요</small>
-<div class="row"><span class="pill mid">원래: 3번 중 2번 참음</span><span class="pill bad">고친 뒤: 3번 중 1번 참음</span></div>
-<small>이번에 고친 곳이 아니라 Autopilot이 바로 넘기는 게 원인이에요.</small>
-</div></div>
+<div class="card">
+<h2>1. 일 끝나면 공책에 “다 했어요” 적기</h2>
+<p class="q">“output/hello.txt를 새로 만들고 … 완료 조건은 …”, “output/report.txt를 새로 만들어 줘 … 완료 조건: 3줄”</p>
+<svg viewBox="0 0 900 250" role="img" aria-label="완료 기록 전후 비교">
+  <text x="10" y="30" class="lane">원래</text>
+  <rect x="70" y="10" width="140" height="80" rx="12" class="boxr"/><text x="140" y="48" text-anchor="middle" class="big">🤖📄</text><text x="140" y="78" text-anchor="middle" class="lbl">파일부터 만듦</text>
+  <path d="M215 50 H280" class="arr"/>
+  <rect x="285" y="10" width="140" height="80" rx="12" class="boxr"/><text x="355" y="48" text-anchor="middle" class="big">🚧</text><text x="355" y="78" text-anchor="middle" class="lbl">“등록 먼저!” 막음</text>
+  <path d="M430 50 H495" class="arr"/>
+  <rect x="500" y="10" width="140" height="80" rx="12" class="boxr"/><text x="570" y="48" text-anchor="middle" class="big">📒</text><text x="570" y="78" text-anchor="middle" class="lbl">공책이 빈칸</text>
+  <text x="680" y="58" class="big x">✗</text><text x="720" y="58" class="cap x">9번 중 0번 기록</text>
+  <text x="10" y="160" class="lane">고친 뒤</text>
+  <rect x="70" y="140" width="140" height="80" rx="12" class="boxr"/><text x="140" y="178" text-anchor="middle" class="big">🤖📝</text><text x="140" y="208" text-anchor="middle" class="lbl">먼저 등록</text>
+  <path d="M215 180 H280" class="arr"/>
+  <rect x="285" y="140" width="140" height="80" rx="12" class="boxr"/><text x="355" y="178" text-anchor="middle" class="big">📄</text><text x="355" y="208" text-anchor="middle" class="lbl">그다음 파일</text>
+  <path d="M430 180 H495" class="arr"/>
+  <rect x="500" y="140" width="140" height="80" rx="12" class="boxr"/><text x="570" y="178" text-anchor="middle" class="big">📒✔</text><text x="570" y="208" text-anchor="middle" class="lbl">“다 했어요” 적힘</text>
+  <text x="680" y="188" class="big w">△</text><text x="720" y="188" class="cap w">9번 중 8번 기록</text>
+</svg>
+<div class="row"><span class="pill mid">거의 고침 — 1번은 아직 안 적힘</span></div>
+<p class="q">남은 1번: Claude가 검토 기록을 남긴 뒤 답 문장을 고쳐 써서 “기록과 답이 다르다”로 막혔어요. 시간도 늘었어요(3번 합계 68초 → 363초).</p>
+</div>
 
-<div class="card"><div class="big">🏃‍♂️➡️🏃</div><div>
-<b>첫 일 끝나면 둘째 일 넘겨받기 (같은 대화)</b>
-<div class="row"><span class="pill mid">원래: 3번 중 2번</span><span class="pill mid">고친 뒤: 3번 중 2번</span></div>
-<small>그대로예요.</small>
-</div></div>
+<div class="card">
+<h2>2. “계획만 적고, 아직 하지 마”</h2>
+<p class="q">“… 지금은 Autopilot 후속 계획만 등록하고 파일은 만들지 마.”</p>
+<svg viewBox="0 0 900 140" role="img" aria-label="등록만 하라는데 바로 넘김">
+  <rect x="10" y="20" width="150" height="90" rx="12" class="boxr"/><text x="85" y="60" text-anchor="middle" class="big">🧑</text><text x="85" y="95" text-anchor="middle" class="lbl">“적기만 해, 하지 마”</text>
+  <path d="M165 65 H215" class="arr"/>
+  <rect x="220" y="20" width="150" height="90" rx="12" class="boxr"/><text x="295" y="60" text-anchor="middle" class="big">🤖🗒️</text><text x="295" y="95" text-anchor="middle" class="lbl">계획표만 적음 ✔</text>
+  <path d="M375 65 H425" class="arr"/>
+  <rect x="430" y="20" width="150" height="90" rx="12" class="boxr"/><text x="505" y="60" text-anchor="middle" class="big">🚚💬</text><text x="505" y="95" text-anchor="middle" class="lbl">바로 “A 해!”</text>
+  <path d="M585 65 H635" class="arr"/>
+  <rect x="640" y="20" width="150" height="90" rx="12" class="boxr"/><text x="715" y="60" text-anchor="middle" class="big">🤖📄📄</text><text x="715" y="95" text-anchor="middle" class="lbl">파일을 만들어 버림</text>
+  <text x="810" y="72" class="big x">✗</text>
+</svg>
+<div class="row"><span class="pill bad">안 고침</span><span class="pill bad">원래 3번 중 1번 어김</span><span class="pill bad">고친 뒤 3번 중 2번 어김</span></div>
+<p class="q">배달원 🚚은 “하지 마”라는 말을 몰라요. 계획표가 생기자마자 일을 넘겨요. 두 버전 모두 6번 다 바로 넘겼어요.</p>
+</div>
 
-<div class="card"><div class="big">🌙➡️☀️</div><div>
-<b>오늘 첫 일, 내일 새 대화에서 둘째 일 이어 하기</b>
-<div class="row"><span class="pill bad">원래: 0번</span><span class="pill mid">고친 뒤: 이어받기 1번 성공</span></div>
-<small>나머지는 시간 초과로 끊기거나, Claude가 둘째 일을 “보류”로 적어 둬서 안 넘어왔어요.</small>
-</div></div>
+<div class="card">
+<h2>3. 같은 대화창에서 첫 일 끝나면 둘째 일 넘겨받기</h2>
+<p class="q">“… 계획이 등록되면 A만 시작하세요. B는 Autopilot이 다음 작업으로 넘겨준 뒤에 실행하세요.”</p>
+<svg viewBox="0 0 900 250" role="img" aria-label="같은 창 넘김 성공과 실패">
+  <text x="10" y="35" class="lane v">잘 될 때</text>
+  <rect x="90" y="10" width="130" height="80" rx="12" class="boxr"/><text x="155" y="48" text-anchor="middle" class="big">🤖A</text><text x="155" y="78" text-anchor="middle" class="lbl">A 끝냄</text>
+  <path d="M225 50 H285" class="arr"/>
+  <rect x="290" y="10" width="130" height="80" rx="12" class="boxr"/><text x="355" y="48" text-anchor="middle" class="big">📒✔</text><text x="355" y="78" text-anchor="middle" class="lbl">A 기록됨</text>
+  <path d="M425 50 H485" class="arr"/>
+  <rect x="490" y="10" width="130" height="80" rx="12" class="boxr"/><text x="555" y="48" text-anchor="middle" class="big">🚚B</text><text x="555" y="78" text-anchor="middle" class="lbl">“B 해!”</text>
+  <path d="M625 50 H685" class="arr"/>
+  <rect x="690" y="10" width="130" height="80" rx="12" class="boxr"/><text x="755" y="48" text-anchor="middle" class="big">🤖B ✔</text><text x="755" y="78" text-anchor="middle" class="lbl">B 끝냄</text>
+  <text x="10" y="175" class="lane x">안 될 때</text>
+  <rect x="90" y="150" width="130" height="80" rx="12" class="boxr"/><text x="155" y="188" text-anchor="middle" class="big">🤖A</text><text x="155" y="218" text-anchor="middle" class="lbl">A 끝냄</text>
+  <path d="M225 190 H285" class="arr"/>
+  <rect x="290" y="150" width="130" height="80" rx="12" class="boxr"/><text x="355" y="188" text-anchor="middle" class="big">📒⏰✗</text><text x="355" y="218" text-anchor="middle" class="lbl">시각·영수증 검사 탈락</text>
+  <path d="M425 190 H485" class="arr"/>
+  <rect x="490" y="150" width="130" height="80" rx="12" class="boxr"/><text x="555" y="188" text-anchor="middle" class="big">🚚💤</text><text x="555" y="218" text-anchor="middle" class="lbl">B를 안 넘김</text>
+  <text x="650" y="198" class="big x">✗</text>
+</svg>
+<div class="row"><span class="pill bad">고치다 맒</span><span class="pill mid">원래 3번 중 2번 성공</span><span class="pill mid">고친 뒤 3번 중 2번 성공 (그대로)</span></div>
+<p class="q">안 된 이유: A의 기록이 “시각이 이상하다”(원래), “영수증이 오래됐다”(고친 뒤)로 공책에 안 적혀서, 배달원이 B를 넘기지 않았어요.</p>
+</div>
 
-<div class="card"><div class="big">🎯</div><div>
-<b>한 줄 정리</b><br>“다 했어요” 기록은 고쳐졌어요. “하지 마”를 무시하고 바로 넘기는 것은 아직 남았어요.
-</div></div>
+<div class="card">
+<h2>4. 오늘 첫 일, 새 대화창에서 둘째 일 이어 하기</h2>
+<p class="q">첫 창 “… A만 실행하고, A가 끝나면 멈추고 B는 실행하지 마.” → 새 창 “같은 Autopilot 계획을 이어서, 넘겨받은 작업 B만 실행해.”</p>
+<svg viewBox="0 0 900 400" role="img" aria-label="새 창 이어받기">
+  <text x="10" y="35" class="lane">원래</text>
+  <rect x="90" y="10" width="150" height="80" rx="12" class="boxr"/><text x="165" y="48" text-anchor="middle" class="big">🪟1 🗒️</text><text x="165" y="78" text-anchor="middle" class="lbl">계획표 + A 끝</text>
+  <path d="M245 50 H305" class="arr"/>
+  <rect x="310" y="10" width="150" height="80" rx="12" class="boxr"/><text x="385" y="48" text-anchor="middle" class="big">🪟2 ❓</text><text x="385" y="78" text-anchor="middle" class="lbl">계획표가 안 보임</text>
+  <path d="M465 50 H525" class="arr"/>
+  <rect x="530" y="10" width="150" height="80" rx="12" class="boxr"/><text x="605" y="48" text-anchor="middle" class="big">🚚💤</text><text x="605" y="78" text-anchor="middle" class="lbl">B를 안 넘김</text>
+  <text x="710" y="58" class="big x">✗</text><text x="750" y="58" class="cap x">3번 중 0번</text>
+  <text x="10" y="155" class="lane">고친 뒤</text>
+  <rect x="90" y="130" width="150" height="80" rx="12" class="boxr"/><text x="165" y="168" text-anchor="middle" class="big">🪟1 🗒️</text><text x="165" y="198" text-anchor="middle" class="lbl">계획표 + A 끝</text>
+  <path d="M245 170 H305" class="arr"/>
+  <rect x="310" y="130" width="150" height="80" rx="12" class="boxr"/><text x="385" y="168" text-anchor="middle" class="big">🪟2 🗒️➡</text><text x="385" y="198" text-anchor="middle" class="lbl">계획표 가져옴</text>
+  <path d="M465 170 H525" class="arr"/>
+  <rect x="530" y="130" width="150" height="80" rx="12" class="boxr"/><text x="605" y="168" text-anchor="middle" class="big">🚚B</text><text x="605" y="198" text-anchor="middle" class="lbl">B를 넘김 (1번 성공)</text>
+  <text x="710" y="178" class="big w">△</text><text x="750" y="178" class="cap w">끝까지 통과 0번</text>
+  <text x="90" y="250" class="cap">끝까지 못 간 이유 3가지</text>
+  <rect x="90" y="262" width="230" height="120" rx="12" class="boxr"/><text x="205" y="305" text-anchor="middle" class="big">⏱️✂</text><text x="205" y="340" text-anchor="middle" class="lbl">너무 오래 걸려</text><text x="205" y="360" text-anchor="middle" class="lbl">20분 제한에 끊김 (2번)</text>
+  <rect x="340" y="262" width="230" height="120" rx="12" class="boxr"/><text x="455" y="305" text-anchor="middle" class="big">🗒️🗒️🗒️❓</text><text x="455" y="340" text-anchor="middle" class="lbl">예전 계획표가 쌓여</text><text x="455" y="360" text-anchor="middle" class="lbl">“어느 거?” 물어봄</text>
+  <rect x="590" y="262" width="230" height="120" rx="12" class="boxr"/><text x="705" y="305" text-anchor="middle" class="big">🗒️⏸️</text><text x="705" y="340" text-anchor="middle" class="lbl">첫 창에서 B를 “보류”로</text><text x="705" y="360" text-anchor="middle" class="lbl">적어서 안 넘어옴 (1번)</text>
+</svg>
+<div class="row"><span class="pill bad">고치다 맒</span><span class="pill mid">이어받기는 1번 됨</span><span class="pill bad">끝까지 통과 0/3</span></div>
+</div>
+
+<div class="card">
+<h2>5. (새로 발견) 이미 끝난 일을 또 넘김</h2>
+<p class="q">“… 지금은 Autopilot 후속 계획만 등록하고 파일은 만들지 마.” — 고친 버전 1번</p>
+<svg viewBox="0 0 900 140" role="img" aria-label="끝난 일 다시 넘김">
+  <rect x="10" y="20" width="150" height="90" rx="12" class="boxr"/><text x="85" y="60" text-anchor="middle" class="big">🤖A ✔</text><text x="85" y="95" text-anchor="middle" class="lbl">A 끝, 기록됨</text>
+  <path d="M165 65 H215" class="arr"/>
+  <rect x="220" y="20" width="150" height="90" rx="12" class="boxr"/><text x="295" y="60" text-anchor="middle" class="big">🤖B ✔</text><text x="295" y="95" text-anchor="middle" class="lbl">B 끝</text>
+  <path d="M375 65 H425" class="arr"/>
+  <rect x="430" y="20" width="150" height="90" rx="12" class="boxr"/><text x="505" y="60" text-anchor="middle" class="big">🚚A?!</text><text x="505" y="95" text-anchor="middle" class="lbl">“A 다시 해!”</text>
+  <path d="M585 65 H635" class="arr"/>
+  <rect x="640" y="20" width="150" height="90" rx="12" class="boxr"/><text x="715" y="60" text-anchor="middle" class="big">🤖🙅</text><text x="715" y="95" text-anchor="middle" class="lbl">Claude가 거절</text>
+  <text x="810" y="72" class="big x">✗</text>
+</svg>
+<div class="row"><span class="pill bad">안 고침</span></div>
+<p class="q">배달원이 A가 끝났다는 걸 잊고 다시 넘겼어요. 이때 B의 기록도 공책에 안 적혔어요.</p>
+</div>
+
+<div class="sum">
+<b>한눈에</b><br>
+📒 완료 기록: <b>거의 고침</b> (0/9 → 8/9)<br>
+✋ “하지 마”를 무시하고 바로 넘김: <b>안 고침</b><br>
+🚚 같은 창 넘김: <b>고치다 맒</b> (2/3 → 2/3)<br>
+🪟 새 창 이어받기: <b>고치다 맒</b> (넘김 1번, 통과 0)<br>
+🔁 끝난 일 다시 넘김: <b>안 고침</b>
+</div>
 </body></html>
