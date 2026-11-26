@@ -7,7 +7,13 @@ assistant records the criterion and route first and the capture precedes the wor
 
 Read-only calls and Ghost-ALICE's own record scripts pass (native_transcript decides), so the
 route can always be registered. Sessions whose input is not canonically bound, other platforms,
-and any lookup failure are left to the Stop gate. Set GHOST_ALICE_ROUTE_GATE=0 to disable.
+and any lookup failure are left to the Stop gate.
+
+GHOST_ALICE_ROUTE_GATE selects when the gate applies:
+- unset or "1" (default): only while the session owns an admitted criterion that is not met.
+  That is where Ghost-ALICE Autopilot records completion; plain work keeps the read-turn cost.
+- "always": every file-changing call without a ready route (the first local fix).
+- "0": off.
 Dependencies: Python 3.11+ standard library and this Core's ledger module.
 """
 from __future__ import annotations
@@ -26,9 +32,31 @@ _MESSAGE = ('route-before-work: This tool call would change files, but the curre
     'checked after the route exists.')
 
 
+def _script_paths(env):
+    """Where the two record scripts are, so the assistant does not search the disk for them."""
+    found = []
+    route = Path(__file__).resolve().parent / 'response_route.py'
+    if route.is_file():
+        found.append('response route: ' + str(route))
+    for key in ('GHOST_ALICE_SKILLS_DIR', 'GHOST_ALICE_CORE_ROOT'):
+        if env.get(key):
+            ledger = Path(env[key]) / 'session-intent-analyzer' / 'scripts' / 'session_intent_ledger.py'
+            if ledger.is_file():
+                found.append('ledger: ' + str(ledger))
+                break
+    return (' Script paths: ' + '; '.join(found) + '.') if found else ''
+
+
+def _open_criterion(state):
+    return any(isinstance(c, dict) and c.get('admitted') is True and c.get('work_unit_id')
+               and str(c.get('status') or 'unmet').lower() != 'met'
+               for c in state.get('acceptance_criteria') or [])
+
+
 def route_gate_denial(env, hook_payload):
     """Return the denial reason for this PreToolUse call, or None to let it run."""
-    if env.get('GHOST_ALICE_ROUTE_GATE', '1') != '1' or env.get('GHOST_ALICE_PLATFORM') != 'claude':
+    mode = env.get('GHOST_ALICE_ROUTE_GATE', '1')
+    if mode not in {'1', 'always'} or env.get('GHOST_ALICE_PLATFORM') != 'claude':
         return None
     name, data = hook_payload.get('tool_name'), hook_payload.get('tool_input')
     session, root = hook_payload.get('session_id'), env.get('GHOST_ALICE_SESSION_INTENT_ROOT')
@@ -44,6 +72,8 @@ def route_gate_denial(env, hook_payload):
         state = ledger._stored_state(connection, 'claude', session)
         if state is None or not ledger._canonical_input_bound(connection, root, state):
             return None
+        if mode == '1' and not _open_criterion(state):
+            return None
         try:
             route = ledger.read_response_route(root=root, platform='claude', session_id=session,
                                                transaction=connection)
@@ -52,4 +82,4 @@ def route_gate_denial(env, hook_payload):
     if (isinstance(route, dict) and route.get('status') == 'ready'
             and route.get('input_event_id') == state.get('latest_input_event_id')):
         return None
-    return _MESSAGE + ' ' + _LEDGER_SCOPE_NOTE
+    return _MESSAGE + _script_paths(env) + ' ' + _LEDGER_SCOPE_NOTE

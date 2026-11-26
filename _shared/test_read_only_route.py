@@ -161,7 +161,13 @@ class ReadOnlyCallTests(unittest.TestCase):
         for command in ('python -c "open(\'x\',\'w\').write(\'a\')"', 'python -c "import os; os.remove(\'x\')"',
                         'python -c "import shutil; shutil.rmtree(\'x\')"', 'python -c "exec(input())"',
                         'python -c "__import__(\'os\').system(\'rm x\')"', "python -c 'from pathlib import Path; Path(\"x\").touch()'",
-                        'S="x.py"; python "$S"', 'S="session_intent_ledger.py"; python "$S"; rm -rf y'):
+                        'S="x.py"; python "$S"', 'S="session_intent_ledger.py"; python "$S"; rm -rf y',
+                        # Review on #39: writes the earlier deny list missed.
+                        """python -c "import io; io.FileIO('x','w')" """.strip(),
+                        """python -c "import tempfile; tempfile.mkstemp(dir='.')" """.strip(),
+                        """python -c "f=getattr(__builtins__,'op'+'en'); print(1, file=f('x','w'))" """.strip(),
+                        """python -c "import zipfile; zipfile.ZipFile('x.zip','w').close()" """.strip(),
+                        """python -c "import sys; sys.modules['os'].remove('x')" """.strip()):
             with self.subTest(command=command):
                 self.assertFalse(self.read_only(shell(command)))
 

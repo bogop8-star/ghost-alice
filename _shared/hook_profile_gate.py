@@ -1014,13 +1014,13 @@ def _run(hook_id: str, payload: str, *, platform: str | None = None, binding=Non
     started = time.perf_counter()
     # Local fix 2026-11-26: ask for the work route before the first file-changing tool call,
     # so Ghost-ALICE Autopilot's origin capture precedes the work it records.
-    route_denial = None
+    route_denial = route_gate_error = None
     if hook_id == "tool-checkpoint" and binding is not None:
         try:
             from pre_tool_route_gate import route_gate_denial
             route_denial = route_gate_denial(env, hook_payload)
-        except Exception:
-            route_denial = None  # Any lookup failure is left to the Stop gate.
+        except Exception as error:  # Left to the Stop gate, but kept in the strict audit below.
+            route_denial, route_gate_error = None, f"{type(error).__name__}: {error}"[:500]
     if route_denial:
         result = subprocess.CompletedProcess(argv, 0, stdout=json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse", "permissionDecision": "deny",
@@ -1095,6 +1095,7 @@ def _run(hook_id: str, payload: str, *, platform: str | None = None, binding=Non
             "surface_item": item,
             "model_surface_output": model_surface_output,
             "user_surface_output": f"{user_stdout}{user_stderr}",
+            **({"route_gate_error": route_gate_error} if route_gate_error else {}),
         },
     )
     _emit_rendered_user_surface(user_stdout, user_stderr)
