@@ -77,6 +77,45 @@ _SED_PRINT = re.compile(r'(\d+|\$)(,(\d+|\$))?p')
 _PYTHON = re.compile(r'(^|[\\/])(python3?|py)(\.exe)?$|^\$\{?py(thon)?\}?$', re.I)
 _LITERAL = re.compile(r'Q\d+|S|-?\d+(\.\d+)?')
 _ASSIGNMENT = re.compile(r'\$?[A-Za-z_][A-Za-z0-9_:]*=\S*')
+# Inline Python (`python -c`) is read-only only when it is built from an allowlist: these
+# modules, builtins other than the ones that open files or run code, and no private names.
+_PY_READ_MODULES = {'json', 'sys', 're', 'csv', 'math', 'statistics', 'collections', 'itertools', 'functools',
+                    'datetime', 'decimal', 'fractions', 'string', 'textwrap', 'unicodedata', 'hashlib', 'base64',
+                    'operator', 'heapq', 'bisect', 'pprint'}
+_PY_SYS_NAMES = {'stdin', 'stdout', 'stderr', 'argv', 'version', 'version_info', 'maxsize', 'platform', 'exit'}
+_PY_DENIED_BUILTINS = {'open', 'exec', 'eval', 'compile', '__import__', 'getattr', 'setattr', 'delattr', 'globals',
+                       'locals', 'vars', 'input', 'breakpoint', 'help', 'memoryview', 'exit', 'quit'}
+
+
+def _python_reads_only(code):
+    import ast
+    import builtins
+    try:
+        tree = ast.parse(code)
+    except (SyntaxError, ValueError):
+        return False
+    modules = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name not in _PY_READ_MODULES:
+                    return False
+                modules.add(alias.asname or alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level or node.module not in _PY_READ_MODULES:
+                return False
+            if node.module == 'sys' and any(a.name not in _PY_SYS_NAMES for a in node.names):
+                return False
+            modules.update(a.asname or a.name for a in node.names)
+        elif isinstance(node, ast.Attribute):
+            if node.attr.startswith('_'):
+                return False
+            if isinstance(node.value, ast.Name) and node.value.id == 'sys' and node.attr not in _PY_SYS_NAMES:
+                return False
+        elif isinstance(node, ast.Name):
+            if node.id.startswith('__') or node.id in _PY_DENIED_BUILTINS:
+                return False
+    return True
 # PowerShell. Cmdlets that only read or shape what they are given, the .NET members that only
 # read, and the words an expression is made of. A script block or a parenthesised part is
 # judged as commands of its own, so `ForEach-Object { Remove-Item $_ }` is still work.
@@ -120,6 +159,15 @@ def _read_only_command(command, powershell=False):
         if not _read_only_command(inner.group(1), powershell):
             return False
         command = command[:inner.start()] + 'S' + command[inner.end():]
+    if not powershell:
+        # A plain shell variable set to a literal in this command stands for
+        # that literal where it is used, so S="…/response_route.py"; python "$S" is judged as
+        # the script it names. Values holding $ or a backtick are left unresolved.
+        for match in re.finditer(r'(?:^|[;&|\n]\s*)([A-Za-z_]\w*)=(?:"([^"$`]*)"|\'([^\']*)\'|([^\s;&|$`"\']+))',
+                                 command):
+            literal = next((part for part in match.groups()[1:] if part is not None), '')
+            command = re.sub(r'"\$\{?%s\}?"|\$\{%s\}|\$%s\b' % ((re.escape(match.group(1)),) * 3),
+                             lambda _: '"' + literal + '"', command)
     # Quoted text is data (a grep pattern, a label). It is set aside while the commands are
     # read and looked up again where a command treats it as a script (sed, awk).
     quoted = []
@@ -188,6 +236,12 @@ def _read_only_command(command, powershell=False):
         head = text(words[0])
         # Ghost-ALICE's own record scripts keep the ledger; they are not the user's work.
         if _PYTHON.search(head) and any(text(word).replace('\\', '/').split('/')[-1] in _RECORD_SCRIPTS for word in words[1:]):
+            continue
+        # Inline Python that only reads and prints (json.load(sys.stdin),
+        # print) is read-only; code that can open, write, delete, run or import a writer is work.
+        if _PYTHON.search(head) and words[1:2] == ['-c'] and len(words) >= 3 and re.fullmatch(r'Q\d+', words[2]):
+            if not _python_reads_only(text(words[2])):
+                return False
             continue
         # Output redirection to a file is a write.
         if '>' in segment:
