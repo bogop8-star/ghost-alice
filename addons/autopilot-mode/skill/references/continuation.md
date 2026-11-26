@@ -38,7 +38,7 @@ print(json.dumps(result))
 PY
 ```
 
-Set `hold_until_next_input` to `true` in `PLAN_INPUT` when the user's current request says not to run the plan now: "register only", "do not create the files yet", "stop after task A", "do not run task B". The plan is then recorded, but `advance_continuation` dispatches nothing in this session until a later user input; at this input's Stop it reports `continuation: {status: "held"}`. A task the current-session assistant runs itself in this turn (for example task A in "run A, then stop") is still recorded as completed when its proof applies. Use the hold instead of registering a later task as `blocked`: a `blocked` task never becomes dependency-ready without a revised plan. Leave it `false` when the user wants the next task handed over in this session after the current one.
+Set `hold_until_next_input` to `true` in `PLAN_INPUT` when the user's current request says not to run the plan now: "register only", "do not create the files yet", "stop after task A", "do not run task B". The plan is then recorded, but `advance_continuation` dispatches nothing in this session until a later user input; at this input's Stop it reports `continuation: {status: "held"}`. A task the current-session assistant runs itself in this turn (for example task A in "run A, then stop") is still recorded as completed when its proof applies. Use the hold instead of registering a later task as `blocked`: a `blocked` task never becomes dependency-ready without a revised plan. Leave it `false` when the user wants the next task handed over in this session after the current one. The default stays `false` because a hold would also stop that request ("start A; B runs after Autopilot hands it over"), which needs B dispatched at this input's Stop.
 
 Register the plan with one work unit per task, each owning only that task's criteria, and select all planned work units in the route that admits the plan. After the plan is admitted, do not register a different route for the same input before the response review is recorded: a route change after the review makes the prepared receipt stale and the completion is not recorded.
 
@@ -86,9 +86,12 @@ sys.path.insert(0, str(Path(sys.argv[1]) / 'adapters'))
 from autopilot_continuation import adopt_continuation_plan
 print(json.dumps(adopt_continuation_plan(dict(os.environ), expected_input_event_id=sys.argv[2],
     earlier_session_id=sys.argv[3], plan_id=sys.argv[4],
-    approval_evidence={'decision': 'approved', 'source': sys.argv[5]})))
+    approval_evidence={'decision': 'approved', 'source': sys.argv[5]},
+    release_blocked=json.loads(sys.argv[6]) if len(sys.argv) > 6 else [])))
 PY
 ```
+
+An earlier task in `blocked` stays blocked after adoption. Pass its id in `release_blocked` (a JSON list as the sixth argument) only when the user's current request asks to run that task, for example "continue and run task B"; `blocked` can also mean the task stopped for another reason, which only the user resolves.
 
 The API reads the earlier plan only from the same ledger and platform. It accepts a completed earlier task only when that task's criteria are met in the earlier session's ledger, removes completed tasks from the dependencies of the remaining ones, and maps each remaining criterion reference to the current session's criterion with the same `id`, `summary` and `source`. It then registers the remaining tasks through `register_continuation_plan`, so the same surface, reference and dependency checks apply. It returns `{"status":"admitted","plan_id":...,"adopted_from":{...},"tasks":[...]}`. An error names the missing or changed criterion; admit it as listed and retry instead of editing the earlier session.
 

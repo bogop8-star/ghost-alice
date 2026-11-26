@@ -153,8 +153,7 @@ class DispatchRulesTest(unittest.TestCase):
                                         ledger={('wu-a', 1, 'A1'): 'unmet'}, recordings=[])
         self.assertEqual(continuation['status'], 'dispatched')
 
-    def test_blocked_earlier_task_can_be_continued(self):
-        # Retest next-session run 3: task B was registered as blocked in the first session.
+    def blocked_plan(self):
         contracts = [dict(work_unit_id=u, contract_revision=1,
                           criteria=[dict(work_unit_id=u, contract_revision=1, id=c, summary=c, source='user-explicit')])
                      for u, c in (('wu-a', 'A1'), ('wu-b', 'B1'))]
@@ -164,9 +163,25 @@ class DispatchRulesTest(unittest.TestCase):
                     allowed_surfaces=['test-output/...'])
         rows = [dict(admitted=True, id='B1', summary='B1', source='user-explicit',
                      work_unit_id='wu-b2', contract_revision=1)]
-        adopted = self.module._adoption_items(plan, {('wu-a', 1, 'A1'): 'met'}, rows)
-        self.assertEqual([(t['id'], t['status'], t['depends_on']) for t in adopted['items']],
+        return plan, rows
+
+    def test_blocked_earlier_task_is_released_only_when_named(self):
+        # Retest next-session run 3: task B was registered as blocked in the first session.
+        # Review on #40: blocked is also used for other stops, so it is released only on request.
+        plan, rows = self.blocked_plan()
+        released = self.module._adoption_items(plan, {('wu-a', 1, 'A1'): 'met'}, rows, release_blocked=['task-b'])
+        self.assertEqual([(t['id'], t['status'], t['depends_on']) for t in released['items']],
                          [('task-b', 'ready', [])])
+        kept = self.module._adoption_items(plan, {('wu-a', 1, 'A1'): 'met'}, rows)
+        self.assertEqual([t['status'] for t in kept['items']], ['blocked'])
+
+    def test_missing_criterion_reopens_a_completed_task(self):
+        # Review on #40: the whole ledger is read, so a criterion missing there was removed.
+        plan = self.plan([task('task-a', 'wu-a', 'A1', 'completed'),
+                          task('task-b', 'wu-b', 'B1', 'ready', ['task-a'])])
+        continuation, stored = self.run_stop(plan, selected_units=[('wu-b', 'B1')],
+                                             ledger={('wu-b', 1, 'B1'): 'unmet'}, recordings=[])
+        self.assertIn('task-proof-invalidated', [e['event'] for e in stored['events']])
 
 
 if __name__ == '__main__':

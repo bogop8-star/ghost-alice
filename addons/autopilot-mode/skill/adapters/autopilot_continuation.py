@@ -127,9 +127,7 @@ def register_continuation_plan(source, *, expected_input_event_id, items, approv
 # Taking over an earlier session's plan. A plan belongs to the session that admitted it,
 # so a new session never runs it directly: it reads the earlier plan, admits the unfinished
 # tasks' criteria under its own authority, and registers them as its own plan.
-# 'blocked' is included because a task held for the user's go-ahead is exactly what the
-# user releases by asking a new session to continue it.
-_RESUMED_STATUSES = {'ready', 'running', 'reopened', 'waiting', 'blocked'}
+_RESUMED_STATUSES = {'ready', 'running', 'reopened', 'waiting'}
 
 
 def _earlier_run_dir(run_dir, session_id, earlier_session_id):
@@ -145,12 +143,16 @@ def _earlier_run_dir(run_dir, session_id, earlier_session_id):
     return run_dir.parent / earlier_session_id
 
 
-def _adoption_items(plan, earlier_statuses, current_rows):
+def _adoption_items(plan, earlier_statuses, current_rows, release_blocked=()):
     """Unfinished tasks of an earlier plan, mapped onto this session's admitted criteria.
 
     earlier_statuses maps (work_unit_id, contract_revision, criterion_id) to the earlier
     session's criterion status; current_rows are this session's selected criterion rows.
+    A `blocked` task stays blocked unless its id is in release_blocked: `blocked` also marks
+    work stopped for reasons other than waiting for the user, so only the user's current
+    request to run that task releases it.
     """
+    release_blocked = set(release_blocked or ())
     definitions = {_key(c): c for snapshot in plan['contracts'] for c in snapshot['criteria']}
     items = validate_work_items(copy.deepcopy(plan['items']))
     completed = []
@@ -177,7 +179,7 @@ def _adoption_items(plan, earlier_statuses, current_rows):
                              contract_revision=matches[0]['contract_revision'], criterion_id=earlier['id']))
         task['criterion_refs'] = refs
         task['depends_on'] = [d for d in task['depends_on'] if d not in completed]
-        if task['status'] in _RESUMED_STATUSES:
+        if task['status'] in _RESUMED_STATUSES or (task['status'] == 'blocked' and task['id'] in release_blocked):
             task['status'] = 'ready'
         task.pop('attempt', None)
         task.pop('completion', None)
@@ -231,7 +233,8 @@ def resumable_plans(source):
     return found
 
 
-def adopt_continuation_plan(source, *, expected_input_event_id, earlier_session_id, plan_id, approval_evidence):
+def adopt_continuation_plan(source, *, expected_input_event_id, earlier_session_id, plan_id, approval_evidence,
+                            release_blocked=()):
     """Register the unfinished part of an earlier session's plan as this session's plan.
 
     This session must already own and select the unfinished tasks' criteria with the
@@ -242,7 +245,10 @@ def adopt_continuation_plan(source, *, expected_input_event_id, earlier_session_
         raise ValueError('continuation requires explicit approval evidence')
     current, root, target, material, selection = service._v2_material(source, expected_input=expected_input_event_id)
     plan, statuses = _read_earlier_plan(current, target, material, earlier_session_id, plan_id)
-    adopted = _adoption_items(plan, statuses, material['intent_state']['acceptance_criteria'])
+    unknown = set(release_blocked or ()) - {t['id'] for t in plan['items']}
+    if unknown:
+        raise ValueError(f'release_blocked names tasks that are not in the earlier plan: {sorted(unknown)}')
+    adopted = _adoption_items(plan, statuses, material['intent_state']['acceptance_criteria'], release_blocked)
     evidence = dict(copy.deepcopy(approval_evidence), adopted_from=dict(session_id=earlier_session_id,
         plan_id=plan['plan_id'], completed=adopted['completed']))
     result = register_continuation_plan(source, expected_input_event_id=expected_input_event_id,
@@ -289,7 +295,8 @@ def advance_continuation(source, payload, *, hook_input=None):
             blocked.update(descendants)
         for item in items:
             refs=item['criterion_refs']
-            if item['status']=='completed' and any(statuses.get(_key(r)) not in (None,'met') for r in refs):
+            # The whole ledger is read, so a criterion that is missing here was really removed.
+            if item['status']=='completed' and any(statuses.get(_key(r))!='met' for r in refs):
                 item['status']='reopened'
                 plan['dispatches'].pop(item['id'],None)
                 plan['events'].append(dict(event='task-proof-invalidated',task_id=item['id'],criterion_refs=refs))
