@@ -1,6 +1,6 @@
 ---
 name: autopilot-mode
-description: "Use when approved Ghost-ALICE run state or current-session runtime material requires completion recording or continuation of authorized work."
+description: "Use when approved Ghost-ALICE run state or current-session runtime material requires completion recording or continuation of authorized work, or when the user asks a new session to continue an earlier Autopilot plan."
 compatibility:
   - "Python 3.11+ standard library"
   - "Ghost-ALICE Core 0.5.1+ with response-route, completion and shared SQLite APIs"
@@ -45,6 +45,8 @@ The bound runtime protocol selects one path. With `autopilot-completion-receipt.
 The current-conversation model uses the reviewed results, remaining objective and actual user authority to judge whether necessary work remains. It may also register an already authorized conditional dependency plan before the current result is applied. It follows [Register the approved plan](references/continuation.md#register-the-approved-plan) for the complete source/event bindings, task schema, host Python call and result branches. The returned admitted status records a plan; it does not execute a task.
 
 After apply_completion_v2, advance_continuation maps applied criteria to plan status, selects dependency-ready approved work and records dispatch. The native Stop formatter returns that task request to the host for the hook receipt's conversation. If the host delivers it, the model generating that conversation's next response requests the authorized work tools. Ghost-ALICE Autopilot code does not execute business tools or create an assistant. The reference owns unchanged-state dispatch and dependent-task handling.
+
+A plan belongs to the session that admitted it. When the user asks a new session to continue an earlier Autopilot plan, the current-session assistant follows [Continue an earlier session's plan](references/continuation.md#continue-an-earlier-sessions-plan) instead of executing the earlier tasks directly or reporting that the task is unknown.
 
 ### Approved queue API
 

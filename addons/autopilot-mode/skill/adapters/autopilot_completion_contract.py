@@ -279,6 +279,18 @@ def _authenticated_capture_order(record, origin, source, transaction):
     return True, assessor.assessment_definitions(assessment, record['contract'], record['proof'], record['verified_at'])
 
 
+def _partial_declarations_ok(parsed, contract_ids):
+    """A partial answer may name another planned task's criterion only as unverified.
+
+    2026-11-26 retest: task A's answer listed task B's criterion under acceptance-criteria
+    and unverified, as the partial format asks, and A's completion was rejected. A declared
+    criterion outside the captured contract is accepted only when it is unverified and
+    therefore claims nothing.
+    """
+    outside = set(parsed['acceptance_ids']) - set(contract_ids)
+    return outside <= set(parsed.get('unverified_ids') or ())
+
+
 def validate_evidence(record,reference,origin,now,*,source=None,transaction=None):
     if (not isinstance(record,dict) or record.get('schema_version')!=EVIDENCE_SCHEMA
             or digest(record)!=reference): fail('evidence-unbound','Unbound, legacy or altered evidence reference')
@@ -312,7 +324,7 @@ def validate_evidence(record,reference,origin,now,*,source=None,transaction=None
         parsed = _parse_completion_evidence(record['proof'], allow_partial=True)
         if not {row['id'] for row in covered} <= set(parsed['criterion_ids']):
             fail('proof-invalid','Partial coverage includes failed, unverified or uncovered criteria')
-        if not set(parsed['acceptance_ids']) <= {row['id'] for row in record['contract']['criteria']}:
+        if not _partial_declarations_ok(parsed, {row['id'] for row in record['contract']['criteria']}):
             fail('proof-invalid','Partial proof declares criteria outside original capture')
     if record.get('dependency_mapping') not in ('shared','explicit'):
         fail('dependency-invalid','Original dependency relation is unbound')
