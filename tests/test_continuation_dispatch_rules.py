@@ -153,6 +153,35 @@ class DispatchRulesTest(unittest.TestCase):
                                         ledger={('wu-a', 1, 'A1'): 'unmet'}, recordings=[])
         self.assertEqual(continuation['status'], 'dispatched')
 
+    def test_handed_back_task_is_told_to_check_again_after_the_capture(self):
+        # Hand-over retest run 3 (2026-11-28): A ran in the admitting turn, its proof was not
+        # prepared (unprepared), A was dispatched, and the answer reused the earlier check,
+        # which was rejected as time-invalid.
+        plan = self.plan([task('task-a', 'wu-a', 'A1', 'ready'),
+                          task('task-b', 'wu-b', 'B1', 'ready', ['task-a'])])
+        plan['dispatches'] = {}
+        store_result = self.run_stop_payload(plan, recordings=[dict(work_unit_id='wu-a', status='unprepared')])
+        self.assertEqual(store_result['continuation']['task_id'], 'task-a')
+        self.assertIn('handed-back', store_result['systemMessage'])
+
+    def test_first_dispatch_has_no_handed_back_line(self):
+        plan = self.plan([task('task-a', 'wu-a', 'A1', 'ready')])
+        plan['dispatches'] = {}
+        store_result = self.run_stop_payload(plan, recordings=[])
+        self.assertNotIn('handed-back', store_result['systemMessage'])
+
+    def run_stop_payload(self, plan, recordings):
+        captured = {}
+        original = self.module.advance_continuation
+        def keep(source, payload, **kw):
+            result = original(source, payload, **kw)
+            captured.update(result)
+            return result
+        with mock.patch.object(self.module, 'advance_continuation', side_effect=keep):
+            self.run_stop(plan, selected_units=[('wu-a', 'A1'), ('wu-b', 'B1')],
+                          ledger={('wu-a', 1, 'A1'): 'unmet', ('wu-b', 1, 'B1'): 'unmet'}, recordings=recordings)
+        return captured
+
     def blocked_plan(self):
         contracts = [dict(work_unit_id=u, contract_revision=1,
                           criteria=[dict(work_unit_id=u, contract_revision=1, id=c, summary=c, source='user-explicit')])

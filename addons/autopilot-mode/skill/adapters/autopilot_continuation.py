@@ -314,12 +314,18 @@ def advance_continuation(source, payload, *, hook_input=None):
         candidates=[] if held else [t for t in items if t['id'] in ready or (t['status']=='running'
             and all(by_id[d]['status']=='completed' for d in t['depends_on']))]
         selected=None
+        redo=False
         for task in candidates:
             if task['id'] in blocked:continue
             if task['status']=='running' and any(recording_unavailable(r) for r in task['criterion_refs']): continue
             fingerprint=contract.digest(dict(task={k:v for k,v in task.items() if k not in {'status','completion'}},
                 criteria=[dict(ref=r,status=statuses.get(_key(r))) for r in task['criterion_refs']]))
             if plan['dispatches'].get(task['id'])==fingerprint: continue
+            # Handed back: an earlier dispatch (or the task run in the admitting turn) left no
+            # applied proof, so its check came before any capture and cannot be reused.
+            redo=(task['id'] in plan['dispatches'] or task['status']=='running'
+                or any(results.get(r['work_unit_id'],{}).get('status') in {'unprepared','recording-unavailable'}
+                       for r in task['criterion_refs']))
             selected=task
             task['status']='running'
             plan['dispatches'][task['id']]=fingerprint
@@ -332,6 +338,10 @@ def advance_continuation(source, payload, *, hook_input=None):
         message='\n'.join(['[autopilot]','continuation: approved-task','task-id: '+selected['id'],
             'Ghost-ALICE Autopilot advance_continuation selected the approved dependency-ready task identified by task-id and recorded dispatch. The task prompt is addressed to the assistant in the native conversation identified by the hook input. If the host supplies that feedback, the current-session assistant follows task-router and boundary-contract to request work tools within allowed-surfaces; dispatch does not prove execution or whole-work completion:',
             selected['prompt'],'allowed-surfaces: '+', '.join(selected['allowed_surface']),
+            *(['handed-back: this task ran before but its completion was not recorded. Do not reuse the earlier check: '
+               'register the route and prepare the response review first, then check the result again (read the file or '
+               'rerun the command) and answer with that new check. A check made before the capture is rejected as time-invalid.']
+              if redo else []),
             'criterion-refs: '+str(selected['criterion_refs']),
             'Preserve prior applied proof/source/time. Before claiming results for newly affected criteria, follow installed verification-before-completion/references/autopilot-publication.md, section Prepare and record the response review. Ghost-ALICE Autopilot handles authenticated supported proof publication at native Stop.'])
         # Queue dispatch is the current action; recording details remain structured.
