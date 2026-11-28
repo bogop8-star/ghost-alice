@@ -26,7 +26,7 @@ svg text.x{fill:var(--bad);font-weight:800}svg text.v{fill:var(--ok);font-weight
 <svg width="0" height="0" style="position:absolute"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker></defs></svg>
 
 <h1>🤖 Autopilot 문제, 그림으로 보기</h1>
-<p class="sub">같은 일을 <b>원래 버전</b>과 <b>고친 버전</b>에 3번씩 시켜 봤어요 (2026-11-26)</p>
+<p class="sub">같은 일을 <b>원래 버전</b>, <b>1차 수정</b>, <b>2차 수정</b>에 3번씩 시켜 봤어요 (2026-11-26 ~ 11-28)</p>
 <div class="legend"><span>🧑 사람</span><span>🤖 Claude</span><span>🚚 Autopilot(다음 일을 넘겨주는 배달원)</span><span>📒 완료 기록 공책</span><span>🚧 문지기(훅)</span></div>
 
 <div class="card">
@@ -65,8 +65,8 @@ svg text.x{fill:var(--bad);font-weight:800}svg text.v{fill:var(--ok);font-weight
   <rect x="640" y="20" width="150" height="90" rx="12" class="boxr"/><text x="715" y="60" text-anchor="middle" class="big">🤖📄📄</text><text x="715" y="95" text-anchor="middle" class="lbl">파일을 만들어 버림</text>
   <text x="810" y="72" class="big x">✗</text>
 </svg>
-<div class="row"><span class="pill bad">안 고침</span><span class="pill bad">원래 3번 중 1번 어김</span><span class="pill bad">고친 뒤 3번 중 2번 어김</span></div>
-<p class="q">배달원 🚚은 “하지 마”라는 말을 몰라요. 계획표가 생기자마자 일을 넘겨요. 두 버전 모두 6번 다 바로 넘겼어요.</p>
+<div class="row"><span class="pill bad">원래 3번 중 1번 어김</span><span class="pill bad">1차 수정 3번 중 2번 어김</span><span class="pill ok">2차 수정 3/3 지킴</span></div>
+<p class="q">배달원 🚚은 “하지 마”라는 말을 몰랐어요. 2차 수정에서 계획표에 “다음에 말할 때까지 대기” 표시를 달 수 있게 했고, 3번 모두 넘기지 않고 기다렸어요.</p>
 </div>
 
 <div class="card">
@@ -89,8 +89,8 @@ svg text.x{fill:var(--bad);font-weight:800}svg text.v{fill:var(--ok);font-weight
   <rect x="490" y="150" width="130" height="80" rx="12" class="boxr"/><text x="555" y="188" text-anchor="middle" class="big">🚚💤</text><text x="555" y="218" text-anchor="middle" class="lbl">B를 안 넘김</text>
   <text x="650" y="198" class="big x">✗</text>
 </svg>
-<div class="row"><span class="pill bad">고치다 맒</span><span class="pill mid">원래 3번 중 2번 성공</span><span class="pill mid">고친 뒤 3번 중 2번 성공 (그대로)</span></div>
-<p class="q">안 된 이유: A의 기록이 “시각이 이상하다”(원래), “영수증이 오래됐다”(고친 뒤)로 공책에 안 적혀서, 배달원이 B를 넘기지 않았어요.</p>
+<div class="row"><span class="pill mid">원래 3번 중 2번</span><span class="pill mid">1차 수정 3번 중 2번</span><span class="pill ok">2차 수정 마지막 시험 3/3</span></div>
+<p class="q">안 된 이유: A의 기록이 공책에 안 적혀서 배달원이 B를 넘기지 않았어요. 2차 수정에서 “B는 아직 확인 안 함”이라고 적은 답도 받아 주고, 다시 넘긴 일에는 “다시 확인하고 적어”라고 알려 주게 했어요.</p>
 </div>
 
 <div class="card">
@@ -116,7 +116,7 @@ svg text.x{fill:var(--bad);font-weight:800}svg text.v{fill:var(--ok);font-weight
   <rect x="340" y="262" width="230" height="120" rx="12" class="boxr"/><text x="455" y="305" text-anchor="middle" class="big">🗒️🗒️🗒️❓</text><text x="455" y="340" text-anchor="middle" class="lbl">예전 계획표가 쌓여</text><text x="455" y="360" text-anchor="middle" class="lbl">“어느 거?” 물어봄</text>
   <rect x="590" y="262" width="230" height="120" rx="12" class="boxr"/><text x="705" y="305" text-anchor="middle" class="big">🗒️⏸️</text><text x="705" y="340" text-anchor="middle" class="lbl">첫 창에서 B를 “보류”로</text><text x="705" y="360" text-anchor="middle" class="lbl">적어서 안 넘어옴 (1번)</text>
 </svg>
-<div class="row"><span class="pill bad">고치다 맒</span><span class="pill mid">이어받기는 1번 됨</span><span class="pill bad">끝까지 통과 0/3</span></div>
+<div class="row"><span class="pill bad">원래 0/3</span><span class="pill mid">1차 수정 이어받기 1번, 통과 0/3</span><span class="pill ok">2차 수정 3/3 통과</span></div>
 </div>
 
 <div class="card">
@@ -132,16 +132,16 @@ svg text.x{fill:var(--bad);font-weight:800}svg text.v{fill:var(--ok);font-weight
   <rect x="640" y="20" width="150" height="90" rx="12" class="boxr"/><text x="715" y="60" text-anchor="middle" class="big">🤖🙅</text><text x="715" y="95" text-anchor="middle" class="lbl">Claude가 거절</text>
   <text x="810" y="72" class="big x">✗</text>
 </svg>
-<div class="row"><span class="pill bad">안 고침</span></div>
-<p class="q">배달원이 A가 끝났다는 걸 잊고 다시 넘겼어요. 이때 B의 기록도 공책에 안 적혔어요.</p>
+<div class="row"><span class="pill ok">2차 수정에서 고침</span></div>
+<p class="q">배달원이 공책의 일부만 보고 A가 끝났다는 걸 놓쳤어요. 2차 수정에서 공책 전체를 보게 했고, 2차 수정 시험 9번 중 다시 넘긴 일은 없었어요.</p>
 </div>
 
 <div class="sum">
 <b>한눈에</b><br>
 📒 완료 기록: <b>거의 고침</b> (0/9 → 8/9)<br>
-✋ “하지 마”를 무시하고 바로 넘김: <b>안 고침</b><br>
-🚚 같은 창 넘김: <b>고치다 맒</b> (2/3 → 2/3)<br>
-🪟 새 창 이어받기: <b>고치다 맒</b> (넘김 1번, 통과 0)<br>
-🔁 끝난 일 다시 넘김: <b>안 고침</b>
+✋ “하지 마”를 무시하고 바로 넘김: <b>2차 수정에서 고침</b> (3/3 지킴)<br>
+🚚 같은 창 넘김: <b>2차 수정에서 고침</b> (마지막 시험 3/3)<br>
+🪟 새 창 이어받기: <b>2차 수정에서 고침</b> (3/3)<br>
+🔁 끝난 일 다시 넘김: <b>2차 수정에서 고침</b>
 </div>
 </body></html>
